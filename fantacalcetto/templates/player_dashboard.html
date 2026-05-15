@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">Profilo calciatore</p>
+    <h1>{{ player.name }}</h1>
+    <p class="lede">{{ player.nickname or "Soprannome ancora da spogliatoio" }} · {{ player.role }} · {{ player.account_status|account_status_label }}</p>
+  </div>
+  <div class="match-strip">
+    <span>La tua carta</span>
+    <span class="mascot-badge mascot-{{ player.mascot }} {{ player.mascot|mascot_class }}"><b>{{ player.mascot|mascot_code }}</b><small>{{ player|player_mascot_label }}</small></span>
+    <small class="stars">{{ player.power|stars }}</small>
+    <small>Score {{ player.score }} · Affidabilita {{ player.reliability }}%</small>
+  </div>
+</section>
+
+{% if player.account_status != "approved" %}
+  <div class="notice soft">Account non ancora approvato: puoi guardare il profilo, ma non sei ancora arruolabile.</div>
+{% endif %}
+
+<section class="grid two">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Statistiche</h2>
+      <span class="pill">{{ player.power|player_title }}</span>
+    </div>
+    <div class="stat-cards">
+      <div><strong>{{ player.matches }}</strong><small>presenze</small></div>
+      <div><strong>{{ player.goals }}</strong><small>gol</small></div>
+      <div><strong>{{ player.assists }}</strong><small>assist</small></div>
+      <div><strong>{{ player.wins }}</strong><small>vittorie</small></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Regole crescita</h2>
+    </div>
+    <p class="muted">Vittoria, gol e assist alzano lo score. Risposte puntuali aiutano l'affidabilita. Disdire vicino alla gara toglie piu punti: sotto 24h pesa, sotto 3h pesa parecchio.</p>
+    <form class="form login-form" method="post" action="{{ url_for('player_update_mascot_name') }}">
+      <label>Nome mascotte <input name="mascot_name" value="{{ player.mascot_name or '' }}" placeholder="Es. O' Mast d'a fascia"></label>
+      <button class="button" type="submit">Salva nome mascotte</button>
+    </form>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Convocazioni</h2>
+  </div>
+  <div class="cards">
+    {% for m in matches %}
+      <div class="mini-card">
+        <strong>{{ m.title }}</strong>
+        <span>{{ m.match_date.replace("T", " ") }} · {{ m.location }}</span>
+        <small>Stato: {{ (m.response or "non invitato")|response_label }}{% if m.penalty_points %} · penalita {{ m.penalty_points }}{% endif %}</small>
+        {% if player.account_status == "approved" %}
+          <form class="inline-actions" method="post" action="{{ url_for('player_confirm', match_id=m.id) }}">
+            <button class="button primary" type="submit">Confermo</button>
+          </form>
+          <form class="inline-actions" method="post" action="{{ url_for('player_cancel', match_id=m.id) }}">
+            <button class="button ghost" type="submit">Disdico</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

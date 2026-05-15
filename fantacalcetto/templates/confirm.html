@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="public-card">
+  <p class="eyebrow">Invito partita</p>
+  <div class="mini-mascot public" aria-hidden="true">
+    <span class="head"></span>
+    <span class="body"></span>
+    <span class="leg one"></span>
+    <span class="leg two"></span>
+    <span class="mini-ball"></span>
+  </div>
+  <h1>Sono {{ player.name }}, confermo?</h1>
+  {% if player.nickname %}
+    <p class="player-aka">Alias da spogliatoio: <strong>{{ player.nickname }}</strong></p>
+  {% endif %}
+  <p class="lede">{{ match.title }} · {{ match.match_date.replace("T", " ") }} · {{ match.location }}</p>
+  <div class="status-box">
+    Stato attuale: <strong>{{ relation.response|response_label }}</strong>
+  </div>
+  <form method="post" class="confirm-actions">
+    <button class="button primary big" name="response" value="confirmed" type="submit">Sono {{ player.name }}, gioco</button>
+    <button class="button ghost big" name="response" value="declined" type="submit">Sono {{ player.name }}, paccaro</button>
+  </form>
+</section>
+{% endblock %}

@@ -1,22 +1,8 @@
 services:
   - type: web
-    name: incassi-web
-    runtime: python
-    plan: free
-    buildCommand: ""
-    startCommand: "python3 app.py"
-    envVars:
-      - key: SHARED_PASSWORD
-        sync: false
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_KEY
-        sync: false
-  - type: web
     name: fantacalcetto
     runtime: python
     plan: free
-    rootDir: fantacalcetto
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
     envVars:

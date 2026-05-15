@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="public-card login-card">
+  <p class="eyebrow">Area admin</p>
+  <div class="mini-mascot public" aria-hidden="true">
+    <span class="head"></span>
+    <span class="body"></span>
+    <span class="leg one"></span>
+    <span class="leg two"></span>
+    <span class="mini-ball"></span>
+  </div>
+  <h1>PIN del mister</h1>
+  <p class="lede">Qui si convocano giocatori, si generano squadre, si chiudono risultati e si prepara il messaggio WhatsApp. Area regia sponsorizzata Digislam Print Lab.</p>
+  {% if error %}
+    <div class="notice soft">{{ error }}</div>
+  {% endif %}
+  <form class="form login-form" method="post">
+    <label>PIN admin <input name="pin" type="password" inputmode="numeric" autocomplete="current-password" required autofocus></label>
+    <button class="button primary" type="submit">Entra in cabina di regia</button>
+  </form>
+</section>
+{% endblock %}

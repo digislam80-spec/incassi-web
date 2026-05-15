@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="match-header">
+  <div>
+    <p class="eyebrow">Cabina di regia</p>
+    <h1>{{ match.title }}</h1>
+    <p class="lede">{{ match.match_date.replace("T", " ") }} · {{ match.location }} · posti {{ match.player_limit }}. {{ motto }}</p>
+  </div>
+  <div class="match-side">
+    <div class="mini-mascot" aria-hidden="true">
+      <span class="head"></span>
+      <span class="body"></span>
+      <span class="leg one"></span>
+      <span class="leg two"></span>
+      <span class="mini-ball"></span>
+    </div>
+    <p>{{ match.status|status_label }}</p>
+  </div>
+  <form method="post" action="{{ url_for('generate_teams', match_id=match.id) }}">
+    <button class="button primary big" type="submit">Genera squadre</button>
+  </form>
+</section>
+
+{% if auto_generated %}
+  <div class="notice">Oggi si gioca: il mister automatico ha gia fatto le squadre.</div>
+{% elif match_day and match.status == "open" %}
+  <div class="notice soft">Oggi e giorno di partita. Appena ci sono almeno due confermati, le squadre partono da sole.</div>
+{% endif %}
+
+<section class="panel whatsapp-panel">
+  <div class="panel-head">
+    <h2>Messaggio gruppo WhatsApp</h2>
+    <button class="button" type="button" data-copy-target="#group-message" data-copy-label="Copia messaggio">Copia messaggio</button>
+  </div>
+  <textarea id="group-message" readonly rows="12">Convocazione ufficiale FantaCalcetto
+
+{{ match.title }}
+{{ match.match_date.replace("T", " ") }} - {{ match.location }}
+
+Confermate cliccando sul vostro nome:
+{% for p in players %}
+{{ p.name }}{% if p.nickname %} "{{ p.nickname }}"{% endif %}: {{ request.host_url.rstrip('/') }}{{ url_for('public_confirm', token=p.invite_token, match_id=match.id) }}
+{% endfor %}
+Regola non scritta: chi conferma e poi sparisce offre il pallone.
+
+Sponsored by Digislam Print Lab
+https://digislam.shop</textarea>
+  <p class="muted">Copialo nel gruppo. Ogni link e personale: quando Riccardo clicca il suo, l'app sa gia che e Riccardo. Sponsored by Digislam Print Lab - digislam.shop.</p>
+</section>
+
+<section class="grid two">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Convocati</h2>
+      <span class="pill">{{ players|length }}</span>
+    </div>
+    <form method="post" action="{{ url_for('update_responses', match_id=match.id) }}">
+      <div class="roster">
+      {% for p in players %}
+        <div class="roster-row">
+          <div>
+            <strong>{{ p.name }}</strong>
+            <small>{{ p.nickname }} · {{ p.role }} · <span class="stars">{{ p.power|stars }}</span></small>
+            <em>{{ p.power|player_title }}</em>
+            <small class="invite-link">{{ request.host_url.rstrip('/') }}{{ url_for('public_confirm', token=p.invite_token, match_id=match.id) }}</small>
+          </div>
+          <select name="response_{{ p.id }}">
+            <option value="invited" {% if p.response == "invited" %}selected{% endif %}>Invitato</option>
+            <option value="confirmed" {% if p.response == "confirmed" %}selected{% endif %}>Confermato</option>
+            <option value="present" {% if p.response == "present" %}selected{% endif %}>Presente</option>
+            <option value="declined" {% if p.response == "declined" %}selected{% endif %}>Non gioca</option>
+          </select>
+        </div>
+      {% endfor %}
+      </div>
+      <button class="button" type="submit">Salva presenze</button>
+    </form>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Invita Altri</h2>
+      <span class="pill">{{ all_players|length }} fuori lista</span>
+    </div>
+    <form method="post" action="{{ url_for('invite_to_match', match_id=match.id) }}">
+      <div class="check-list">
+      {% for p in all_players %}
+        <label><input type="checkbox" name="player_ids" value="{{ p.id }}"> {{ p.name }} <small>{{ p.power|stars }}</small></label>
+      {% else %}
+        <p class="muted">Tutti gli arruolabili sono gia stati convocati.</p>
+      {% endfor %}
+      </div>
+      <button class="button" type="submit">Aggiungi convocati</button>
+    </form>
+  </div>
+</section>
+
+<section class="teams">
+  {% for team_code, team_name in [("A", match.team_a_name), ("B", match.team_b_name)] %}
+  <div class="panel team">
+    <div class="panel-head">
+      <h2>{{ team_name }}</h2>
+      <span class="pill">
+        {{ players|selectattr("team", "equalto", team_code)|sum(attribute="power") }} stelle
+      </span>
+    </div>
+    {% for p in players if p.team == team_code %}
+      <div class="player-chip">
+        <span>
+          <strong>{{ p.name }}</strong>
+          <small>{{ p.role }}</small>
+          <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
+        </span>
+        <b><span>{{ p.power|stars }}</span><small>{{ p.power|player_title }}</small></b>
+      </div>
+    {% else %}
+      <p class="muted">Squadra non ancora generata.</p>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Risultato e Statistiche</h2>
+    <span class="pill">{{ match.status }}</span>
+  </div>
+  <form class="result-form" method="post" action="{{ url_for('save_result', match_id=match.id) }}">
+    <div class="scoreline">
+      <label>{{ match.team_a_name }} <input type="number" name="team_a_score" min="0" value="{{ match.team_a_score if match.team_a_score is not none else 0 }}"></label>
+      <span>-</span>
+      <label>{{ match.team_b_name }} <input type="number" name="team_b_score" min="0" value="{{ match.team_b_score if match.team_b_score is not none else 0 }}"></label>
+    </div>
+    <div class="stats-grid">
+      {% for p in players if p.team %}
+        <div class="stat-row">
+          <strong>{{ p.name }}</strong>
+          <label>Gol <input type="number" min="0" name="goals_{{ p.id }}" value="{{ p.match_goals }}"></label>
+          <label>Assist <input type="number" min="0" name="assists_{{ p.id }}" value="{{ p.match_assists }}"></label>
+        </div>
+      {% else %}
+        <p class="muted">Genera prima le squadre, poi potrai inserire gol e assist.</p>
+      {% endfor %}
+    </div>
+    <button class="button primary" type="submit">Chiudi partita e aggiorna score</button>
+  </form>
+</section>
+{% endblock %}

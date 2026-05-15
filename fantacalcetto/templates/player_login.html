@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="public-card login-card">
+  <p class="eyebrow">Login calciatore</p>
+  <h1>Spogliatoio personale.</h1>
+  <p class="lede">Da qui controlli convocazioni, conferme, disdette, statistiche e percorso di crescita. FantaCalcetto e powered by Digislam Print Lab.</p>
+  {% if error %}
+    <div class="notice soft">{{ error }}</div>
+  {% endif %}
+  <form class="form login-form" method="post">
+    <label>Username <input name="username" autocomplete="username" required autofocus></label>
+    <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+    <button class="button primary" type="submit">Entra</button>
+  </form>
+</section>
+{% endblock %}

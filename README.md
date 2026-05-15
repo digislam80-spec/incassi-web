@@ -2,6 +2,8 @@
 
 Versione semplice da usare su iPhone senza App Store, Apple Developer o CloudKit.
 
+Questo repository contiene anche `fantacalcetto/`, la beta privata di FantaCalcetto. Le due app restano separate: Incassi usa la tabella Supabase `incassi`, FantaCalcetto usa `players`, `matches` e `match_players`.
+
 L'accesso usa una password unica condivisa. In locale, se non imposti niente, la password predefinita e:
 
 ```text

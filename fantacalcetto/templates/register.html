@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="public-card">
+  <p class="eyebrow">Registrazione calciatore</p>
+  <h1>Entra nella lista arruolabili.</h1>
+  <p class="lede">Scegli account, numero WhatsApp e mascotte. L'admin ti approva e poi diventi convocabile. Powered by Digislam Print Lab.</p>
+  {% if error %}
+    <div class="notice soft">{{ error }}</div>
+  {% endif %}
+  <form class="form register-form" method="post">
+    <label>Nome <input name="name" required></label>
+    <label>Cognome <input name="surname"></label>
+    <label>Soprannome <input name="nickname" placeholder="Es. Trivela"></label>
+    <label>WhatsApp <input name="phone" placeholder="333..." required></label>
+    <label>Username <input name="username" autocomplete="username" required></label>
+    <label>Password <input name="password" type="password" autocomplete="new-password" required></label>
+    <label>Mascotte
+      <select name="mascot">
+        {% for key, mascot in mascots.items() %}
+          <option value="{{ key }}">{{ mascot.label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Nome personalizzato mascotte <input name="mascot_name" placeholder="Es. O' Fenomeno e Secondigliano"></label>
+    <div class="mascot-choice-grid">
+      {% for key, mascot in mascots.items() %}
+        <span class="mascot-badge compact mascot-{{ key }} {{ mascot.class }}"><b>{{ mascot.code }}</b><small>{{ mascot.label }}</small></span>
+      {% endfor %}
+    </div>
+    <button class="button primary" type="submit">Manda richiesta al mister</button>
+  </form>
+</section>
+{% endblock %}

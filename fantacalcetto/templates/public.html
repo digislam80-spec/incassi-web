@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">Bacheca pubblica</p>
+    <h1>Statistiche, potenze e gloria da calcetto.</h1>
+    <p class="lede">{{ motto }} Qui si guarda, si commenta e si rosica: niente gestione, niente telefoni, niente cabina di regia. Sponsored by Digislam Print Lab.</p>
+  </div>
+  {% if match %}
+  <div class="match-strip">
+    <span>Prossima partita</span>
+    <strong>{{ match.title }}</strong>
+    <small>{{ match.match_date.replace("T", " ") }} · {{ match.location }}</small>
+    <small>{{ confirmed_count }}/{{ match.player_limit }} confermati · {{ match.status|status_label }}</small>
+  </div>
+  {% endif %}
+</section>
+
+<section class="fun-strip">
+  <div class="pitch-doodle" aria-hidden="true">
+    <span class="stickman keeper"></span>
+    <span class="stickman left"></span>
+    <span class="stickman right"></span>
+    <span class="ball"></span>
+  </div>
+  <div>
+    <h2>Solo analisi</h2>
+    <p>I non-admin vedono classifica, potenza, score, stats e squadre quando sono pronte. Per diventare arruolabile usa la registrazione calciatore, poi l'admin approva. Stampa, gadget e follie grafiche su <a href="https://digislam.shop" target="_blank" rel="noopener">digislam.shop</a>.</p>
+    <a class="button primary" href="{{ url_for('register_player') }}">Registrati come calciatore</a>
+  </div>
+</section>
+
+{% if match and match.status in ["teams", "teams_auto", "closed"] %}
+<section class="teams">
+  {% for team_code, team_name in [("A", match.team_a_name), ("B", match.team_b_name)] %}
+  <div class="panel team">
+    <div class="panel-head">
+      <h2>{{ team_name }}</h2>
+      <span class="pill">{{ match_players|selectattr("team", "equalto", team_code)|sum(attribute="power") }} stelle</span>
+    </div>
+    {% for p in match_players if p.team == team_code %}
+      <div class="player-chip">
+        <span>
+          <strong>{{ p.name }}</strong>
+          <small>{{ p.nickname or p.role }} · {{ p.role }}</small>
+          <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
+        </span>
+        <b><span>{{ p.power|stars }}</span><small>{{ p.power|player_title }}</small></b>
+      </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Classifica Potenza</h2>
+    <span class="pill">{{ players|length }} giocatori</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Giocatore</th><th>Mascotte</th><th>Ruolo</th><th>Potenza</th><th>Score</th><th>Stats</th><th>Affid.</th></tr>
+      </thead>
+      <tbody>
+      {% for p in players %}
+        <tr>
+          <td><strong>{{ p.name }}</strong><small>{{ p.nickname or "senza soprannome" }}</small><em>{{ p.power|player_title }}</em></td>
+          <td><span class="mascot-badge mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span></td>
+          <td>{{ p.role }}</td>
+          <td class="stars">{{ p.power|stars }}</td>
+          <td>{{ p.score }}</td>
+          <td>{{ p.matches }} pres. · {{ p.goals }} gol · {{ p.assists }} assist</td>
+          <td>{{ p.reliability }}%</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Ultime Partite</h2>
+  </div>
+  <div class="cards">
+    {% for m in matches %}
+      <div class="mini-card">
+        <strong>{{ m.title }}</strong>
+        <span>{{ m.match_date.replace("T", " ") }}</span>
+        <small>{{ m.location }} · {{ m.status|status_label }}</small>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

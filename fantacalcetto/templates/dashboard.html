@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">Versione MVP</p>
+    <h1>Convoca, bilancia, gioca, aggiorna la leggenda.</h1>
+    <p class="lede">{{ motto }} Nel giorno della partita il mister automatico prepara le squadre appena trova i confermati. Powered by Digislam Print Lab.</p>
+  </div>
+  {% if match %}
+  <div class="match-strip">
+    <span>Prossima partita</span>
+    <strong>{{ match.title }}</strong>
+    <small>{{ match.match_date.replace("T", " ") }} · {{ match.location }}</small>
+    <small>{{ match.status|status_label }}</small>
+    <a class="button primary" href="{{ url_for('match_detail', match_id=match.id) }}">Apri cabina di regia</a>
+  </div>
+  {% endif %}
+</section>
+
+<section class="fun-strip">
+  <div class="pitch-doodle" aria-hidden="true">
+    <span class="stickman keeper"></span>
+    <span class="stickman left"></span>
+    <span class="stickman right"></span>
+    <span class="ball"></span>
+  </div>
+  <div>
+    <h2>Mister Automatico attivo</h2>
+    <p>Link registrazione calciatori: <strong>{{ request.host_url.rstrip('/') }}{{ url_for('register_player') }}</strong>. Il giorno della partita, se ci sono confermati o presenti, l'app fa le squadre da sola. Sponsor ufficiale: <a href="https://digislam.shop" target="_blank" rel="noopener">Digislam Print Lab</a>.</p>
+  </div>
+</section>
+
+{% if pending_players %}
+<section class="panel">
+  <div class="panel-head">
+    <h2>Richieste Registrazione</h2>
+    <span class="pill">{{ pending_players|length }} in attesa</span>
+  </div>
+  <div class="cards">
+    {% for p in pending_players %}
+      <div class="mini-card pending-card">
+        <strong>{{ p.name }}</strong>
+        <span>{{ p.nickname or "senza soprannome" }} · {{ p.phone }}</span>
+        <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
+        <form class="inline-actions" method="post" action="{{ url_for('approve_player', player_id=p.id) }}">
+          <button class="button primary" type="submit">Approva</button>
+        </form>
+        <form class="inline-actions" method="post" action="{{ url_for('reject_player', player_id=p.id) }}">
+          <button class="button ghost" type="submit">Respingi</button>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="grid two">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Crea Partita</h2>
+      <span class="pill">Admin</span>
+    </div>
+    <form class="form" method="post" action="{{ url_for('create_match') }}">
+      <label>Titolo <input name="title" value="Calcetto del Venerdi" required></label>
+      <label>Data e ora <input type="datetime-local" name="match_date" required></label>
+      <label>Campo <input name="location" value="Centro Sportivo" required></label>
+      <label>Posti <input type="number" name="player_limit" min="2" max="30" step="2" value="10"></label>
+      <button class="button primary" type="submit">Crea e invita tutti</button>
+    </form>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Nuovo Giocatore</h2>
+      <span class="pill">Arruolabile</span>
+    </div>
+    <form class="form" method="post" action="{{ url_for('add_player') }}">
+      <label>Nome <input name="name" placeholder="Nome" required></label>
+      <label>Soprannome <input name="nickname" placeholder="Es. Bomberino"></label>
+      <label>Telefono <input name="phone" placeholder="333..." required></label>
+      <label>Ruolo
+        <select name="role">
+          <option>Jolly</option><option>Portiere</option><option>Difensore</option><option>Centrocampista</option><option>Attaccante</option>
+        </select>
+      </label>
+      <label>Potenza
+        <select name="power">
+          <option value="1">1 stella</option><option value="2">2 stelle</option><option value="3" selected>3 stelle</option><option value="4">4 stelle</option><option value="5">5 stelle</option>
+        </select>
+      </label>
+      <label>Mascotte
+        <select name="mascot">
+          {% for key, mascot in mascots.items() %}
+            <option value="{{ key }}">{{ mascot.label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button class="button" type="submit">Aggiungi</button>
+    </form>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Rosa Arruolabili</h2>
+    <span class="pill">{{ players|length }} giocatori</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Giocatore</th><th>Mascotte</th><th>Ruolo</th><th>Potenza</th><th>Score</th><th>Stats</th><th>Affid.</th></tr>
+      </thead>
+      <tbody>
+      {% for p in players %}
+        <tr>
+          <td><strong>{{ p.name }}</strong><small>{{ p.nickname or "senza soprannome" }} · {{ p.phone }}</small><em>{{ p.power|player_title }}</em></td>
+          <td>
+            <form class="mascot-form" method="post" action="{{ url_for('update_player_mascot', player_id=p.id) }}">
+              <span class="mascot-badge mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
+              <select name="mascot" onchange="this.form.submit()">
+                {% for key, mascot in mascots.items() %}
+                  <option value="{{ key }}" {% if p.mascot == key %}selected{% endif %}>{{ mascot.label }}</option>
+                {% endfor %}
+              </select>
+            </form>
+            <form class="mascot-form" method="post" action="{{ url_for('update_player_mascot_name', player_id=p.id) }}">
+              <input name="mascot_name" value="{{ p.mascot_name or '' }}" placeholder="Nome mascotte personalizzato">
+              <button class="button" type="submit">Salva nome</button>
+            </form>
+          </td>
+          <td>{{ p.role }}</td>
+          <td>
+            <form class="mini-select-form" method="post" action="{{ url_for('update_player_power', player_id=p.id) }}">
+              <span class="stars">{{ p.power|stars }}</span>
+              <select name="power" onchange="this.form.submit()">
+                {% for value in [1, 2, 3, 4, 5] %}
+                  <option value="{{ value }}" {% if p.power == value %}selected{% endif %}>{{ value }} stelle</option>
+                {% endfor %}
+              </select>
+            </form>
+          </td>
+          <td>{{ p.score }}</td>
+          <td>{{ p.matches }} pres. · {{ p.goals }} gol · {{ p.assists }} assist</td>
+          <td>{{ p.reliability }}%</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Storico Partite</h2>
+  </div>
+  <div class="cards">
+    {% for m in matches %}
+      <a class="mini-card" href="{{ url_for('match_detail', match_id=m.id) }}">
+        <strong>{{ m.title }}</strong>
+        <span>{{ m.match_date.replace("T", " ") }}</span>
+        <small>{{ m.location }} · {{ m.status|status_label }}</small>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

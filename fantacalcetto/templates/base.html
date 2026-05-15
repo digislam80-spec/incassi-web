@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FantaCalcetto</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('dashboard') }}">
+      <span class="brand-mark image-mark"><img src="{{ url_for('static', filename='favicon.png') }}" alt="FantaCalcetto"></span>
+      <span>
+        <strong>FantaCalcetto</strong>
+        <small>La lega del Venerdi</small>
+      </span>
+    </a>
+    <nav>
+      <a href="{{ url_for('dashboard') }}">Analisi</a>
+      {% if current_player %}
+        <a href="{{ url_for('player_dashboard') }}">Il mio profilo</a>
+      {% else %}
+        <a href="{{ url_for('register_player') }}">Registrati</a>
+        <a href="{{ url_for('player_login') }}">Login calciatore</a>
+      {% endif %}
+      {% if is_admin %}
+        <a href="{{ url_for('admin_dashboard') }}">Admin</a>
+      {% else %}
+        <a href="{{ url_for('admin_login') }}">Login admin</a>
+      {% endif %}
+      {% if is_admin and match is defined and match %}
+        <a href="{{ url_for('match_detail', match_id=match.id) }}">Partita</a>
+      {% endif %}
+      {% if is_admin %}
+        <form class="nav-form" method="post" action="{{ url_for('admin_logout') }}">
+          <button type="submit">Esci</button>
+        </form>
+      {% endif %}
+      {% if current_player %}
+        <form class="nav-form" method="post" action="{{ url_for('player_logout') }}">
+          <button type="submit">Esci calciatore</button>
+        </form>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="page">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">
+    <strong>FantaCalcetto</strong>
+    <span>App sponsored by <a href="https://digislam.shop" target="_blank" rel="noopener">Digislam Print Lab</a></span>
+    <span>App creata da Riccardo Muollo. Tutti i diritti sono riservati.</span>
+  </footer>
+  <script>
+    document.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-copy-target]");
+      if (!button) return;
+      const target = document.querySelector(button.dataset.copyTarget);
+      if (!target) return;
+      target.select();
+      target.setSelectionRange(0, target.value.length);
+      try {
+        await navigator.clipboard.writeText(target.value);
+        button.textContent = "Copiato";
+        setTimeout(() => { button.textContent = button.dataset.copyLabel || "Copia"; }, 1400);
+      } catch (_error) {
+        document.execCommand("copy");
+        button.textContent = "Copiato";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="public-card">
+  <p class="eyebrow">Richiesta inviata</p>
+  <h1>Sei in sala VAR.</h1>
+  <p class="lede">L'admin deve approvarti. Quando sei approvato potrai entrare con username e password, vedere convocazioni, confermare, disdire e controllare statistiche.</p>
+  <a class="button primary big" href="{{ url_for('player_login') }}">Vai al login calciatore</a>
+</section>
+{% endblock %}
