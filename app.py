@@ -1,6 +1,8 @@
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import urlparse
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 import json
 import os
 import uuid
@@ -10,9 +12,69 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("DATA_DIR", BASE_DIR))
 DATA_FILE = DATA_DIR / "incassi.json"
 SHARED_PASSWORD = os.environ.get("SHARED_PASSWORD", "incassi2026")
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
+FIELDS = ["os", "contanti", "bonifici", "paypal", "altri"]
+
+
+class StorageError(Exception):
+    pass
+
+
+def use_supabase():
+    return bool(SUPABASE_URL and SUPABASE_SERVICE_KEY)
+
+
+def supabase_request(path, method="GET", payload=None, prefer=None):
+    body = None
+    headers = {
+        "apikey": SUPABASE_SERVICE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    if prefer:
+        headers["Prefer"] = prefer
+
+    if payload is not None:
+        body = json.dumps(payload).encode("utf-8")
+
+    request = Request(f"{SUPABASE_URL}/rest/v1/{path}", data=body, headers=headers, method=method)
+
+    try:
+        with urlopen(request, timeout=15) as response:
+            raw = response.read().decode("utf-8")
+            return json.loads(raw) if raw else None
+    except HTTPError as error:
+        detail = error.read().decode("utf-8")
+        raise StorageError(f"Supabase HTTP {error.code}: {detail}") from error
+    except URLError as error:
+        raise StorageError(f"Supabase non raggiungibile: {error.reason}") from error
+
+
+def load_supabase_entries():
+    rows = supabase_request("incassi?select=*&order=data.desc")
+    return [normalize_loaded_entry(row) for row in rows or []]
+
+
+def save_supabase_entry(entry):
+    rows = supabase_request(
+        "incassi?on_conflict=data",
+        method="POST",
+        payload=entry,
+        prefer="resolution=merge-duplicates,return=representation",
+    )
+    return normalize_loaded_entry(rows[0]) if rows else entry
+
+
+def delete_supabase_entry(entry_id):
+    supabase_request(f"incassi?id=eq.{entry_id}", method="DELETE")
 
 
 def load_entries():
+    if use_supabase():
+        return load_supabase_entries()
+
     if not DATA_FILE.exists():
         return []
     try:
@@ -29,21 +91,51 @@ def save_entries(entries):
     )
 
 
+def save_entry(entry):
+    if use_supabase():
+        return save_supabase_entry(entry)
+
+    entries = [item for item in load_entries() if item.get("id") != entry["id"]]
+
+    same_date = next((item for item in entries if item.get("data") == entry["data"]), None)
+    if same_date:
+        entry["id"] = same_date["id"]
+        entries = [item for item in entries if item.get("id") != entry["id"]]
+
+    entries.append(entry)
+    save_entries(entries)
+    return entry
+
+
+def delete_entry(entry_id):
+    if use_supabase():
+        delete_supabase_entry(entry_id)
+        return
+
+    entries = [item for item in load_entries() if item.get("id") != entry_id]
+    save_entries(entries)
+
+
 def normalize_entry(payload):
-    fields = ["os", "contanti", "bonifici", "paypal", "altri"]
     entry = {
         "id": payload.get("id") or str(uuid.uuid4()),
         "data": str(payload.get("data", ""))[:10],
         "note": str(payload.get("note", "")).strip(),
     }
 
-    for field in fields:
+    for field in FIELDS:
         try:
             entry[field] = round(float(payload.get(field) or 0), 2)
         except (TypeError, ValueError):
             entry[field] = 0
 
-    entry["totale"] = round(sum(entry[field] for field in fields), 2)
+    entry["totale"] = round(sum(entry[field] for field in FIELDS), 2)
+    return entry
+
+
+def normalize_loaded_entry(row):
+    entry = normalize_entry(row)
+    entry["id"] = row.get("id") or entry["id"]
     return entry
 
 
@@ -60,8 +152,11 @@ class IncassiHandler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/incassi":
             if not self.require_auth():
                 return
-            entries = sorted(load_entries(), key=lambda item: item.get("data", ""), reverse=True)
-            self.send_json(entries)
+            try:
+                entries = sorted(load_entries(), key=lambda item: item.get("data", ""), reverse=True)
+                self.send_json(entries)
+            except StorageError as error:
+                self.send_json({"message": str(error)}, status=502)
             return
 
         if parsed.path == "/":
@@ -91,17 +186,11 @@ class IncassiHandler(SimpleHTTPRequestHandler):
             self.send_error(400, "La data è obbligatoria")
             return
 
-        entry = normalize_entry(payload)
-        entries = [item for item in load_entries() if item.get("id") != entry["id"]]
-
-        same_date = next((item for item in entries if item.get("data") == entry["data"]), None)
-        if same_date and not payload.get("id"):
-            entry["id"] = same_date["id"]
-            entries = [item for item in entries if item.get("id") != entry["id"]]
-
-        entries.append(entry)
-        save_entries(entries)
-        self.send_json(entry, status=201)
+        try:
+            entry = save_entry(normalize_entry(payload))
+            self.send_json(entry, status=201)
+        except StorageError as error:
+            self.send_json({"message": str(error)}, status=502)
 
     def do_DELETE(self):
         parsed = urlparse(self.path)
@@ -113,10 +202,12 @@ class IncassiHandler(SimpleHTTPRequestHandler):
         if not self.require_auth():
             return
 
-        entry_id = parsed.path[len(prefix):]
-        entries = [item for item in load_entries() if item.get("id") != entry_id]
-        save_entries(entries)
-        self.send_json({"ok": True})
+        try:
+            entry_id = parsed.path[len(prefix):]
+            delete_entry(entry_id)
+            self.send_json({"ok": True})
+        except StorageError as error:
+            self.send_json({"message": str(error)}, status=502)
 
     def read_json(self):
         length = int(self.headers.get("Content-Length", "0"))

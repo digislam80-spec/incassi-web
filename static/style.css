@@ -74,6 +74,16 @@ textarea {
   font-weight: 700;
 }
 
+.app-error {
+  margin: 0 0 12px;
+  min-height: 0;
+}
+
+.app-error:empty,
+.app-error[hidden] {
+  display: none;
+}
+
 .topbar {
   display: flex;
   align-items: center;

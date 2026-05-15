@@ -15,6 +15,7 @@ const entriesEl = document.querySelector("#entries");
 const template = document.querySelector("#entryTemplate");
 const grandTotalEl = document.querySelector("#grandTotal");
 const todayTotalEl = document.querySelector("#todayTotal");
+const appError = document.querySelector("#appError");
 
 let entries = [];
 let password = localStorage.getItem("incassiPassword") || "";
@@ -55,6 +56,11 @@ function showLogin(message = "") {
 function hideLogin() {
   loginView.hidden = true;
   loginError.textContent = "";
+}
+
+function showAppError(message = "") {
+  appError.textContent = message;
+  appError.hidden = !message;
 }
 
 async function login(event) {
@@ -107,7 +113,14 @@ async function loadEntries() {
     return;
   }
 
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    showAppError(error.message || "Errore nel caricamento degli incassi.");
+    return;
+  }
+
   entries = await response.json();
+  showAppError();
   hideLogin();
   render();
 }
@@ -125,21 +138,34 @@ async function saveEntry(event) {
     payload[field] = numberValue(field);
   });
 
-  await fetch("/api/incassi", {
+  const response = await fetch("/api/incassi", {
     method: "POST",
     headers: authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(payload),
   });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    showAppError(error.message || "Errore nel salvataggio.");
+    return;
+  }
 
   resetForm();
   await loadEntries();
 }
 
 async function deleteEntry(id) {
-  await fetch(`/api/incassi/${id}`, {
+  const response = await fetch(`/api/incassi/${id}`, {
     method: "DELETE",
     headers: authHeaders(),
   });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    showAppError(error.message || "Errore nell'eliminazione.");
+    return;
+  }
+
   await loadEntries();
 }
 
