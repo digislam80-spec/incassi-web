@@ -110,8 +110,8 @@ nav a, .fun-strip a, .site-footer a { color: var(--green); }
   border-radius: 8px;
   color: white;
   background:
-    linear-gradient(115deg, rgba(13, 54, 42, .94), rgba(12, 50, 42, .75)),
-    url("https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=1600&q=80") center/cover;
+    linear-gradient(115deg, rgba(8, 31, 24, .94) 0%, rgba(8, 31, 24, .78) 40%, rgba(8, 31, 24, .30) 100%),
+    url("/static/generated/hero-cartoon.jpg") center/cover;
   box-shadow: var(--shadow);
 }
 .match-header {
@@ -180,10 +180,11 @@ h2 { margin: 0; font-size: 21px; }
   z-index: 1;
   width: 74px;
   height: 74px;
-  object-fit: cover;
-  border-radius: 18px;
-  border: 3px solid #fff7c8;
-  box-shadow: 0 12px 24px rgba(0,0,0,.22);
+  object-fit: contain;
+  border-radius: 0;
+  border: 0;
+  filter: drop-shadow(0 14px 12px rgba(0,0,0,.24));
+  box-shadow: none;
 }
 .mascot-scene img:first-child { transform: rotate(-8deg) translate(14px, -2px); }
 .mascot-scene img:nth-child(2) {
@@ -585,9 +586,11 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
   display: block;
   width: 52px;
   height: 58px;
+  background: transparent center/contain no-repeat;
   color: transparent;
   font-size: 0;
   letter-spacing: 0;
+  filter: drop-shadow(0 6px 5px rgba(25,33,31,.16));
   transform: rotate(var(--tilt));
 }
 .mascot-badge b::before {
@@ -683,6 +686,32 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
 .mascot-badge.compact b::before { left: 5px; width: 24px; height: 24px; border-width: 1px; }
 .mascot-badge.compact b::after { left: 8px; top: 23px; width: 18px; height: 14px; border-radius: 5px; }
 .mascot-badge.compact small { font-size: 11px; }
+.mascot-badge b::before,
+.mascot-badge b::after,
+.mascot-badge.compact b::before,
+.mascot-badge.compact b::after {
+  display: none;
+}
+.mascot-badge.mascot-fantasista b { background-image: url("/static/mascots/fantasista.png"); }
+.mascot-badge.mascot-saracinesca b { background-image: url("/static/mascots/saracinesca.png"); }
+.mascot-badge.mascot-panzer b { background-image: url("/static/mascots/panzer.png"); }
+.mascot-badge.mascot-diesel b { background-image: url("/static/mascots/diesel.png"); }
+.mascot-badge.mascot-tackle b { background-image: url("/static/mascots/tackle.png"); }
+.mascot-badge.mascot-trivela b { background-image: url("/static/mascots/trivela.png"); }
+.mascot-badge.mascot-tap_in b { background-image: url("/static/mascots/tap_in.png"); }
+.mascot-badge.mascot-jolly b { background-image: url("/static/mascots/jolly.png"); }
+.mascot-badge.mascot-regista b { background-image: url("/static/mascots/regista.png"); }
+.mascot-badge.mascot-bomber b { background-image: url("/static/mascots/bomber.png"); }
+.mascot-badge.mascot-muraglia b { background-image: url("/static/mascots/muraglia.png"); }
+.mascot-badge.mascot-scatto b { background-image: url("/static/mascots/scatto.png"); }
+.mascot-badge.mascot-rabona b { background-image: url("/static/mascots/rabona.png"); }
+.mascot-badge.mascot-pressing b { background-image: url("/static/mascots/pressing.png"); }
+.mascot-badge.mascot-caviglia b { background-image: url("/static/mascots/caviglia.png"); }
+.mascot-badge.mascot-professore b { background-image: url("/static/mascots/professore.png"); }
+.mascot-badge.mascot-meteorite b { background-image: url("/static/mascots/meteorite.png"); }
+.mascot-badge.mascot-sciarpa b { background-image: url("/static/mascots/sciarpa.png"); }
+.mascot-badge.mascot-rigorista b { background-image: url("/static/mascots/rigorista.png"); }
+.mascot-badge.mascot-varista b { background-image: url("/static/mascots/varista.png"); }
 .mascot-form {
   display: grid;
   gap: 8px;
