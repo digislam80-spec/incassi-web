@@ -76,11 +76,17 @@
           <a class="button ghost" href="{{ url_for('player_match_calendar', match_id=m.id) }}">Aggiungi al calendario</a>
         {% endif %}
         {% if player.account_status == "approved" and m.status not in ["cancelled", "closed"] %}
-          <form class="inline-actions" method="post" action="{{ url_for('player_confirm', match_id=m.id) }}">
-            <button class="button primary" type="submit">Confermo</button>
-          </form>
+          {% if m.response in ["confirmed", "present"] %}
+            <button class="button primary confirmed-button" type="button" disabled>Confermato</button>
+          {% elif m.response == "waitlist" %}
+            <button class="button waitlist-button" type="button" disabled>In lista d'attesa</button>
+          {% else %}
+            <form class="inline-actions" method="post" action="{{ url_for('player_confirm', match_id=m.id) }}">
+              <button class="button primary" type="submit">{% if m.response == "declined" %}Riconfermo{% else %}Confermo{% endif %}</button>
+            </form>
+          {% endif %}
           <form class="inline-actions" method="post" action="{{ url_for('player_cancel', match_id=m.id) }}">
-            <button class="button ghost" type="submit">Disdico</button>
+            <button class="button ghost" type="submit" {% if m.response == "declined" %}disabled{% endif %}>{% if m.response == "declined" %}Disdetto{% else %}Disdico{% endif %}</button>
           </form>
         {% endif %}
       </div>
