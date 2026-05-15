@@ -45,6 +45,16 @@ DATA_TABLES = [
 
 APP_UPDATES = [
     {
+        "title": "Profilo calciatore modificabile",
+        "body": "Ora ogni calciatore può ritoccare nome, soprannome, WhatsApp, piede e mascotte anche dopo la registrazione.",
+        "tag": "Profilo",
+    },
+    {
+        "title": "Overall in stile figurina",
+        "body": "La carta calciatore mette più in vista rating, stelle, ruolo e mascotte: finalmente il talento sembra quasi ufficiale.",
+        "tag": "Grafica",
+    },
+    {
         "title": "Bacheca spogliatoio attiva",
         "body": "Da oggi FantaCalcetto racconta registrazioni, conferme, disdette e novità dell'app in una cronaca unica.",
         "tag": "Novità app",
@@ -1619,6 +1629,7 @@ def player_dashboard():
         news_comments=comments_for_events(news_items),
         match_comments=comments_for_matches(my_matches),
         app_updates=APP_UPDATES[:3],
+        mascots=MASCOTS,
     )
 
 
@@ -1775,20 +1786,38 @@ def add_event_comment(event_id):
 @require_player
 def player_update_profile():
     player = current_player()
+    name = request.form.get("name", "").strip() or player["name"]
+    nickname = request.form.get("nickname", "").strip()
+    phone = request.form.get("phone", "").strip() or player["phone"]
+    mascot = request.form.get("mascot", player["mascot"] or "jolly")
     preferred_foot = request.form.get("preferred_foot", "right")
+    if mascot not in MASCOTS:
+        mascot = player["mascot"] or "jolly"
     if preferred_foot not in FOOT_LABELS:
         preferred_foot = "right"
     execute(
-        "update players set mascot_name = ?, preferred_foot = ? where id = ?",
-        (request.form.get("mascot_name", "").strip(), preferred_foot, player["id"]),
+        """
+        update players
+        set name = ?, nickname = ?, phone = ?, mascot = ?, mascot_name = ?, preferred_foot = ?
+        where id = ?
+        """,
+        (
+            name,
+            nickname,
+            phone,
+            mascot,
+            request.form.get("mascot_name", "").strip(),
+            preferred_foot,
+            player["id"],
+        ),
     )
     log_league_event(
         "Profilo aggiornato",
-        f"{player['name']} ha ritoccato mascotte o piede preferito. Lo scouting prende appunti.",
+        f"{name} ha ritoccato profilo, mascotte o piede preferito. Lo scouting prende appunti.",
         "profile",
         player["id"],
     )
-    return redirect(url_for("player_dashboard"))
+    return redirect(url_for("player_dashboard", notice="Profilo aggiornato. La figurina è stata rimessa in posa."))
 
 
 @app.route("/player/mascot-name", methods=["POST"])

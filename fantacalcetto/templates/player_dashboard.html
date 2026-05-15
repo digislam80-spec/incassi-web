@@ -8,10 +8,16 @@
   </div>
   <div class="match-strip">
     <span>La tua carta</span>
-    <span class="mascot-badge mascot-{{ player.mascot }} {{ player.mascot|mascot_class }}"><b>{{ player.mascot|mascot_code }}</b><small>{{ player|player_mascot_label }}</small></span>
-    <span class="overall-badge"><small>Overall</small><strong>{{ player|overall_rating }}</strong></span>
-    <small class="stars">{{ player.power|stars }}</small>
-    <small>Score {{ player.score }} · Affidabilità {{ player.reliability }}% · piede {{ player.preferred_foot|foot_label }}</small>
+    <div class="overall-badge fifa-card">
+      <div class="fifa-card-top">
+        <strong>{{ player|overall_rating }}</strong>
+        <span>{{ player.role[:3]|upper }}</span>
+      </div>
+      <img src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
+      <b>{{ player.nickname or player.name }}</b>
+      <small>{{ player.power|stars }} · {{ player.preferred_foot|foot_label }}</small>
+      <em>Score {{ player.score }} · Affidabilità {{ player.reliability }}%</em>
+    </div>
   </div>
 </section>
 
@@ -85,11 +91,20 @@
   </div>
   <div class="panel">
     <div class="panel-head">
-      <h2>Regole crescita</h2>
+      <h2>Modifica profilo</h2>
       <a class="button ghost" href="{{ url_for('rules') }}">Leggi regolamento</a>
     </div>
-    <p class="muted">Confermare vale +1 score e +2 affidabilità. In partita: vittoria +3, pareggio +1, gol +2, assist +1. Se fai almeno 5 punti in una partita prendi +0.5 stella. Disdire costa score e affidabilità: sotto 24h perdi anche 0.5 stella, sotto 3h perdi 1 stella.</p>
     <form class="form login-form" method="post" action="{{ url_for('player_update_profile') }}">
+      <label>Nome visualizzato <input name="name" value="{{ player.name }}" required></label>
+      <label>Soprannome <input name="nickname" value="{{ player.nickname or '' }}" placeholder="Es. Trivela"></label>
+      <label>WhatsApp <input name="phone" value="{{ player.phone or '' }}" placeholder="333..." required></label>
+      <label>Mascotte
+        <select name="mascot">
+          {% for key, mascot in mascots.items() %}
+            <option value="{{ key }}" {% if player.mascot == key %}selected{% endif %}>{{ mascot.label }}</option>
+          {% endfor %}
+        </select>
+      </label>
       <label>Nome mascotte <input name="mascot_name" value="{{ player.mascot_name or '' }}" placeholder="Es. O' Mast d'a fascia"></label>
       <label>Piede preferito
         <select name="preferred_foot">
@@ -98,9 +113,22 @@
           {% endfor %}
         </select>
       </label>
+      <div class="mascot-choice-grid">
+        {% for key, mascot in mascots.items() %}
+          <span class="mascot-badge compact mascot-{{ key }} {{ mascot.class }}"><b>{{ mascot.code }}</b><small>{{ mascot.label }}</small></span>
+        {% endfor %}
+      </div>
       <button class="button" type="submit">Salva profilo</button>
     </form>
   </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Regole crescita</h2>
+    <span class="pill">{{ player.power|player_title }}</span>
+  </div>
+  <p class="muted">Confermare vale +1 score e +2 affidabilità. In partita: vittoria +3, pareggio +1, gol +2, assist +1. Se fai almeno 5 punti in una partita prendi +0.5 stella. Disdire costa score e affidabilità: sotto 24h perdi anche 0.5 stella, sotto 3h perdi 1 stella.</p>
 </section>
 
 <section class="panel">
