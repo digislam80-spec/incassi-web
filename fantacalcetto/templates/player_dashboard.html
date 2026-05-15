@@ -5,6 +5,7 @@
     <p class="eyebrow">Profilo calciatore</p>
     <h1>{{ player.name }}</h1>
     <p class="lede">{{ player.nickname or "Soprannome ancora da spogliatoio" }} · {{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.account_status|account_status_label }}</p>
+    <button class="button profile-help-button" type="button" onclick="document.getElementById('player-help').showModal()">Cosa posso fare qui?</button>
   </div>
   <div class="match-strip">
     <span>La tua carta</span>
@@ -20,6 +21,32 @@
     </div>
   </div>
 </section>
+
+<dialog class="app-modal" id="player-help">
+  <form method="dialog">
+    <button class="modal-close" aria-label="Chiudi">×</button>
+  </form>
+  <p class="eyebrow">Guida rapida</p>
+  <h2>Il tuo spogliatoio digitale</h2>
+  <div class="help-grid">
+    <div>
+      <strong>Convocazioni</strong>
+      <p>Vedi le partite aperte, confermi la presenza, entri in lista d'attesa se i posti sono finiti e puoi disdire dall'account.</p>
+    </div>
+    <div>
+      <strong>Profilo e figurina</strong>
+      <p>Cambi nome, soprannome, WhatsApp, piede preferito, mascotte e nome della mascotte. L'overall cresce con score, affidabilità e statistiche.</p>
+    </div>
+    <div>
+      <strong>Cronache</strong>
+      <p>Leggi le notizie dello spogliatoio, commenti le news e puoi pubblicare una cronaca tua che vedono tutti i calciatori.</p>
+    </div>
+    <div>
+      <strong>Calendario e regole</strong>
+      <p>Apri l'evento, lo aggiungi al calendario del telefono e controlli regolamento, penalità e premi goliardici.</p>
+    </div>
+  </div>
+</dialog>
 
 <div class="notice soft">Disclaimer da spogliatoio: ogni calciatore è tenuto a controllare la propria scheda evento. Orario, campo, conferma ufficiale o annullamento valgono sempre qui dentro.</div>
 
@@ -37,6 +64,14 @@
       <h2>Cronache Spogliatoio</h2>
       <span class="pill">Lega live</span>
     </div>
+    <details class="chronicle-composer">
+      <summary>Scrivi una cronaca</summary>
+      <form class="form" method="post" action="{{ url_for('add_player_chronicle') }}">
+        <label>Titolo <input name="title" maxlength="90" placeholder="Es. Il mister ha perso il fischietto"></label>
+        <label>Testo <textarea name="body" maxlength="700" rows="4" placeholder="Racconta la perla, la scusa, la sentenza o il momento da tramandare." required></textarea></label>
+        <button class="button primary" type="submit">Pubblica in bacheca</button>
+      </form>
+    </details>
     <div class="news-list">
       {% for item in news_items %}
         <article class="news-item">

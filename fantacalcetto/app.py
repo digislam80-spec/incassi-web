@@ -45,6 +45,16 @@ DATA_TABLES = [
 
 APP_UPDATES = [
     {
+        "title": "Aiuto rapido nel profilo",
+        "body": "Nel profilo calciatore c'è un tasto che apre una spiegazione veloce di cosa si può fare con l'app.",
+        "tag": "Guida",
+    },
+    {
+        "title": "Cronache scritte dai calciatori",
+        "body": "Ogni calciatore può pubblicare una cronaca di spogliatoio: battute, comunicazioni e perle tattiche finiscono in bacheca.",
+        "tag": "Spogliatoio",
+    },
+    {
         "title": "Profilo calciatore modificabile",
         "body": "Ora ogni calciatore può ritoccare nome, soprannome, WhatsApp, piede e mascotte anche dopo la registrazione.",
         "tag": "Profilo",
@@ -1780,6 +1790,26 @@ def add_event_comment(event_id):
             (event_id, player["id"], body[:400]),
         )
     return redirect(url_for("player_dashboard", notice="Commento alla news pubblicato."))
+
+
+@app.route("/player/chronicles", methods=["POST"])
+@require_player
+def add_player_chronicle():
+    player = current_player()
+    title = request.form.get("title", "").strip()
+    body = request.form.get("body", "").strip()
+    if not body:
+        return redirect(url_for("player_dashboard", notice="Scrivi almeno due righe, pure storte, ma scrivile."))
+    if not title:
+        title = f"Cronaca di {player['name']}"
+    log_league_event(
+        title[:90],
+        body[:700],
+        "cronaca",
+        player["id"],
+        "all",
+    )
+    return redirect(url_for("player_dashboard", notice="Cronaca pubblicata. Lo spogliatoio è stato informato."))
 
 
 @app.route("/player/profile", methods=["POST"])
