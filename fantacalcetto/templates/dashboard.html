@@ -108,7 +108,7 @@
   <div class="table-wrap">
     <table>
       <thead>
-        <tr><th>Giocatore</th><th>Mascotte</th><th>Ruolo</th><th>Potenza</th><th>Score</th><th>Stats</th><th>Affid.</th></tr>
+        <tr><th>Giocatore</th><th>Mascotte</th><th>Ruolo</th><th>Potenza</th><th>Score</th><th>Stats</th><th>Affid.</th><th>Gestione</th></tr>
       </thead>
       <tbody>
       {% for p in players %}
@@ -142,6 +142,11 @@
           <td>{{ p.score }}</td>
           <td>{{ p.matches }} pres. · {{ p.goals }} gol · {{ p.assists }} assist</td>
           <td>{{ p.reliability }}%</td>
+          <td>
+            <form class="inline-actions" method="post" action="{{ url_for('remove_player', player_id=p.id) }}" onsubmit="return confirm('Rimuovere {{ p.name }} dalla rosa arruolabili? Lo storico resta salvato.');">
+              <button class="button danger" type="submit">Rimuovi</button>
+            </form>
+          </td>
         </tr>
       {% endfor %}
       </tbody>

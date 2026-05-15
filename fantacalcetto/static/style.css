@@ -348,6 +348,7 @@ input, select {
 }
 .button.primary { border-color: var(--green); background: var(--green); color: white; }
 .button.ghost { background: transparent; }
+.button.danger { border-color: #b23a32; background: #b23a32; color: white; }
 .button.big { min-height: 54px; padding: 14px 20px; font-size: 16px; }
 .form .button { grid-column: 1 / -1; }
 

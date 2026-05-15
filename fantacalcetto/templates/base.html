@@ -10,7 +10,7 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="{{ url_for('dashboard') }}">
+    <a class="brand" href="{{ url_for('dashboard') if current_player or is_admin else url_for('player_login') }}">
       <span class="brand-mark image-mark"><img src="{{ url_for('static', filename='favicon.png') }}" alt="FantaCalcetto"></span>
       <span>
         <strong>FantaCalcetto</strong>
@@ -18,7 +18,9 @@
       </span>
     </a>
     <nav>
-      <a href="{{ url_for('dashboard') }}">Analisi</a>
+      {% if current_player or is_admin %}
+        <a href="{{ url_for('dashboard') }}">Analisi</a>
+      {% endif %}
       {% if current_player %}
         <a href="{{ url_for('player_dashboard') }}">Il mio profilo</a>
       {% else %}

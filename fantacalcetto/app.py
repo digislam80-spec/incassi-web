@@ -138,7 +138,11 @@ def current_player():
     player_id = session.get("player_id")
     if not player_id:
         return None
-    return query("select * from players where id = ?", (player_id,), one=True)
+    player = query("select * from players where id = ?", (player_id,), one=True)
+    if player and player["account_status"] in ("rejected", "removed"):
+        session.pop("player_id", None)
+        return None
+    return player
 
 
 def is_player_logged_in():
@@ -439,6 +443,7 @@ def account_status_label(status):
         "pending": "In attesa approvazione",
         "approved": "Arruolabile",
         "rejected": "Respinto",
+        "removed": "Rimosso dalla rosa",
     }
     return labels.get(status, status)
 
@@ -636,6 +641,8 @@ def cancellation_penalty(match):
 
 @app.route("/")
 def dashboard():
+    if not is_admin() and not current_player():
+        return redirect(url_for("player_login", next=request.path))
     match = latest_match()
     maybe_auto_generate(match)
     match = latest_match()
@@ -744,6 +751,9 @@ def player_login():
         username = request.form["username"].strip().lower()
         player = query("select * from players where lower(username) = lower(?)", (username,), one=True)
         if player and player["password_hash"] and check_password_hash(player["password_hash"], request.form["password"]):
+            if player["account_status"] in ("rejected", "removed"):
+                error = "Account non attivo. Parla col mister prima di entrare nello spogliatoio."
+                return render_template("player_login.html", error=error, match=latest_match())
             session["player_id"] = player["id"]
             return redirect(request.args.get("next") or url_for("player_dashboard"))
         error = "Credenziali sbagliate. Riprova senza tunnel."
@@ -927,6 +937,27 @@ def approve_player(player_id):
 @require_admin
 def reject_player(player_id):
     execute("update players set account_status = 'rejected', active = 0 where id = ?", (player_id,))
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/players/<int:player_id>/remove", methods=["POST"])
+@require_admin
+def remove_player(player_id):
+    execute(
+        "update players set account_status = 'removed', active = 0 where id = ?",
+        (player_id,),
+    )
+    execute(
+        """
+        delete from match_players
+        where player_id = ? and match_id in (
+            select id from matches where status != 'closed'
+        )
+        """,
+        (player_id,),
+    )
+    if session.get("player_id") == player_id:
+        session.pop("player_id", None)
     return redirect(url_for("admin_dashboard"))
 
 
