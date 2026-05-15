@@ -20,6 +20,7 @@
     <nav>
       {% if current_player %}
         <a href="{{ url_for('player_dashboard') }}">Il mio profilo</a>
+        <a href="{{ url_for('player_guide') }}">Guida</a>
         <a href="{{ url_for('league_overview') }}">Analisi lega</a>
         <a href="{{ url_for('rules') }}">Regolamento</a>
       {% else %}

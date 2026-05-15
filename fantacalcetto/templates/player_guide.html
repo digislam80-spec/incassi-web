@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="public-card guide-card">
+  <p class="eyebrow">Manuale dello spogliatoio</p>
+  <img class="brand-illustration compact" src="{{ url_for('static', filename='favicon.png') }}" alt="FantaCalcetto Digislam">
+  <h1>Come sopravvivere a FantaCalcetto.</h1>
+  <p class="lede">Qui non si viene solo a cliccare bottoni: si entra in una lega dove confermare è sacro, disdire costa, e ogni gol diventa materiale per sfottò.</p>
+  <div class="guide-list">
+    <article>
+      <strong>1. Profilo calciatore</strong>
+      <p>Vedi overall, stelle, score, affidabilità, piede preferito, mascotte e statistiche. Se cambi nome mascotte o piede, lo spogliatoio lo scopre: la bacheca non perdona.</p>
+    </article>
+    <article>
+      <strong>2. Convocazioni</strong>
+      <p>Quando c'è una partita, trovi il bottone neutro <b>Da confermare</b>. Dopo il click diventa verde: <b>Confermato</b>. Se arrivi tardi, entri in lista d'attesa.</p>
+    </article>
+    <article>
+      <strong>3. Disdette</strong>
+      <p>Puoi disdire dall'account, ma più lo fai vicino alla partita più perdi score, affidabilità e magari mezza stella. Il gruppo WhatsApp può ridere, l'app invece conta.</p>
+    </article>
+    <article>
+      <strong>4. Calendario</strong>
+      <p>Ogni evento si può aggiungere al calendario del telefono. Il calciatore serio controlla sempre la scheda evento: campo, orario e stato vivono qui.</p>
+    </article>
+    <article>
+      <strong>5. Commenti</strong>
+      <p>Puoi commentare news e partite. Usa poteri goliardici con responsabilità: si sfotte forte, ma non si rovina lo spogliatoio.</p>
+    </article>
+    <article>
+      <strong>6. Crescita</strong>
+      <p>Confermare dà score e affidabilità. In campo contano gol, assist, vittorie e pagelle. Il mister assegna le stelle base, poi il campo presenta il conto.</p>
+    </article>
+  </div>
+  <a class="button primary" href="{{ url_for('player_dashboard') if current_player else url_for('admin_dashboard') }}">Torna allo spogliatoio</a>
+</section>
+{% endblock %}

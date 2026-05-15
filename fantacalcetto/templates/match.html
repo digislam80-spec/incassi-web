@@ -26,6 +26,20 @@
   <div><strong>{{ summary_counts.invited }}</strong><small>in attesa</small></div>
 </section>
 
+<section class="panel">
+  <div class="panel-head">
+    <h2>Commenti Partita</h2>
+    <span class="pill">{{ match_comments|length }}</span>
+  </div>
+  <div class="comment-list">
+    {% for comment in match_comments %}
+      <small><b>{{ comment.player_name or "Spogliatoio" }}</b>: {{ comment.body }} · {{ comment.created_at }}</small>
+    {% else %}
+      <p class="muted">Ancora nessun commento. Strano, di solito qualcuno ha sempre da ridire.</p>
+    {% endfor %}
+  </div>
+</section>
+
 <section class="grid two">
   <div class="panel">
     <div class="panel-head">

@@ -42,6 +42,11 @@
           <strong>{{ item.title }}</strong>
           <p>{{ item.body }}</p>
           <small>{{ item.created_at }}{% if item.actor_name %} · {{ item.actor_name }}{% endif %}</small>
+          <div class="comment-list">
+            {% for comment in news_comments.get(item.id, []) %}
+              <small><b>{{ comment.player_name or "Spogliatoio" }}</b>: {{ comment.body }}</small>
+            {% endfor %}
+          </div>
         </article>
       {% else %}
         <p class="muted">Ancora nessuna cronaca: lo spogliatoio è pulito, evento raro.</p>
@@ -84,10 +89,9 @@
   <p class="muted">Usa il backup prima di ogni pulizia. L'admin resta via PIN, quindi puoi ripartire con iscrizioni vere senza utenti demo.</p>
 </section>
 
-{% if pending_players %}
 <section class="panel">
   <div class="panel-head">
-    <h2>Richieste Registrazione</h2>
+    <h2>Da Approvare</h2>
     <span class="pill">{{ pending_players|length }} in attesa</span>
   </div>
   <div class="cards">
@@ -103,10 +107,14 @@
           <button class="button ghost" type="submit">Respingi</button>
         </form>
       </div>
+    {% else %}
+      <div class="mini-card">
+        <strong>Nessuno in attesa</strong>
+        <span>Quando qualcuno si registra, appare qui bello evidente.</span>
+      </div>
     {% endfor %}
   </div>
 </section>
-{% endif %}
 
 {% if reset_requests %}
 <section class="panel">
@@ -204,8 +212,8 @@
 
 <section class="panel">
   <div class="panel-head">
-    <h2>Rosa Arruolabili</h2>
-    <span class="pill">{{ players|length }} giocatori</span>
+    <h2>Approvati e Arruolabili</h2>
+    <span class="pill">{{ players|length }} approvati</span>
   </div>
   <div class="admin-player-list">
     {% for p in players %}
@@ -268,9 +276,31 @@
           </form>
         </div>
       </details>
+    {% else %}
+      <div class="mini-card">
+        <strong>Nessun approvato</strong>
+        <span>La rosa è vuota: manda il link registrazione e poi approva i superstiti.</span>
+      </div>
     {% endfor %}
   </div>
 </section>
+
+{% if rejected_players %}
+<section class="panel">
+  <div class="panel-head">
+    <h2>Non Attivi</h2>
+    <span class="pill">{{ rejected_players|length }}</span>
+  </div>
+  <div class="cards">
+    {% for p in rejected_players %}
+      <div class="mini-card">
+        <strong>{{ p.name }}</strong>
+        <span>{{ p.account_status|account_status_label }} · {{ p.username or "senza username" }}</span>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 
 <section class="panel">
   <div class="panel-head">
