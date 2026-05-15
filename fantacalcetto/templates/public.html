@@ -61,7 +61,7 @@
   <div class="table-wrap">
     <table>
       <thead>
-        <tr><th>Giocatore</th><th>Mascotte</th><th>Ruolo</th><th>Potenza</th><th>Score</th><th>Stats</th><th>Affid.</th></tr>
+        <tr><th>Giocatore</th><th>Mascotte</th><th>Ruolo</th><th>Overall</th><th>Potenza</th><th>Score</th><th>Stats</th><th>Affid.</th></tr>
       </thead>
       <tbody>
       {% for p in players %}
@@ -69,6 +69,7 @@
           <td><strong>{{ p.name }}</strong><small>{{ p.nickname or "senza soprannome" }}</small><em>{{ p.power|player_title }}</em></td>
           <td><span class="mascot-badge mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span></td>
           <td>{{ p.role }}</td>
+          <td><span class="overall-mini">{{ p|overall_rating }}</span></td>
           <td class="stars">{{ p.power|stars }}</td>
           <td>{{ p.score }}</td>
           <td>{{ p.matches }} pres. · {{ p.goals }} gol · {{ p.assists }} assist</td>

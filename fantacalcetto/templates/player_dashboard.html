@@ -9,10 +9,13 @@
   <div class="match-strip">
     <span>La tua carta</span>
     <span class="mascot-badge mascot-{{ player.mascot }} {{ player.mascot|mascot_class }}"><b>{{ player.mascot|mascot_code }}</b><small>{{ player|player_mascot_label }}</small></span>
+    <span class="overall-badge"><small>Overall</small><strong>{{ player|overall_rating }}</strong></span>
     <small class="stars">{{ player.power|stars }}</small>
     <small>Score {{ player.score }} · Affidabilita {{ player.reliability }}%</small>
   </div>
 </section>
+
+<div class="notice soft">Disclaimer da spogliatoio: ogni calciatore e tenuto a controllare la propria scheda evento. Orario, campo, conferma ufficiale o annullamento valgono sempre qui dentro.</div>
 
 {% if player.account_status != "approved" %}
   <div class="notice soft">Account non ancora approvato: puoi guardare il profilo, ma non sei ancora arruolabile.</div>
@@ -51,13 +54,17 @@
   <div class="cards">
     {% for m in matches %}
       <div class="mini-card">
-        <strong>{{ m.title }}</strong>
+        <a class="event-title" href="{{ url_for('player_match_calendar', match_id=m.id) }}"><strong>{{ m.title }}</strong></a>
         <span>{{ m.match_date.replace("T", " ") }} · {{ m.location }}</span>
+        <small>{{ m.status|status_label }}</small>
         <small>Stato: {{ (m.response or "non invitato")|response_label }}{% if m.response == "waitlist" and waitlist_positions.get(m.id) %} · posizione {{ waitlist_positions.get(m.id) }}{% elif m.responded_at %} · ordine conferma registrato{% endif %}{% if m.penalty_points %} · penalita {{ m.penalty_points }}{% endif %}</small>
         {% if m.response == "waitlist" %}
           <p class="waitlist-note">Numero massimo raggiunto: sei nella panchina d'onore. Se qualcuno disdice, entri automaticamente in lista.</p>
         {% endif %}
-        {% if player.account_status == "approved" %}
+        {% if m.status != "cancelled" %}
+          <a class="button ghost" href="{{ url_for('player_match_calendar', match_id=m.id) }}">Aggiungi al calendario</a>
+        {% endif %}
+        {% if player.account_status == "approved" and m.status not in ["cancelled", "closed"] %}
           <form class="inline-actions" method="post" action="{{ url_for('player_confirm', match_id=m.id) }}">
             <button class="button primary" type="submit">Confermo</button>
           </form>

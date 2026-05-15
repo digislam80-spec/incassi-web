@@ -4,7 +4,7 @@
   <div>
     <p class="eyebrow">Versione MVP</p>
     <h1>Convoca, bilancia, gioca, aggiorna la leggenda.</h1>
-    <p class="lede">{{ motto }} Nel giorno della partita il mister automatico prepara le squadre appena trova i confermati. Powered by Digislam Print Lab.</p>
+    <p class="lede">{{ motto }} Il mister conferma la partita quando raggiunge quota; nel giorno gara il mister automatico prepara le squadre solo sulla partita confermata. Powered by Digislam Print Lab.</p>
   </div>
   {% if match %}
   <div class="match-strip">
@@ -110,7 +110,7 @@
   <div class="table-wrap">
     <table>
       <thead>
-        <tr><th>Giocatore</th><th>Mascotte</th><th>Ruolo</th><th>Potenza</th><th>Score</th><th>Stats</th><th>Affid.</th><th>Gestione</th></tr>
+        <tr><th>Giocatore</th><th>Mascotte</th><th>Ruolo</th><th>Overall</th><th>Potenza</th><th>Score</th><th>Stats</th><th>Affid.</th><th>Gestione</th></tr>
       </thead>
       <tbody>
       {% for p in players %}
@@ -131,6 +131,7 @@
             </form>
           </td>
           <td>{{ p.role }}</td>
+          <td><span class="overall-mini">{{ p|overall_rating }}</span></td>
           <td>
             <form class="mini-select-form" method="post" action="{{ url_for('update_player_power', player_id=p.id) }}">
               <span class="stars">{{ p.power|stars }}</span>

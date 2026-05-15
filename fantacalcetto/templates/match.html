@@ -21,10 +21,72 @@
   </form>
 </section>
 
+<section class="grid two">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Controllo Partita</h2>
+      <span class="pill">{{ confirmed_count }}/{{ match.player_limit }} quota</span>
+    </div>
+    <form class="form" method="post" action="{{ url_for('update_match_settings', match_id=match.id) }}">
+      <label>Titolo <input name="title" value="{{ match.title }}" required></label>
+      <label>Data e ora <input type="datetime-local" name="match_date" value="{{ match.match_date }}" required></label>
+      <label>Campo <input name="location" value="{{ match.location }}" required></label>
+      <label>Quota partita <input type="number" name="player_limit" min="2" max="30" value="{{ match.player_limit }}"></label>
+      <button class="button" type="submit">Salva modifiche</button>
+    </form>
+    <div class="inline-actions admin-actions">
+      <form method="post" action="{{ url_for('confirm_match', match_id=match.id) }}">
+        <button class="button primary" type="submit" {% if confirmed_count < match.player_limit %}disabled title="Prima raggiungi quota partita o aggiungi un esterno"{% endif %}>Conferma partita</button>
+      </form>
+      <form method="post" action="{{ url_for('reopen_match', match_id=match.id) }}">
+        <button class="button ghost" type="submit">Riapri convocazioni</button>
+      </form>
+      <form method="post" action="{{ url_for('cancel_match', match_id=match.id) }}" onsubmit="return confirm('Annullare la partita? I calciatori la vedranno come annullata.');">
+        <button class="button danger" type="submit">Annulla partita</button>
+      </form>
+    </div>
+    {% if confirmed_count < match.player_limit %}
+      <p class="muted">Per confermare servono {{ match.player_limit }} giocatori. Se siete in meno, aggiungi un esterno o abbassa la quota partita.</p>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Aggiungi Esterno</h2>
+      <span class="pill">Ripescaggio</span>
+    </div>
+    <form class="form" method="post" action="{{ url_for('add_external_player', match_id=match.id) }}">
+      <label>Nome <input name="name" placeholder="Nome esterno" required></label>
+      <label>Soprannome <input name="nickname" value="Esterno"></label>
+      <label>Telefono <input name="phone" placeholder="facoltativo"></label>
+      <label>Ruolo
+        <select name="role">
+          <option>Jolly</option><option>Portiere</option><option>Difensore</option><option>Centrocampista</option><option>Attaccante</option>
+        </select>
+      </label>
+      <label>Potenza
+        <select name="power">
+          {% for value in [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] %}
+            <option value="{{ value }}" {% if value == 3 %}selected{% endif %}>{{ value|format_power }} stelle</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Mascotte
+        <select name="mascot">
+          {% for key, mascot in mascots.items() %}
+            <option value="{{ key }}">{{ mascot.label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button class="button primary" type="submit">Aggiungi e conferma</button>
+    </form>
+  </div>
+</section>
+
 {% if auto_generated %}
   <div class="notice">Oggi si gioca: il mister automatico ha gia fatto le squadre.</div>
 {% elif match_day and match.status == "open" %}
-  <div class="notice soft">Oggi e giorno di partita. Appena ci sono almeno due confermati, le squadre partono da sole.</div>
+  <div class="notice soft">Oggi e giorno di partita. Le squadre automatiche partono solo dopo la conferma ufficiale del mister.</div>
 {% endif %}
 
 <section class="panel whatsapp-panel">

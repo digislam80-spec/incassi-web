@@ -7,7 +7,7 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 from functools import wraps
 
-from flask import Flask, g, redirect, render_template, request, session, url_for
+from flask import Flask, Response, g, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 try:
@@ -456,9 +456,11 @@ def player_title(power):
 def status_label(status):
     labels = {
         "open": "Convocazioni aperte",
+        "confirmed": "Partita confermata",
         "teams": "Squadre fatte",
         "teams_auto": "Squadre fatte dal mister automatico",
         "closed": "Terzo tempo autorizzato",
+        "cancelled": "Partita annullata",
     }
     return labels.get(status, status)
 
@@ -510,6 +512,21 @@ def mascot_class(mascot):
     return mascot_data(mascot)["class"]
 
 
+def overall_rating(player):
+    power = power_value(player["power"])
+    score = int(player["score"] or 0)
+    reliability = int(player["reliability"] or 0)
+    matches = int(player["matches"] or 0)
+    goals = int(player["goals"] or 0)
+    assists = int(player["assists"] or 0)
+    wins = int(player["wins"] or 0)
+    base = 35 + (power - 1) * 10
+    form = min(18, score * 0.45)
+    trust = (reliability - 50) * 0.18
+    production = min(12, goals * 1.2 + assists * 0.8 + wins * 1.5 + matches * 0.3)
+    return max(1, min(100, round(base + form + trust + production)))
+
+
 app.jinja_env.filters["player_title"] = player_title
 app.jinja_env.filters["status_label"] = status_label
 app.jinja_env.filters["response_label"] = response_label
@@ -518,6 +535,7 @@ app.jinja_env.filters["mascot_label"] = mascot_label
 app.jinja_env.filters["player_mascot_label"] = player_mascot_label
 app.jinja_env.filters["mascot_code"] = mascot_code
 app.jinja_env.filters["mascot_class"] = mascot_class
+app.jinja_env.filters["overall_rating"] = overall_rating
 
 
 def latest_match():
@@ -526,6 +544,19 @@ def latest_match():
 
 def get_match(match_id):
     return query("select * from matches where id = ?", (match_id,), one=True)
+
+
+def confirmed_count(match_id):
+    row = query(
+        """
+        select count(*) as total
+        from match_players
+        where match_id = ? and response in ('confirmed', 'present')
+        """,
+        (match_id,),
+        one=True,
+    )
+    return row["total"] if row else 0
 
 
 def invited_players(match_id):
@@ -732,7 +763,7 @@ def apply_team_generation(match_id, automatic=False):
 
 
 def maybe_auto_generate(match):
-    if not match or match["status"] != "open" or not match_day(match):
+    if not match or match["status"] != "confirmed" or not match_day(match):
         return False
     confirmed = query(
         """
@@ -770,6 +801,7 @@ RULES = [
     "Si entra in campo per giocare, correre il giusto e lamentarsi con stile: la polemica e ammessa solo se fa ridere.",
     "La conferma vale come stretta di mano: chi clicca Confermo si prende il posto finche non disdice dall'account.",
     "Chi prima conferma, prima partecipa. Dal posto numero 11 scatta la lista d'attesa: pettorina in mano e speranza nel cuore.",
+    "Il calciatore e tenuto a controllare la propria scheda evento: orario, campo, conferma o annullamento vivono li dentro.",
     "La disdetta e libera, ma non gratis: piu e vicina alla partita, piu pesa su score, affidabilita e stelle.",
     "Gol, assist, vittorie e presenza fanno crescere. Il talento sale, ma pure la puntualita conta.",
     "Le stelle sono sacre ma non eterne: il mister assegna la base, poi il campo e le disdette fanno il resto.",
@@ -982,11 +1014,18 @@ def player_dashboard():
     )
 
 
+def match_is_locked(match):
+    return not match or match["status"] in ("closed", "cancelled")
+
+
 @app.route("/player/matches/<int:match_id>/confirm", methods=["POST"])
 @require_player
 def player_confirm(match_id):
     player = current_player()
     if player["account_status"] != "approved":
+        return redirect(url_for("player_dashboard"))
+    match = get_match(match_id)
+    if match_is_locked(match):
         return redirect(url_for("player_dashboard"))
     previous = query(
         "select response from match_players where match_id = ? and player_id = ?",
@@ -1034,7 +1073,7 @@ def player_cancel(match_id):
     if player["account_status"] != "approved":
         return redirect(url_for("player_dashboard"))
     match = get_match(match_id)
-    if not match:
+    if match_is_locked(match):
         return redirect(url_for("player_dashboard"))
     penalty, power_penalty, _message = cancellation_penalty(match)
     execute(
@@ -1234,6 +1273,131 @@ def match_detail(match_id):
         auto_generated=auto_generated,
         match_day=match_day(match),
         motto=goliardic_motto(match),
+        confirmed_count=confirmed_count(match_id),
+        mascots=MASCOTS,
+    )
+
+
+@app.route("/matches/<int:match_id>/settings", methods=["POST"])
+@require_admin
+def update_match_settings(match_id):
+    execute(
+        """
+        update matches
+        set title = ?, match_date = ?, location = ?, player_limit = ?
+        where id = ?
+        """,
+        (
+            request.form["title"].strip(),
+            request.form["match_date"],
+            request.form["location"].strip(),
+            int(request.form.get("player_limit", 10)),
+            match_id,
+        ),
+    )
+    sync_waitlist(match_id)
+    return redirect(url_for("match_detail", match_id=match_id))
+
+
+@app.route("/matches/<int:match_id>/confirm-match", methods=["POST"])
+@require_admin
+def confirm_match(match_id):
+    match = get_match(match_id)
+    if match and match["status"] not in ("closed", "cancelled") and confirmed_count(match_id) >= match["player_limit"]:
+        execute("update matches set status = 'confirmed' where id = ?", (match_id,))
+    return redirect(url_for("match_detail", match_id=match_id))
+
+
+@app.route("/matches/<int:match_id>/reopen", methods=["POST"])
+@require_admin
+def reopen_match(match_id):
+    execute("update matches set status = 'open', team_a_score = null, team_b_score = null where id = ?", (match_id,))
+    return redirect(url_for("match_detail", match_id=match_id))
+
+
+@app.route("/matches/<int:match_id>/cancel", methods=["POST"])
+@require_admin
+def cancel_match(match_id):
+    execute("update matches set status = 'cancelled' where id = ?", (match_id,))
+    execute("update match_players set team = null where match_id = ?", (match_id,))
+    return redirect(url_for("match_detail", match_id=match_id))
+
+
+@app.route("/matches/<int:match_id>/external", methods=["POST"])
+@require_admin
+def add_external_player(match_id):
+    name = request.form["name"].strip()
+    if not name:
+        return redirect(url_for("match_detail", match_id=match_id))
+    player_id = execute(
+        """
+        insert into players (name, nickname, phone, role, power, mascot, mascot_name, invite_token, account_status, active)
+        values (?, ?, ?, ?, ?, ?, ?, ?, 'approved', 1)
+        """,
+        (
+            name,
+            request.form.get("nickname", "Esterno").strip(),
+            request.form.get("phone", "esterno").strip() or "esterno",
+            request.form.get("role", "Jolly"),
+            float(request.form.get("power", 3)),
+            request.form.get("mascot", "jolly"),
+            request.form.get("mascot_name", "").strip(),
+            uuid.uuid4().hex,
+        ),
+    )
+    execute(
+        """
+        insert into match_players (match_id, player_id, response, responded_at)
+        values (?, ?, 'confirmed', current_timestamp)
+        on conflict(match_id, player_id) do update set response = 'confirmed', responded_at = current_timestamp
+        """,
+        (match_id, player_id),
+    )
+    sync_waitlist(match_id)
+    return redirect(url_for("match_detail", match_id=match_id))
+
+
+@app.route("/player/matches/<int:match_id>/calendar.ics")
+@require_player
+def player_match_calendar(match_id):
+    match = get_match(match_id)
+    if not match or match["status"] == "cancelled":
+        return redirect(url_for("player_dashboard"))
+    try:
+        start = datetime.fromisoformat(match["match_date"])
+    except ValueError:
+        start = datetime.now()
+    end = start + timedelta(hours=1, minutes=30)
+
+    def ics_text(value):
+        return str(value or "").replace("\\", "\\\\").replace(",", "\\,").replace(";", "\\;").replace("\n", "\\n")
+
+    stamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    body = "\r\n".join(
+        [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//FantaCalcetto//Digislam Print Lab//IT",
+            "CALSCALE:GREGORIAN",
+            "METHOD:PUBLISH",
+            "BEGIN:VEVENT",
+            f"UID:fantacalcetto-{match_id}@digislam.shop",
+            f"DTSTAMP:{stamp}",
+            f"DTSTART:{start.strftime('%Y%m%dT%H%M%S')}",
+            f"DTEND:{end.strftime('%Y%m%dT%H%M%S')}",
+            f"SUMMARY:{ics_text(match['title'])}",
+            f"LOCATION:{ics_text(match['location'])}",
+            "DESCRIPTION:Controlla sempre la scheda evento FantaCalcetto: orario, campo, conferma o annullamento possono cambiare.",
+            "END:VEVENT",
+            "END:VCALENDAR",
+            "",
+        ]
+    )
+    filename = f"fantacalcetto-{match_id}.ics"
+    return Response(
+        body,
+        mimetype="text/calendar",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 
@@ -1279,7 +1443,9 @@ def update_responses(match_id):
 @app.route("/matches/<int:match_id>/generate", methods=["POST"])
 @require_admin
 def generate_teams(match_id):
-    apply_team_generation(match_id)
+    match = get_match(match_id)
+    if match and match["status"] != "cancelled":
+        apply_team_generation(match_id)
     return redirect(url_for("match_detail", match_id=match_id))
 
 
