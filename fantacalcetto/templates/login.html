@@ -2,15 +2,9 @@
 {% block content %}
 <section class="public-card login-card">
   <p class="eyebrow">Area admin</p>
-  <div class="mini-mascot public" aria-hidden="true">
-    <span class="head"></span>
-    <span class="body"></span>
-    <span class="leg one"></span>
-    <span class="leg two"></span>
-    <span class="mini-ball"></span>
-  </div>
+  <img class="brand-illustration compact" src="{{ url_for('static', filename='favicon.png') }}" alt="FantaCalcetto Digislam">
   <h1>PIN del mister</h1>
-  <p class="lede">Qui si convocano giocatori, si generano squadre, si chiudono risultati e si prepara il messaggio WhatsApp. Area regia sponsorizzata Digislam Print Lab.</p>
+  <p class="lede">Cabina di regia FantaCalcetto. Digislam Print Lab in panchina.</p>
   {% if error %}
     <div class="notice soft">{{ error }}</div>
   {% endif %}

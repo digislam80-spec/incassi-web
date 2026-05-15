@@ -1699,7 +1699,7 @@ def save_result(match_id):
         """
         select player_id, team, goals, assists, points_awarded, win_awarded, power_bonus_awarded
         from match_players
-        where match_id = ? and team is not null
+        where match_id = ? and (team is not null or response in ('confirmed', 'present'))
         """,
         (match_id,),
     )
@@ -1711,7 +1711,7 @@ def save_result(match_id):
         review = request.form.get(f"review_{row['player_id']}", "").strip()
         won = (row["team"] == "A" and team_a_score > team_b_score) or (row["team"] == "B" and team_b_score > team_a_score)
         win_value = 1 if won else 0
-        points = 3 if won else 1 if team_a_score == team_b_score else 0
+        points = 3 if won else 1 if row["team"] and team_a_score == team_b_score else 0
         points += goals * 2 + assists
         power_bonus = 0.5 if points >= 5 else 0
         execute(
@@ -1723,6 +1723,28 @@ def save_result(match_id):
             """,
             (goals, assists, rating, review, points, win_value, power_bonus, match_id, row["player_id"]),
         )
+        award_type_id = int(request.form.get(f"quick_award_{row['player_id']}", 0) or 0)
+        award_note = request.form.get(f"quick_award_note_{row['player_id']}", "").strip()
+        if award_type_id:
+            existing_award = query(
+                """
+                select id from match_awards
+                where match_id = ? and player_id = ? and award_type_id = ?
+                limit 1
+                """,
+                (match_id, row["player_id"], award_type_id),
+                one=True,
+            )
+            if existing_award:
+                execute("update match_awards set note = ? where id = ?", (award_note, existing_award["id"]))
+            else:
+                execute(
+                    """
+                    insert into match_awards (match_id, award_type_id, player_id, note)
+                    values (?, ?, ?, ?)
+                    """,
+                    (match_id, award_type_id, row["player_id"], award_note),
+                )
         goals_delta = goals - int(row["goals"] or 0)
         assists_delta = assists - int(row["assists"] or 0)
         score_delta = points - int(row["points_awarded"] or 0)

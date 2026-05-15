@@ -2,13 +2,7 @@
 {% block content %}
 <section class="public-card">
   <p class="eyebrow">Invito partita</p>
-  <div class="mini-mascot public" aria-hidden="true">
-    <span class="head"></span>
-    <span class="body"></span>
-    <span class="leg one"></span>
-    <span class="leg two"></span>
-    <span class="mini-ball"></span>
-  </div>
+  <img class="brand-illustration compact" src="{{ url_for('static', filename='favicon.png') }}" alt="FantaCalcetto Digislam">
   <h1>Sono {{ player.name }}, confermo?</h1>
   {% if player.nickname %}
     <p class="player-aka">Alias da spogliatoio: <strong>{{ player.nickname }}</strong></p>

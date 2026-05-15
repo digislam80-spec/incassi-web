@@ -7,13 +7,7 @@
     <p class="lede">{{ match.match_date.replace("T", " ") }} · {{ match.location }} · posti {{ match.player_limit }}. {{ motto }}</p>
   </div>
   <div class="match-side">
-    <div class="mini-mascot" aria-hidden="true">
-      <span class="head"></span>
-      <span class="body"></span>
-      <span class="leg one"></span>
-      <span class="leg two"></span>
-      <span class="mini-ball"></span>
-    </div>
+    <img class="brand-illustration" src="{{ url_for('static', filename='favicon.png') }}" alt="FantaCalcetto Digislam">
     <p>{{ match.status|status_label }}</p>
   </div>
   <form method="post" action="{{ url_for('generate_teams', match_id=match.id) }}">
@@ -239,17 +233,32 @@ FantaCalcetto powered by Digislam Print Lab.</textarea>
       <span>-</span>
       <label>{{ match.team_b_name }} <input type="number" name="team_b_score" min="0" value="{{ match.team_b_score if match.team_b_score is not none else 0 }}"></label>
     </div>
-    <div class="stats-grid">
-      {% for p in players if p.team %}
-        <div class="stat-row">
-          <strong>{{ p.name }}</strong>
+    <div class="quick-pagelle-grid">
+      {% for p in players if p.team or p.response in ["confirmed", "present"] %}
+        <div class="quick-pagella-row">
+          <div class="quick-player">
+            <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
+            <div>
+              <strong>{{ p.name }}</strong>
+              <small>{% if p.team == "A" %}{{ match.team_a_name }}{% elif p.team == "B" %}{{ match.team_b_name }}{% else %}Partecipante{% endif %} · {{ p.power|stars }} · OVR {{ p|overall_rating }}</small>
+            </div>
+          </div>
+          <label>Voto <input type="number" min="1" max="10" step="0.5" name="rating_{{ p.id }}" value="{{ p.rating or '' }}" placeholder="7"></label>
           <label>Gol <input type="number" min="0" name="goals_{{ p.id }}" value="{{ p.match_goals }}"></label>
           <label>Assist <input type="number" min="0" name="assists_{{ p.id }}" value="{{ p.match_assists }}"></label>
-          <label>Voto <input type="number" min="1" max="10" step="0.5" name="rating_{{ p.id }}" value="{{ p.rating or '' }}" placeholder="7.5"></label>
-          <label>Pagella <input name="review_{{ p.id }}" value="{{ p.review or '' }}" placeholder="Ha corso, ha sudato, ha quasi capito il modulo"></label>
+          <label>Premio rapido
+            <select name="quick_award_{{ p.id }}">
+              <option value="">Nessuno</option>
+              {% for award in award_types %}
+                <option value="{{ award.id }}">{{ award.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="quick-review">Pagella lampo <input name="review_{{ p.id }}" value="{{ p.review or '' }}" placeholder="Ha corso, ha sudato, ha quasi capito il modulo"></label>
+          <label class="quick-review">Nota premio <input name="quick_award_note_{{ p.id }}" placeholder="Motivazione al volo"></label>
         </div>
       {% else %}
-        <p class="muted">Genera prima le squadre, poi potrai inserire gol e assist.</p>
+        <p class="muted">Appena ci sono confermati o presenti, qui trovi la lista rapida per voti, gol, assist e premi.</p>
       {% endfor %}
     </div>
     <button class="button primary" type="submit">Salva risultato e pagelle</button>
