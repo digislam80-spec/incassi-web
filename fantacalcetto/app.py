@@ -1653,6 +1653,8 @@ def create_match():
 @require_admin
 def match_detail(match_id):
     match = get_match(match_id)
+    if not match:
+        return redirect(url_for("admin_dashboard"))
     auto_generated = maybe_auto_generate(match)
     match = get_match(match_id)
     players = invited_players(match_id)
@@ -1681,6 +1683,7 @@ def match_detail(match_id):
         confirmed_count=confirmed_count(match_id),
         mascots=MASCOTS,
         foot_labels=FOOT_LABELS,
+        notice=request.args.get("notice", ""),
     )
 
 
@@ -1709,9 +1712,22 @@ def update_match_settings(match_id):
 @require_admin
 def confirm_match(match_id):
     match = get_match(match_id)
-    if match and match["status"] not in ("closed", "cancelled") and confirmed_count(match_id) >= match["player_limit"]:
+    if not match:
+        return redirect(url_for("admin_dashboard"))
+    if match["status"] in ("closed", "cancelled"):
+        return redirect(url_for("match_detail", match_id=match_id, notice="Questa partita non può essere confermata perché è chiusa o annullata."))
+    quota = int(match["player_limit"] or 0)
+    confirmed = confirmed_count(match_id)
+    if quota <= 0:
+        return redirect(url_for("match_detail", match_id=match_id, notice="Imposta prima una quota partita valida."))
+    if confirmed < quota:
+        return redirect(url_for("match_detail", match_id=match_id, notice=f"Quota non raggiunta: {confirmed}/{quota}. Aggiungi un esterno o abbassa la quota."))
+    try:
         execute("update matches set status = 'confirmed' where id = ?", (match_id,))
-    return redirect(url_for("match_detail", match_id=match_id))
+    except Exception:
+        app.logger.exception("Errore durante la conferma partita %s", match_id)
+        return redirect(url_for("match_detail", match_id=match_id, notice="Non sono riuscito a confermare la partita. Riprova dopo aver salvato quota e orario."))
+    return redirect(url_for("match_detail", match_id=match_id, notice="Partita confermata. Il mister automatico è in panchina."))
 
 
 @app.route("/matches/<int:match_id>/reopen", methods=["POST"])

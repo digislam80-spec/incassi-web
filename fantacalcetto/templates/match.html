@@ -15,6 +15,10 @@
   </form>
 </section>
 
+{% if notice %}
+  <div class="notice soft">{{ notice }}</div>
+{% endif %}
+
 <section class="match-quickbar">
   <div><strong>{{ summary_counts.confirmed }}/{{ match.player_limit }}</strong><small>confermati</small></div>
   <div><strong>{{ summary_counts.waitlist }}</strong><small>lista attesa</small></div>
