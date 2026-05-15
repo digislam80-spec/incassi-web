@@ -22,7 +22,7 @@ http://127.0.0.1:5001
 - Bacheca pubblica con classifica, potenza, score e squadre gia generate.
 - Area admin protetta da PIN per rosa arruolabili e gestione partita.
 - Registrazione autonoma calciatore con username, password, nome, WhatsApp e mascotte.
-- Branding "La lega del Venerdi" con sponsor Digislam Print Lab.
+- Branding "La lega del Venerdì" con sponsor Digislam Print Lab.
 - Approvazione admin prima di diventare arruolabile.
 - Creazione partita con numero massimo di giocatori.
 - Convocazioni e stato presenza: invitato, confermato, presente, non gioca.

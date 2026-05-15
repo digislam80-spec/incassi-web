@@ -84,9 +84,9 @@
 </section>
 
 {% if auto_generated %}
-  <div class="notice">Oggi si gioca: il mister automatico ha gia fatto le squadre.</div>
+  <div class="notice">Oggi si gioca: il mister automatico ha già fatto le squadre.</div>
 {% elif match_day and match.status == "open" %}
-  <div class="notice soft">Oggi e giorno di partita. Le squadre automatiche partono solo dopo la conferma ufficiale del mister.</div>
+  <div class="notice soft">Oggi è giorno di partita. Le squadre automatiche partono solo dopo la conferma ufficiale del mister.</div>
 {% endif %}
 
 <section class="panel whatsapp-panel">
@@ -107,11 +107,11 @@ Se non hai account, registrati qui e aspetta l'approvazione del mister:
 
 Posti disponibili: {{ match.player_limit }}. Chi prima conferma, prima partecipa.
 Se i posti sono finiti, vai in lista d'attesa e vieni ripescato automaticamente se qualcuno disdice.
-Disdetta dall'account: piu e vicina alla gara, piu pesa su score e stelle.
+Disdetta dall'account: più è vicina alla gara, più pesa su score e stelle.
 
 Sponsored by Digislam Print Lab
 https://digislam.shop</textarea>
-  <p class="muted">Copialo nel gruppo. C'e un solo link: ogni calciatore entra col proprio account, conferma o disdice, e l'app tiene l'ordine di conferma. Sponsored by Digislam Print Lab - digislam.shop.</p>
+  <p class="muted">Copialo nel gruppo. C'è un solo link: ogni calciatore entra col proprio account, conferma o disdice, e l'app tiene l'ordine di conferma. Sponsored by Digislam Print Lab - digislam.shop.</p>
 </section>
 
 <section class="grid two">
@@ -154,7 +154,7 @@ https://digislam.shop</textarea>
       {% for p in all_players %}
         <label><input type="checkbox" name="player_ids" value="{{ p.id }}"> {{ p.name }} <small>{{ p.power|stars }}</small></label>
       {% else %}
-        <p class="muted">Tutti gli arruolabili sono gia stati convocati.</p>
+        <p class="muted">Tutti gli arruolabili sono già stati convocati.</p>
       {% endfor %}
       </div>
       <button class="button" type="submit">Aggiungi convocati</button>

@@ -26,7 +26,7 @@
   </div>
   <div>
     <h2>Mister Automatico attivo</h2>
-    <p>Link unico spogliatoio: <strong>{{ request.host_url.rstrip('/') }}{{ url_for('player_login') }}</strong>. Chi non ha account si registra, chi e approvato entra e conferma. A parita di posti vale l'ordine di conferma. Sponsor ufficiale: <a href="https://digislam.shop" target="_blank" rel="noopener">Digislam Print Lab</a>.</p>
+    <p>Link unico spogliatoio: <strong>{{ request.host_url.rstrip('/') }}{{ url_for('player_login') }}</strong>. Chi non ha account si registra, chi è approvato entra e conferma. A parità di posti vale l'ordine di conferma. Sponsor ufficiale: <a href="https://digislam.shop" target="_blank" rel="noopener">Digislam Print Lab</a>.</p>
   </div>
 </section>
 
@@ -61,7 +61,7 @@
       <span class="pill">Admin</span>
     </div>
     <form class="form" method="post" action="{{ url_for('create_match') }}">
-      <label>Titolo <input name="title" value="Calcetto del Venerdi" required></label>
+      <label>Titolo <input name="title" value="Calcetto del Venerdì" required></label>
       <label>Data e ora <input type="datetime-local" name="match_date" required></label>
       <label>Campo <input name="location" value="Centro Sportivo" required></label>
       <label>Posti <input type="number" name="player_limit" min="2" max="30" step="2" value="10"></label>

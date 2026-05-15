@@ -71,7 +71,7 @@ def db():
     if "db" not in g:
         if USE_POSTGRES:
             if psycopg is None:
-                raise RuntimeError("DATABASE_URL impostato, ma psycopg non e installato.")
+                raise RuntimeError("DATABASE_URL impostato, ma psycopg non è installato.")
             g.db = psycopg.connect(DATABASE_URL, row_factory=dict_row)
         else:
             db_dir = os.path.dirname(DB_PATH)
@@ -240,7 +240,7 @@ def init_db():
             """
         )
         connection.execute(
-            "update matches set title = 'Calcetto del Venerdi' where title = 'Calcetto del Giovedi'"
+            "update matches set title = 'Calcetto del Venerdì' where title in ('Calcetto del Venerdi', 'Calcetto del Giovedi')"
         )
         connection.execute("alter table players alter column power type numeric(2,1) using power::numeric")
         connection.execute("alter table match_players add column if not exists responded_at timestamptz")
@@ -337,7 +337,7 @@ def init_db():
         """
     )
     connection.execute(
-        "update matches set title = 'Calcetto del Venerdi' where title = 'Calcetto del Giovedi'"
+        "update matches set title = 'Calcetto del Venerdì' where title in ('Calcetto del Venerdi', 'Calcetto del Giovedi')"
     )
     connection.commit()
 
@@ -413,7 +413,7 @@ def seed_initial_data():
             insert into matches (title, match_date, location, player_limit)
             values (?, ?, ?, ?)
             """,
-            ("Calcetto del Venerdi", next_match.strftime("%Y-%m-%dT20:30"), "Centro Sportivo", 10),
+            ("Calcetto del Venerdì", next_match.strftime("%Y-%m-%dT20:30"), "Centro Sportivo", 10),
         )
         for player in query("select id from players order by id limit 12"):
             response = "confirmed" if player["id"] <= 10 else "invited"
@@ -471,7 +471,7 @@ def response_label(response):
         "confirmed": "Ha confermato",
         "waitlist": "In lista d'attesa",
         "present": "Presente in lista",
-        "declined": "Non puo giocare",
+        "declined": "Non può giocare",
         "non invitato": "Non ancora invitato",
     }
     return labels.get(response, response)
@@ -781,7 +781,7 @@ def maybe_auto_generate(match):
 
 def goliardic_motto(match):
     if not match:
-        return "Il pallone e rotondo, le scuse pure."
+        return "Il pallone è rotondo, le scuse pure."
     mottos = [
         "Chi arriva tardi parte in porta.",
         "Il VAR e il gruppo WhatsApp.",
@@ -798,17 +798,17 @@ def approved_players_sql():
 
 
 RULES = [
-    "Si entra in campo per giocare, correre il giusto e lamentarsi con stile: la polemica e ammessa solo se fa ridere.",
-    "La conferma vale come stretta di mano: chi clicca Confermo si prende il posto finche non disdice dall'account.",
+    "Si entra in campo per giocare, correre il giusto e lamentarsi con stile: la polemica è ammessa solo se fa ridere.",
+    "La conferma vale come stretta di mano: chi clicca Confermo si prende il posto finché non disdice dall'account.",
     "Chi prima conferma, prima partecipa. Dal posto numero 11 scatta la lista d'attesa: pettorina in mano e speranza nel cuore.",
-    "Il calciatore e tenuto a controllare la propria scheda evento: orario, campo, conferma o annullamento vivono li dentro.",
-    "La disdetta e libera, ma non gratis: piu e vicina alla partita, piu pesa su score, affidabilita e stelle.",
-    "Gol, assist, vittorie e presenza fanno crescere. Il talento sale, ma pure la puntualita conta.",
+    "Il calciatore è tenuto a controllare la propria scheda evento: orario, campo, conferma o annullamento vivono lì dentro.",
+    "La disdetta è libera, ma non gratis: più è vicina alla partita, più pesa su score, affidabilità e stelle.",
+    "Gol, assist, vittorie e presenza fanno crescere. Il talento sale, ma pure la puntualità conta.",
     "Le stelle sono sacre ma non eterne: il mister assegna la base, poi il campo e le disdette fanno il resto.",
     "Mascotte e soprannomi devono essere goliardici, non offensivi: si ride insieme, non addosso.",
-    "Il gruppo WhatsApp serve per il folklore; la verita ufficiale sta dentro FantaCalcetto.",
+    "Il gruppo WhatsApp serve per il folklore; la verità ufficiale sta dentro FantaCalcetto.",
     "Chi sparisce dopo aver confermato entra nella leggenda, ma dalla porta sbagliata.",
-    "Digislam Print Lab veglia sulla lega: rispetto, calcetto e terzo tempo con dignita variabile.",
+    "Digislam Print Lab veglia sulla lega: rispetto, calcetto e terzo tempo con dignità variabile.",
 ]
 
 
@@ -932,7 +932,7 @@ def register_player():
             mascot = "jolly"
         accepted_rules = request.form.get("accepted_rules") == "yes"
         if query("select id from players where lower(username) = lower(?)", (username,), one=True):
-            error = "Username gia preso: serve un nome da spogliatoio originale."
+            error = "Username già preso: serve un nome da spogliatoio originale."
         elif len(password) < 4:
             error = "Password troppo corta: almeno 4 caratteri, senza fare i fenomeni."
         elif not accepted_rules:
