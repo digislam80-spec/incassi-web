@@ -13,14 +13,28 @@
   <div class="profile-card-stage" aria-label="Card calciatore">
     <div class="overall-badge fifa-card fifa-shield-card">
       <div class="fifa-card-top">
-        <strong>{{ player|overall_rating }}</strong>
-        <span>{{ player.role[:3]|upper }}</span>
+        <div class="fifa-rating">
+          <strong>{{ player|overall_rating }}</strong>
+          <span>{{ player.role[:3]|upper }}</span>
+          <i></i>
+          <b>⚽</b>
+        </div>
+        <img class="fifa-card-mascot" src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
       </div>
-      <img class="fifa-card-mascot" src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
-      <b>{{ player.nickname or player.name }}</b>
-      <small>{{ player.power|stars }}</small>
-      <em>Score {{ player.score }} · Affidabilità {{ player.reliability }}%</em>
-      <span class="fifa-card-foot">{{ player.preferred_foot|foot_label }}</span>
+      <div class="fifa-nameplate">
+        <b>{{ player.nickname or player.name }}</b>
+        <small>{{ player.power|stars }}</small>
+      </div>
+      <div class="fifa-stats">
+        <div>
+          <span><b>{{ player.reliability }}</b> AFF</span>
+          <span><b>{{ player.score }}</b> SCO</span>
+        </div>
+        <div>
+          <span><b>{{ player.matches }}</b> PRE</span>
+          <span><b>{% if player.preferred_foot == "left" %}SX{% elif player.preferred_foot == "both" %}AM{% else %}DX{% endif %}</b> PIE</span>
+        </div>
+      </div>
     </div>
   </div>
 </section>

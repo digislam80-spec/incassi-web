@@ -45,6 +45,11 @@ DATA_TABLES = [
 
 APP_UPDATES = [
     {
+        "title": "Card scudo pubblicata",
+        "body": "La card profilo usa uno scudo dorato più pulito: overall centrato, mascotte leggibile e statistiche rapide ordinate.",
+        "tag": "Grafica",
+    },
+    {
         "title": "Card profilo più professionale",
         "body": "La figurina calciatore diventa uno scudo stile card calcistica: overall più grande, mascotte protagonista e niente box inutile.",
         "tag": "Grafica",

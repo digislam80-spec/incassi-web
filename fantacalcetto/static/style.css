@@ -149,7 +149,7 @@ h2 { margin: 0; font-size: 21px; }
   display: grid;
   place-items: center;
   justify-self: center;
-  width: min(100%, 330px);
+  width: min(100%, 348px);
   min-height: 340px;
 }
 #profile-edit { scroll-margin-top: 96px; }
@@ -560,120 +560,159 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
 .overall-badge {
   display: grid;
   place-items: center;
-  min-width: 146px;
+  min-width: 148px;
   min-height: 190px;
   border: 0;
   border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(255,255,255,.46), transparent 26%),
-    linear-gradient(160deg, #f5d979 0%, #d49b12 52%, #8a6311 100%);
+  background: transparent;
   color: #241b08;
-  box-shadow: 0 18px 34px rgba(0,0,0,.24);
-}
-.overall-badge small {
-  color: rgba(36,27,8,.72);
-  font-size: 11px;
-  font-weight: 900;
-  text-transform: uppercase;
+  box-shadow: none;
 }
 .overall-badge strong {
-  font-size: 52px;
-  line-height: .82;
+  font-size: 58px;
+  line-height: .84;
 }
 .fifa-card {
   position: relative;
-  align-items: center;
-  justify-items: center;
-  gap: 4px;
-  width: min(100%, 270px);
-  min-height: 330px;
-  padding: 22px 22px 34px;
-  overflow: hidden;
+  width: min(100%, 348px);
+  min-height: 416px;
+  padding: 58px 42px 44px;
+  overflow: visible;
   isolation: isolate;
+  filter: drop-shadow(0 24px 24px rgba(0,0,0,.30));
 }
 .fifa-shield-card {
-  clip-path: polygon(50% 0, 89% 9%, 98% 54%, 90% 78%, 50% 100%, 10% 78%, 2% 54%, 11% 9%);
-  background:
-    radial-gradient(circle at 50% 32%, rgba(255,255,255,.45), transparent 22%),
-    linear-gradient(135deg, rgba(255,255,255,.56), transparent 22%),
-    linear-gradient(160deg, #ffe28a 0%, #d9a629 48%, #946810 100%);
-  box-shadow: 0 24px 40px rgba(0,0,0,.32);
+  background: transparent;
 }
-.fifa-card::before,
+.fifa-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("/static/generated/card-shield.png") center/100% 100% no-repeat;
+  pointer-events: none;
+  z-index: -1;
+}
 .fifa-card::after {
   content: "";
   position: absolute;
-  pointer-events: none;
-}
-.fifa-card::before {
-  inset: 10px;
-  border: 2px solid rgba(255,255,255,.72);
-  clip-path: polygon(50% 0, 89% 9%, 98% 54%, 90% 78%, 50% 100%, 10% 78%, 2% 54%, 11% 9%);
-  z-index: -1;
-}
-.fifa-card::after {
-  inset: 16px 22px 26px;
+  inset: 42px 44px 130px;
   background:
-    linear-gradient(90deg, transparent 0 46%, rgba(255,255,255,.52) 47% 53%, transparent 54%),
-    linear-gradient(0deg, transparent 0 63%, rgba(255,255,255,.48) 64% 66%, transparent 67%);
-  opacity: .7;
+    linear-gradient(116deg, transparent 0 47%, rgba(91,61,12,.44) 48% 49%, rgba(255,255,255,.38) 50% 54%, transparent 55%),
+    radial-gradient(ellipse at 66% 50%, rgba(85,60,18,.20), transparent 42%);
+  opacity: .82;
+  pointer-events: none;
   z-index: -1;
 }
 .fifa-card-top {
-  display: flex;
-  width: calc(100% - 78px);
+  position: absolute;
+  top: 58px;
+  left: 58px;
+  right: 56px;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 2px;
   align-items: start;
-  justify-content: space-between;
-  gap: 8px;
-  justify-self: center;
 }
-.fifa-card-top strong {
-  font-size: clamp(58px, 8vw, 82px);
-  letter-spacing: 0;
+.fifa-rating {
+  display: grid;
+  justify-items: center;
+  text-align: center;
 }
-.fifa-card-top span {
-  padding-top: 7px;
-  font-size: 16px;
-  font-weight: 950;
-  color: rgba(36,27,8,.72);
+.fifa-rating strong { letter-spacing: 0; }
+.fifa-rating span {
+  margin-top: 6px;
+  font-size: 26px;
+  line-height: .95;
+  font-weight: 700;
+}
+.fifa-rating i {
+  display: block;
+  width: 52px;
+  height: 2px;
+  margin: 10px auto;
+  background: rgba(32,23,8,.62);
+}
+.fifa-rating b {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border: 3px solid #b7352d;
+  border-radius: 50%;
+  background: white;
+  font-size: 22px;
+  line-height: 1;
+  box-shadow: 0 6px 12px rgba(0,0,0,.14);
 }
 .fifa-card-mascot {
-  width: min(75%, 172px);
-  height: 160px;
-  margin: -8px 0 -2px;
+  width: 158px;
+  height: 158px;
   object-fit: contain;
-  filter: drop-shadow(0 16px 11px rgba(0,0,0,.28));
+  transform: translate(4px, 4px) scale(1.03);
+  filter: drop-shadow(0 18px 12px rgba(0,0,0,.30));
 }
-.fifa-card b {
-  max-width: 100%;
-  overflow-wrap: anywhere;
+.fifa-nameplate {
+  position: absolute;
+  top: 238px;
+  left: 78px;
+  right: 62px;
+  z-index: 2;
+  padding-top: 12px;
+  border-top: 2px solid rgba(32,23,8,.48);
   text-align: center;
-  font-size: clamp(18px, 3vw, 23px);
+}
+.fifa-nameplate b {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 25px;
   line-height: 1.05;
   text-transform: uppercase;
 }
-.fifa-card small {
+.fifa-nameplate small {
+  display: block;
+  margin-top: 7px;
   color: rgba(36,27,8,.74);
-  font-size: 15px;
-}
-.fifa-card em {
-  margin-top: 2px;
-  color: rgba(36,27,8,.74);
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 900;
-  text-align: center;
-}
-.fifa-card-foot {
-  display: inline-flex;
-  margin-top: 0;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.32);
-  color: rgba(36,27,8,.82);
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 950;
-  text-transform: uppercase;
+}
+.fifa-stats {
+  position: absolute;
+  top: 302px;
+  left: 82px;
+  right: 72px;
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  gap: 9px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(32,23,8,.42);
+}
+.fifa-stats::before {
+  content: "";
+  grid-column: 2;
+  grid-row: 1;
+  width: 1px;
+  background: rgba(32,23,8,.40);
+}
+.fifa-stats div {
+  display: grid;
+  gap: 0;
+}
+.fifa-stats div:last-child { grid-column: 3; }
+.fifa-stats span {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 6px;
+  align-items: baseline;
+  color: rgba(32,23,8,.92);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: .04em;
+}
+.fifa-stats span b {
+  font-size: 19px;
+  letter-spacing: 0;
 }
 .overall-mini {
   display: inline-grid;
