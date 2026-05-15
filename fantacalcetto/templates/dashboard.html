@@ -72,6 +72,45 @@
 </section>
 {% endif %}
 
+{% if reset_requests %}
+<section class="panel">
+  <div class="panel-head">
+    <h2>Recupero Password</h2>
+    <span class="pill">{{ reset_requests|length }} richieste</span>
+  </div>
+  <div class="password-request-list">
+    {% for item in reset_requests %}
+      <article class="password-request-row">
+        <div>
+          <strong>{{ item.player_name or item.display_name or item.username or item.phone or "Calciatore misterioso" }}</strong>
+          <small>
+            Username: {{ item.player_username or item.username or "-" }} · WhatsApp: {{ item.phone or "-" }} · {{ item.created_at }}
+          </small>
+          {% if item.message %}<p>{{ item.message }}</p>{% endif %}
+        </div>
+        <form class="password-reset-form" method="post" action="{{ url_for('resolve_password_request', request_id=item.id) }}">
+          <label>Calciatore
+            <select name="player_id">
+              {% if item.player_id %}
+                <option value="{{ item.player_id }}">{{ item.player_name or item.username }}</option>
+              {% endif %}
+              {% for p in players %}
+                <option value="{{ p.id }}" {% if p.id == item.player_id %}selected{% endif %}>{{ p.name }} · {{ p.username or "senza username" }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>Nuova password provvisoria <input name="new_password" placeholder="Es. calcetto2026" required></label>
+          <button class="button primary" type="submit">Imposta password</button>
+        </form>
+        <form method="post" action="{{ url_for('dismiss_password_request', request_id=item.id) }}">
+          <button class="button ghost" type="submit">Archivia</button>
+        </form>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 <section class="grid two">
   <div class="panel">
     <div class="panel-head">
