@@ -17,6 +17,10 @@
 
 <div class="notice soft">Disclaimer da spogliatoio: ogni calciatore è tenuto a controllare la propria scheda evento. Orario, campo, conferma ufficiale o annullamento valgono sempre qui dentro.</div>
 
+{% if notice %}
+  <div class="notice">{{ notice }}</div>
+{% endif %}
+
 {% if player.account_status != "approved" %}
   <div class="notice soft">Account non ancora approvato: puoi guardare il profilo, ma non sei ancora arruolabile.</div>
 {% endif %}

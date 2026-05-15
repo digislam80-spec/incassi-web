@@ -1404,6 +1404,7 @@ def player_dashboard():
         match=match,
         waitlist_positions=my_waitlist_positions,
         foot_labels=FOOT_LABELS,
+        notice=request.args.get("notice", ""),
     )
 
 
@@ -1419,7 +1420,7 @@ def player_confirm(match_id):
         return redirect(url_for("player_dashboard"))
     match = get_match(match_id)
     if match_is_locked(match):
-        return redirect(url_for("player_dashboard"))
+        return redirect(url_for("player_dashboard", notice="Questa partita non è più confermabile. Controlla lo stato evento."))
     previous = query(
         "select response from match_players where match_id = ? and player_id = ?",
         (match_id, player["id"]),
@@ -1428,35 +1429,40 @@ def player_confirm(match_id):
     if previous and previous["response"] == "present":
         return redirect(url_for("player_dashboard"))
     response = "confirmed" if has_roster_slot(match_id, player["id"]) else "waitlist"
-    execute(
-        """
-        insert into match_players (match_id, player_id, response, responded_at)
-        values (?, ?, ?, current_timestamp)
-        on conflict(match_id, player_id) do update set
-            response = excluded.response,
-            team = null,
-            cancelled_at = null,
-            penalty_points = 0,
-            responded_at = case
-                when responded_at is null then current_timestamp
-                else responded_at
-            end
-        """,
-        (match_id, player["id"], response),
-    )
-    if response == "confirmed" and (not previous or previous["response"] not in ("confirmed", "present")):
+    try:
         execute(
             """
-            update players
-            set score = score + 1,
-                reliability = min(100, reliability + ?)
-            where id = ?
+            insert into match_players (match_id, player_id, response, responded_at)
+            values (?, ?, ?, current_timestamp)
+            on conflict(match_id, player_id) do update set
+                response = excluded.response,
+                team = null,
+                cancelled_at = null,
+                penalty_points = 0,
+                responded_at = case
+                    when match_players.responded_at is null then current_timestamp
+                    else match_players.responded_at
+                end
             """,
-            (2, player["id"]),
+            (match_id, player["id"], response),
         )
-    sync_waitlist(match_id)
-    maybe_auto_generate(get_match(match_id))
-    return redirect(url_for("player_dashboard"))
+        if response == "confirmed" and (not previous or previous["response"] not in ("confirmed", "present")):
+            execute(
+                """
+                update players
+                set score = score + 1,
+                    reliability = min(100, reliability + ?)
+                where id = ?
+                """,
+                (2, player["id"]),
+            )
+        sync_waitlist(match_id)
+        maybe_auto_generate(get_match(match_id))
+    except Exception:
+        app.logger.exception("Errore durante conferma giocatore %s partita %s", player["id"], match_id)
+        return redirect(url_for("player_dashboard", notice="Non sono riuscito a registrare la conferma. Riprova o avvisa il mister."))
+    notice = "Conferma registrata: sei dentro." if response == "confirmed" else "Posti pieni: sei in lista d'attesa."
+    return redirect(url_for("player_dashboard", notice=notice))
 
 
 @app.route("/player/matches/<int:match_id>/cancel", methods=["POST"])
@@ -1469,31 +1475,35 @@ def player_cancel(match_id):
     if match_is_locked(match):
         return redirect(url_for("player_dashboard"))
     penalty, power_penalty, _message = cancellation_penalty(match)
-    execute(
-        """
-        insert into match_players (match_id, player_id, response, cancelled_at, responded_at, penalty_points)
-        values (?, ?, 'declined', current_timestamp, current_timestamp, ?)
-        on conflict(match_id, player_id) do update set
-            response = 'declined',
-            cancelled_at = current_timestamp,
-            responded_at = current_timestamp,
-            penalty_points = excluded.penalty_points
-        """,
-        (match_id, player["id"], penalty),
-    )
-    execute(
-        """
-        update players
-        set score = max(0, score - ?),
-            reliability = max(0, reliability - ?)
-        where id = ?
-        """,
-        (penalty, penalty * 2, player["id"]),
-    )
-    adjust_player_power(player["id"], -power_penalty)
-    sync_waitlist(match_id)
-    maybe_auto_generate(get_match(match_id))
-    return redirect(url_for("player_dashboard"))
+    try:
+        execute(
+            """
+            insert into match_players (match_id, player_id, response, cancelled_at, responded_at, penalty_points)
+            values (?, ?, 'declined', current_timestamp, current_timestamp, ?)
+            on conflict(match_id, player_id) do update set
+                response = 'declined',
+                cancelled_at = current_timestamp,
+                responded_at = current_timestamp,
+                penalty_points = excluded.penalty_points
+            """,
+            (match_id, player["id"], penalty),
+        )
+        execute(
+            """
+            update players
+            set score = max(0, score - ?),
+                reliability = max(0, reliability - ?)
+            where id = ?
+            """,
+            (penalty, penalty * 2, player["id"]),
+        )
+        adjust_player_power(player["id"], -power_penalty)
+        sync_waitlist(match_id)
+        maybe_auto_generate(get_match(match_id))
+    except Exception:
+        app.logger.exception("Errore durante disdetta giocatore %s partita %s", player["id"], match_id)
+        return redirect(url_for("player_dashboard", notice="Non sono riuscito a registrare la disdetta. Riprova o avvisa il mister."))
+    return redirect(url_for("player_dashboard", notice="Disdetta registrata. Lo spogliatoio prende nota."))
 
 
 @app.route("/player/profile", methods=["POST"])
