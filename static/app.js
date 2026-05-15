@@ -39,7 +39,6 @@ const importResult = document.querySelector("#importResult");
 const transferList = document.querySelector("#transferList");
 const addTransferButton = document.querySelector("#addTransferButton");
 const transferTotalEl = document.querySelector("#transferTotal");
-const newEntryButton = document.querySelector("#newEntryButton");
 const historyAddButton = document.querySelector("#historyAddButton");
 const closeFormButton = document.querySelector("#closeFormButton");
 const deleteCurrentButton = document.querySelector("#deleteCurrentButton");
@@ -680,7 +679,6 @@ function escapeHtml(value) {
 
 form.addEventListener("submit", saveEntry);
 loginForm.addEventListener("submit", login);
-newEntryButton.addEventListener("click", () => openForm());
 historyAddButton.addEventListener("click", () => openForm());
 closeFormButton.addEventListener("click", closeForm);
 backButton.addEventListener("click", goBack);

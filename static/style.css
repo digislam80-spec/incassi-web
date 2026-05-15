@@ -22,6 +22,12 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+strong,
+button,
+input {
+  min-width: 0;
+}
+
 button,
 input,
 textarea,
@@ -145,10 +151,12 @@ select {
 
 .brand h1 {
   font-size: 24px;
+  line-height: 1.05;
 }
 
 .top-actions {
   display: flex;
+  flex: 0 0 auto;
   gap: 8px;
 }
 
@@ -289,6 +297,7 @@ label span {
   margin-top: 6px;
   font-size: 24px;
   line-height: 1.1;
+  overflow-wrap: anywhere;
 }
 
 .month-total-card strong {
@@ -318,6 +327,7 @@ label span {
 
 .month-breakdown strong {
   font-size: 16px;
+  overflow-wrap: anywhere;
 }
 
 .panel {
@@ -659,6 +669,7 @@ button {
   white-space: nowrap;
   color: white;
   font-size: 28px;
+  line-height: 1;
 }
 
 .month-totals {
@@ -677,6 +688,7 @@ button {
   padding: 8px;
   font-size: 12px;
   font-weight: 800;
+  min-width: 0;
 }
 
 .month-totals strong {
@@ -684,6 +696,7 @@ button {
   margin-top: 3px;
   color: var(--text);
   font-size: 12px;
+  overflow-wrap: anywhere;
 }
 
 .history-row {
@@ -720,6 +733,7 @@ button {
   white-space: nowrap;
   font-size: 17px;
   text-align: right;
+  line-height: 1.1;
 }
 
 .row-body {
@@ -760,6 +774,8 @@ button {
   font-size: 12px;
   font-weight: 800;
   text-align: right;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .row-methods small {
@@ -771,12 +787,90 @@ button {
   text-align: left;
 }
 
+.row-methods > span,
+.month-totals strong,
+.month-breakdown strong,
+.row-total,
+.month-head strong,
+.stats-grid strong,
+.method-stats dd {
+  font-variant-numeric: tabular-nums;
+}
+
 .empty {
   border: 1px dashed var(--line);
   border-radius: 8px;
   padding: 22px;
   color: var(--muted);
   text-align: center;
+}
+
+@media (max-width: 640px) {
+  .shell {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .topbar {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .brand {
+    gap: 10px;
+  }
+
+  .brand img {
+    width: min(170px, 46vw);
+  }
+
+  .brand h1 {
+    font-size: 20px;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+  }
+
+  .month-overview {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .month-total-card {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+
+  .month-total-card strong {
+    font-size: 30px;
+  }
+
+  .month-breakdown,
+  .month-totals,
+  .row-methods {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .month-breakdown div,
+  .month-totals span,
+  .row-methods > span {
+    padding: 8px;
+  }
+
+  .month-breakdown strong,
+  .month-totals strong {
+    font-size: 14px;
+  }
+
+  .row-methods > span {
+    display: grid;
+    gap: 3px;
+    text-align: left;
+  }
+
+  .row-methods > span:nth-child(5) {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 430px) {
@@ -790,7 +884,6 @@ button {
   }
 
   .month-overview,
-  .month-breakdown,
   .screen-nav,
   .grid,
   .filters,
@@ -801,51 +894,72 @@ button {
   }
 
   .topbar {
-    align-items: stretch;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
   }
 
   .brand {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
+    align-items: center;
+    flex: 1 1 auto;
+    flex-direction: row;
+    gap: 8px;
   }
 
   .brand img {
-    width: min(260px, 80vw);
+    width: min(145px, 42vw);
   }
 
   .top-actions {
-    align-items: flex-end;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
   }
 
-  .add-button {
-    width: 100%;
+  .icon-button {
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
   }
 
-  .date-row,
-  .month-totals,
-  .row-methods {
+  .date-row {
     grid-template-columns: 1fr;
   }
 
-  .row-methods > span {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    text-align: right;
-  }
-
-  .row-main,
-  .row-body {
+  .row-main {
     align-items: flex-start;
     grid-template-columns: 1fr;
+  }
+
+  .row-body {
+    align-items: start;
+    grid-template-columns: minmax(0, 1fr) 44px;
   }
 
   .row-total {
     text-align: left;
+  }
+
+  .month-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+  }
+
+  .month-head strong {
+    font-size: 26px;
+    white-space: normal;
+  }
+
+  .row-main {
+    gap: 6px;
+  }
+
+  .row-main > span:first-child {
+    font-size: 15px;
+  }
+
+  .row-total {
+    font-size: 19px;
   }
 
   .row-methods small {
@@ -858,9 +972,18 @@ button {
 
   .panel-head,
   .form-head,
-  .history-head,
   .import-row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .history-head {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .history-head .add-button.compact {
+    width: auto;
+    flex: 0 0 auto;
   }
 }
