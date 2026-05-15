@@ -55,29 +55,31 @@
 
 <section class="panel">
   <div class="panel-head">
-    <h2>Classifica Potenza</h2>
+    <h2>Analisi Rapida Lega</h2>
     <span class="pill">{{ players|length }} giocatori</span>
   </div>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr><th>Giocatore</th><th>Mascotte</th><th>Ruolo</th><th>Overall</th><th>Potenza</th><th>Score</th><th>Stats</th><th>Affid.</th></tr>
-      </thead>
-      <tbody>
-      {% for p in players %}
-        <tr>
-          <td><strong>{{ p.name }}</strong><small>{{ p.nickname or "senza soprannome" }}</small><em>{{ p.power|player_title }}</em></td>
-          <td><span class="mascot-badge mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span></td>
-          <td>{{ p.role }}</td>
-          <td><span class="overall-mini">{{ p|overall_rating }}</span></td>
-          <td class="stars">{{ p.power|stars }}</td>
-          <td>{{ p.score }}</td>
-          <td>{{ p.matches }} pres. · {{ p.goals }} gol · {{ p.assists }} assist</td>
-          <td>{{ p.reliability }}%</td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
+  <div class="league-list">
+    {% for p in players %}
+      <article class="league-card">
+        <div class="league-rank">{{ loop.index }}</div>
+        <div class="league-main">
+          <strong>{{ p.name }}</strong>
+          <small>{{ p.nickname or "senza soprannome" }} · {{ p.role }} · piede {{ p.preferred_foot|foot_label }}</small>
+          <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
+        </div>
+        <div class="league-score">
+          <span class="overall-mini">{{ p|overall_rating }}</span>
+          <small class="stars">{{ p.power|stars }}</small>
+        </div>
+        <div class="league-metrics">
+          <span><strong>{{ p.score }}</strong><small>score</small></span>
+          <span><strong>{{ p.matches }}</strong><small>pres.</small></span>
+          <span><strong>{{ p.goals }}</strong><small>gol</small></span>
+          <span><strong>{{ p.assists }}</strong><small>assist</small></span>
+          <span><strong>{{ p.reliability }}%</strong><small>aff.</small></span>
+        </div>
+      </article>
+    {% endfor %}
   </div>
 </section>
 

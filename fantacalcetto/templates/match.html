@@ -71,6 +71,13 @@
           {% endfor %}
         </select>
       </label>
+      <label>Piede
+        <select name="preferred_foot">
+          {% for key, label in foot_labels.items() %}
+            <option value="{{ key }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
       <label>Mascotte
         <select name="mascot">
           {% for key, mascot in mascots.items() %}

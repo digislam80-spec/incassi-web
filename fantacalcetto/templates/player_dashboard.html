@@ -4,14 +4,14 @@
   <div>
     <p class="eyebrow">Profilo calciatore</p>
     <h1>{{ player.name }}</h1>
-    <p class="lede">{{ player.nickname or "Soprannome ancora da spogliatoio" }} · {{ player.role }} · {{ player.account_status|account_status_label }}</p>
+    <p class="lede">{{ player.nickname or "Soprannome ancora da spogliatoio" }} · {{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.account_status|account_status_label }}</p>
   </div>
   <div class="match-strip">
     <span>La tua carta</span>
     <span class="mascot-badge mascot-{{ player.mascot }} {{ player.mascot|mascot_class }}"><b>{{ player.mascot|mascot_code }}</b><small>{{ player|player_mascot_label }}</small></span>
     <span class="overall-badge"><small>Overall</small><strong>{{ player|overall_rating }}</strong></span>
     <small class="stars">{{ player.power|stars }}</small>
-    <small>Score {{ player.score }} · Affidabilita {{ player.reliability }}%</small>
+    <small>Score {{ player.score }} · Affidabilità {{ player.reliability }}% · piede {{ player.preferred_foot|foot_label }}</small>
   </div>
 </section>
 
@@ -40,9 +40,16 @@
       <a class="button ghost" href="{{ url_for('rules') }}">Leggi regolamento</a>
     </div>
     <p class="muted">Confermare vale +1 score e +2 affidabilità. In partita: vittoria +3, pareggio +1, gol +2, assist +1. Se fai almeno 5 punti in una partita prendi +0.5 stella. Disdire costa score e affidabilità: sotto 24h perdi anche 0.5 stella, sotto 3h perdi 1 stella.</p>
-    <form class="form login-form" method="post" action="{{ url_for('player_update_mascot_name') }}">
+    <form class="form login-form" method="post" action="{{ url_for('player_update_profile') }}">
       <label>Nome mascotte <input name="mascot_name" value="{{ player.mascot_name or '' }}" placeholder="Es. O' Mast d'a fascia"></label>
-      <button class="button" type="submit">Salva nome mascotte</button>
+      <label>Piede preferito
+        <select name="preferred_foot">
+          {% for key, label in foot_labels.items() %}
+            <option value="{{ key }}" {% if (player.preferred_foot or "right") == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button class="button" type="submit">Salva profilo</button>
     </form>
   </div>
 </section>

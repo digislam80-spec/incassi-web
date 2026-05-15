@@ -43,6 +43,12 @@ PLAYER_TITLES = {
     1: "Progetto tecnico",
 }
 
+FOOT_LABELS = {
+    "right": "Destro",
+    "left": "Sinistro",
+    "both": "Entrambi",
+}
+
 MASCOTS = {
     "fantasista": {"code": "F10", "label": "O' Poet ca palla", "class": "gold"},
     "saracinesca": {"code": "GK", "label": "A' Serranda e Scampia", "class": "blue"},
@@ -191,6 +197,7 @@ def init_db():
                 password_hash text default '',
                 account_status text not null default 'approved',
                 role text not null default 'Jolly',
+                preferred_foot text not null default 'right',
                 mascot text not null default 'jolly',
                 mascot_name text default '',
                 power numeric(2,1) not null default 3 check(power between 1 and 5),
@@ -243,6 +250,7 @@ def init_db():
             "update matches set title = 'Calcetto del Venerdì' where title in ('Calcetto del Venerdi', 'Calcetto del Giovedi')"
         )
         connection.execute("alter table players alter column power type numeric(2,1) using power::numeric")
+        connection.execute("alter table players add column if not exists preferred_foot text not null default 'right'")
         connection.execute("alter table match_players add column if not exists responded_at timestamptz")
         connection.execute(
             """
@@ -266,6 +274,7 @@ def init_db():
             password_hash text default '',
             account_status text not null default 'approved',
             role text not null default 'Jolly',
+            preferred_foot text not null default 'right',
             mascot text not null default 'jolly',
             mascot_name text default '',
             power numeric not null default 3 check(power between 1 and 5),
@@ -316,6 +325,7 @@ def init_db():
         "username": "alter table players add column username text default ''",
         "password_hash": "alter table players add column password_hash text default ''",
         "account_status": "alter table players add column account_status text not null default 'approved'",
+        "preferred_foot": "alter table players add column preferred_foot text not null default 'right'",
     }
     for column, sql in player_migrations.items():
         if column not in columns:
@@ -400,8 +410,8 @@ def seed_initial_data():
         for player in seed_players:
             execute(
                 """
-                insert into players (name, nickname, phone, role, power, mascot, username, password_hash, account_status, invite_token)
-                values (?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?)
+                insert into players (name, nickname, phone, role, power, mascot, preferred_foot, username, password_hash, account_status, invite_token)
+                values (?, ?, ?, ?, ?, ?, 'right', ?, ?, 'approved', ?)
                 """,
                 (*player, player[0].lower(), generate_password_hash("calcetto"), uuid.uuid4().hex),
             )
@@ -451,6 +461,10 @@ app.jinja_env.filters["format_power"] = format_power
 
 def player_title(power):
     return PLAYER_TITLES.get(round(power_value(power)), "Mistero tattico")
+
+
+def foot_label(foot):
+    return FOOT_LABELS.get(foot or "right", "Destro")
 
 
 def status_label(status):
@@ -528,6 +542,7 @@ def overall_rating(player):
 
 
 app.jinja_env.filters["player_title"] = player_title
+app.jinja_env.filters["foot_label"] = foot_label
 app.jinja_env.filters["status_label"] = status_label
 app.jinja_env.filters["response_label"] = response_label
 app.jinja_env.filters["account_status_label"] = account_status_label
@@ -898,6 +913,7 @@ def admin_dashboard():
         match_day=match_day(match) if match else False,
         motto=goliardic_motto(match),
         mascots=MASCOTS,
+        foot_labels=FOOT_LABELS,
     )
 
 
@@ -928,8 +944,11 @@ def register_player():
         phone = request.form["phone"].strip()
         password = request.form["password"]
         mascot = request.form.get("mascot", "jolly")
+        preferred_foot = request.form.get("preferred_foot", "right")
         if mascot not in MASCOTS:
             mascot = "jolly"
+        if preferred_foot not in FOOT_LABELS:
+            preferred_foot = "right"
         accepted_rules = request.form.get("accepted_rules") == "yes"
         if query("select id from players where lower(username) = lower(?)", (username,), one=True):
             error = "Username già preso: serve un nome da spogliatoio originale."
@@ -941,8 +960,8 @@ def register_player():
             execute(
                 """
                 insert into players
-                    (name, nickname, phone, username, password_hash, account_status, active, mascot, mascot_name, invite_token)
-                values (?, ?, ?, ?, ?, 'pending', 0, ?, ?, ?)
+                    (name, nickname, phone, username, password_hash, account_status, active, mascot, mascot_name, preferred_foot, invite_token)
+                values (?, ?, ?, ?, ?, 'pending', 0, ?, ?, ?, ?)
                 """,
                 (
                     f"{name} {surname}".strip(),
@@ -952,11 +971,19 @@ def register_player():
                     generate_password_hash(password),
                     mascot,
                     request.form.get("mascot_name", "").strip(),
+                    preferred_foot,
                     uuid.uuid4().hex,
                 ),
             )
             return render_template("register_done.html", match=latest_match())
-    return render_template("register.html", error=error, mascots=MASCOTS, rules=RULES, match=latest_match())
+    return render_template(
+        "register.html",
+        error=error,
+        mascots=MASCOTS,
+        foot_labels=FOOT_LABELS,
+        rules=RULES,
+        match=latest_match(),
+    )
 
 
 @app.route("/player/login", methods=["GET", "POST"])
@@ -1011,6 +1038,7 @@ def player_dashboard():
         matches=my_matches,
         match=match,
         waitlist_positions=my_waitlist_positions,
+        foot_labels=FOOT_LABELS,
     )
 
 
@@ -1103,24 +1131,36 @@ def player_cancel(match_id):
     return redirect(url_for("player_dashboard"))
 
 
+@app.route("/player/profile", methods=["POST"])
+@require_player
+def player_update_profile():
+    player = current_player()
+    preferred_foot = request.form.get("preferred_foot", "right")
+    if preferred_foot not in FOOT_LABELS:
+        preferred_foot = "right"
+    execute(
+        "update players set mascot_name = ?, preferred_foot = ? where id = ?",
+        (request.form.get("mascot_name", "").strip(), preferred_foot, player["id"]),
+    )
+    return redirect(url_for("player_dashboard"))
+
+
 @app.route("/player/mascot-name", methods=["POST"])
 @require_player
 def player_update_mascot_name():
-    player = current_player()
-    execute(
-        "update players set mascot_name = ? where id = ?",
-        (request.form.get("mascot_name", "").strip(), player["id"]),
-    )
-    return redirect(url_for("player_dashboard"))
+    return player_update_profile()
 
 
 @app.route("/players", methods=["POST"])
 @require_admin
 def add_player():
+    preferred_foot = request.form.get("preferred_foot", "right")
+    if preferred_foot not in FOOT_LABELS:
+        preferred_foot = "right"
     execute(
         """
-        insert into players (name, nickname, phone, role, power, mascot, invite_token)
-        values (?, ?, ?, ?, ?, ?, ?)
+        insert into players (name, nickname, phone, role, power, mascot, preferred_foot, invite_token)
+        values (?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             request.form["name"].strip(),
@@ -1129,6 +1169,7 @@ def add_player():
             request.form.get("role", "Jolly"),
             float(request.form.get("power", 3)),
             request.form.get("mascot", "jolly"),
+            preferred_foot,
             uuid.uuid4().hex,
         ),
     )
@@ -1138,10 +1179,13 @@ def add_player():
 @app.route("/players/<int:player_id>", methods=["POST"])
 @require_admin
 def update_player(player_id):
+    preferred_foot = request.form.get("preferred_foot", "right")
+    if preferred_foot not in FOOT_LABELS:
+        preferred_foot = "right"
     execute(
         """
         update players
-        set name = ?, nickname = ?, phone = ?, role = ?, power = ?, reliability = ?, mascot = ?, mascot_name = ?
+        set name = ?, nickname = ?, phone = ?, role = ?, power = ?, reliability = ?, mascot = ?, mascot_name = ?, preferred_foot = ?
         where id = ?
         """,
         (
@@ -1153,6 +1197,7 @@ def update_player(player_id):
             int(request.form.get("reliability", 80)),
             request.form.get("mascot", "jolly"),
             request.form.get("mascot_name", "").strip(),
+            preferred_foot,
             player_id,
         ),
     )
@@ -1276,6 +1321,7 @@ def match_detail(match_id):
         motto=goliardic_motto(match),
         confirmed_count=confirmed_count(match_id),
         mascots=MASCOTS,
+        foot_labels=FOOT_LABELS,
     )
 
 
@@ -1330,10 +1376,13 @@ def add_external_player(match_id):
     name = request.form["name"].strip()
     if not name:
         return redirect(url_for("match_detail", match_id=match_id))
+    preferred_foot = request.form.get("preferred_foot", "right")
+    if preferred_foot not in FOOT_LABELS:
+        preferred_foot = "right"
     player_id = execute(
         """
-        insert into players (name, nickname, phone, role, power, mascot, mascot_name, invite_token, account_status, active)
-        values (?, ?, ?, ?, ?, ?, ?, ?, 'approved', 1)
+        insert into players (name, nickname, phone, role, power, mascot, mascot_name, preferred_foot, invite_token, account_status, active)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', 1)
         """,
         (
             name,
@@ -1343,6 +1392,7 @@ def add_external_player(match_id):
             float(request.form.get("power", 3)),
             request.form.get("mascot", "jolly"),
             request.form.get("mascot_name", "").strip(),
+            preferred_foot,
             uuid.uuid4().hex,
         ),
     )

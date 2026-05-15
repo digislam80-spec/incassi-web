@@ -90,6 +90,13 @@
           {% endfor %}
         </select>
       </label>
+      <label>Piede
+        <select name="preferred_foot">
+          {% for key, label in foot_labels.items() %}
+            <option value="{{ key }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
       <label>Mascotte
         <select name="mascot">
           {% for key, mascot in mascots.items() %}
@@ -113,7 +120,7 @@
         <summary>
           <span class="admin-player-main">
             <strong>{{ p.name }}</strong>
-            <small>{{ p.nickname or "senza soprannome" }} · {{ p.role }}</small>
+            <small>{{ p.nickname or "senza soprannome" }} · {{ p.role }} · {{ p.preferred_foot|foot_label }}</small>
           </span>
           <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
           <span class="stars">{{ p.power|stars }}</span>
@@ -146,6 +153,13 @@
               </select>
             </label>
             <label>Affidabilità <input type="number" name="reliability" min="0" max="100" value="{{ p.reliability }}"></label>
+            <label>Piede
+              <select name="preferred_foot">
+                {% for key, label in foot_labels.items() %}
+                  <option value="{{ key }}" {% if (p.preferred_foot or "right") == key %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </label>
             <label>Mascotte
               <select name="mascot">
                 {% for key, mascot in mascots.items() %}
