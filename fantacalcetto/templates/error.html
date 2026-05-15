@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="public-card login-card">
+  <p class="eyebrow">Errore spogliatoio</p>
+  <img class="brand-illustration compact" src="{{ url_for('static', filename='favicon.png') }}" alt="FantaCalcetto Digislam">
+  <h1>Il pallone è finito nel parcheggio.</h1>
+  <p class="lede">C'è stato un errore tecnico, ma l'app non è sparita. Torna in admin e riprova: se succede ancora, il log ora registra il punto preciso.</p>
+  <a class="button primary" href="{{ url_for('admin_dashboard') if is_admin else url_for('player_login') }}">Torna a FantaCalcetto</a>
+</section>
+{% endblock %}

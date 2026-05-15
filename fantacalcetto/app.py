@@ -10,6 +10,7 @@ from functools import wraps
 from threading import Lock
 
 from flask import Flask, Response, g, redirect, render_template, request, session, url_for
+from werkzeug.exceptions import HTTPException
 from werkzeug.security import check_password_hash, generate_password_hash
 
 try:
@@ -194,6 +195,14 @@ def require_player(view):
 @app.context_processor
 def inject_user_state():
     return {"is_admin": is_admin(), "current_player": current_player()}
+
+
+@app.errorhandler(Exception)
+def handle_unexpected_error(error):
+    if isinstance(error, HTTPException):
+        return error
+    app.logger.exception("Errore non gestito su %s", request.path)
+    return render_template("error.html", error=error), 500
 
 
 def init_db():
@@ -1690,22 +1699,30 @@ def match_detail(match_id):
 @app.route("/matches/<int:match_id>/settings", methods=["POST"])
 @require_admin
 def update_match_settings(match_id):
-    execute(
-        """
-        update matches
-        set title = ?, match_date = ?, location = ?, player_limit = ?
-        where id = ?
-        """,
-        (
-            request.form["title"].strip(),
-            request.form["match_date"],
-            request.form["location"].strip(),
-            int(request.form.get("player_limit", 10)),
-            match_id,
-        ),
-    )
-    sync_waitlist(match_id)
-    return redirect(url_for("match_detail", match_id=match_id))
+    match = get_match(match_id)
+    if not match:
+        return redirect(url_for("admin_dashboard"))
+    title = request.form.get("title", "").strip() or match["title"]
+    match_date = request.form.get("match_date", "").strip() or match["match_date"]
+    location = request.form.get("location", "").strip() or match["location"]
+    try:
+        player_limit = max(2, min(30, int(request.form.get("player_limit", match["player_limit"] or 10))))
+    except (TypeError, ValueError):
+        return redirect(url_for("match_detail", match_id=match_id, notice="Quota partita non valida: inserisci un numero da 2 a 30."))
+    try:
+        execute(
+            """
+            update matches
+            set title = ?, match_date = ?, location = ?, player_limit = ?
+            where id = ?
+            """,
+            (title, match_date, location, player_limit, match_id),
+        )
+        sync_waitlist(match_id)
+    except Exception:
+        app.logger.exception("Errore durante il salvataggio impostazioni partita %s", match_id)
+        return redirect(url_for("match_detail", match_id=match_id, notice="Non sono riuscito a salvare la partita. Controlla data, ora e quota."))
+    return redirect(url_for("match_detail", match_id=match_id, notice="Modifiche partita salvate."))
 
 
 @app.route("/matches/<int:match_id>/confirm-match", methods=["POST"])
