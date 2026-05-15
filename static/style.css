@@ -24,7 +24,8 @@ body {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
@@ -141,6 +142,7 @@ h2 {
 }
 
 .summary div,
+.panel,
 .entry-form,
 .entry {
   border: 1px solid var(--line);
@@ -168,6 +170,83 @@ label span {
   line-height: 1.1;
 }
 
+.panel {
+  margin-bottom: 12px;
+  padding: 14px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.panel-head h2 {
+  margin: 0;
+}
+
+select {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfb;
+  color: var(--text);
+  padding: 8px 10px;
+}
+
+.filters,
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stats-grid {
+  margin-top: 12px;
+}
+
+.stats-grid div {
+  border-radius: 8px;
+  background: #eef5f3;
+  padding: 12px;
+}
+
+.stats-grid span,
+.method-stats dt,
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.stats-grid strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 18px;
+}
+
+.method-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.method-stats div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
+.method-stats dd {
+  margin: 0;
+  font-weight: 800;
+}
+
 .entry-form {
   display: grid;
   gap: 12px;
@@ -191,6 +270,20 @@ textarea {
   color: var(--text);
   padding: 10px 12px;
   outline: none;
+}
+
+.import-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.import-row input {
+  margin-top: 0;
+}
+
+.hint {
+  margin-top: 8px;
 }
 
 textarea {
@@ -310,8 +403,17 @@ button {
 
   .summary,
   .grid,
-  .methods {
+  .methods,
+  .filters,
+  .stats-grid,
+  .method-stats {
     grid-template-columns: 1fr;
+  }
+
+  .panel-head,
+  .import-row {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .entry-head {

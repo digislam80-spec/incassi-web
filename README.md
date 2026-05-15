@@ -46,6 +46,34 @@ SUPABASE_SERVICE_KEY
 SHARED_PASSWORD
 ```
 
+## Import JSON
+
+L'app accetta un file JSON con un elenco di incassi, oppure un oggetto con chiave `incassi`, `entries` o `data`.
+
+Esempio:
+
+```json
+[
+  {
+    "data": "15/05/2026",
+    "pos": "120,50",
+    "contanti": "80",
+    "bonifici": 40,
+    "paypal": 0,
+    "altri": 10,
+    "note": "Import storico"
+  }
+]
+```
+
+Alias accettati:
+
+- `POS`: `pos` oppure `os`
+- `Contanti`: `contanti`, `cash`
+- `Bonifici`: `bonifici`, `bonifico`, `bankTransfer`
+- `PayPal`: `paypal`
+- `Altri metodi`: `altri`, `altro`, `other`, `altriMetodi`
+
 ## Tabella Supabase
 
 Nel SQL Editor di Supabase esegui:

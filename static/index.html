@@ -38,7 +38,7 @@
 
       <section class="summary" aria-label="Riepilogo">
         <div>
-          <span>Totale periodo</span>
+          <span>Totale complessivo</span>
           <strong id="grandTotal">€ 0,00</strong>
         </div>
         <div>
@@ -48,6 +48,53 @@
       </section>
 
       <p class="error app-error" id="appError" role="alert"></p>
+
+      <section class="panel" aria-label="Statistiche">
+        <div class="panel-head">
+          <h2>Statistiche</h2>
+          <select id="statsMode" aria-label="Periodo statistiche">
+            <option value="month">Mese</option>
+            <option value="year">Anno</option>
+            <option value="range">Intervallo</option>
+          </select>
+        </div>
+
+        <div class="filters">
+          <label id="monthFilter">
+            <span>Mese</span>
+            <input id="statsMonth" type="month">
+          </label>
+          <label id="yearFilter" hidden>
+            <span>Anno</span>
+            <input id="statsYear" type="number" min="2000" max="2100" step="1">
+          </label>
+          <label id="fromFilter" hidden>
+            <span>Da</span>
+            <input id="statsFrom" type="date">
+          </label>
+          <label id="toFilter" hidden>
+            <span>A</span>
+            <input id="statsTo" type="date">
+          </label>
+        </div>
+
+        <div class="stats-grid">
+          <div>
+            <span>Totale periodo</span>
+            <strong id="periodTotal">€ 0,00</strong>
+          </div>
+          <div>
+            <span>Giorni inseriti</span>
+            <strong id="periodDays">0</strong>
+          </div>
+          <div>
+            <span>Media giornaliera</span>
+            <strong id="periodAverage">€ 0,00</strong>
+          </div>
+        </div>
+
+        <dl class="method-stats" id="methodStats"></dl>
+      </section>
 
       <form class="entry-form" id="entryForm">
         <input type="hidden" id="entryId">
@@ -59,7 +106,7 @@
 
         <div class="grid">
           <label>
-            <span>OS</span>
+            <span>POS</span>
             <input id="os" name="os" type="text" inputmode="decimal" placeholder="0,00">
           </label>
           <label>
@@ -90,6 +137,17 @@
           <button class="primary" type="submit">Salva</button>
         </div>
       </form>
+
+      <section class="panel" aria-label="Importa incassi">
+        <div class="panel-head">
+          <h2>Importa JSON</h2>
+        </div>
+        <div class="import-row">
+          <input id="importFile" type="file" accept="application/json,.json">
+          <button class="secondary" id="importButton" type="button">Importa</button>
+        </div>
+        <p class="hint" id="importResult"></p>
+      </section>
 
       <section class="history" aria-label="Storico incassi">
         <h2>Storico</h2>

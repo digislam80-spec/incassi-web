@@ -6,6 +6,7 @@ from urllib.error import HTTPError, URLError
 import json
 import os
 import uuid
+from datetime import datetime
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -15,6 +16,14 @@ SHARED_PASSWORD = os.environ.get("SHARED_PASSWORD", "incassi2026")
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 FIELDS = ["os", "contanti", "bonifici", "paypal", "altri"]
+FIELD_ALIASES = {
+    "os": ["os", "pos"],
+    "contanti": ["contanti", "cash", "contante"],
+    "bonifici": ["bonifici", "bonifico", "bankTransfer", "bank_transfer", "transfer"],
+    "paypal": ["paypal", "payPal", "pay_pal"],
+    "altri": ["altri", "altro", "other", "others", "altriMetodi", "altri_metodi"],
+}
+DATE_ALIASES = ["data", "date", "giorno", "day"]
 
 
 class StorageError(Exception):
@@ -107,6 +116,32 @@ def save_entry(entry):
     return entry
 
 
+def import_entries(payload):
+    if isinstance(payload, dict):
+        rows = payload.get("incassi") or payload.get("entries") or payload.get("data") or [payload]
+    else:
+        rows = payload
+
+    if not isinstance(rows, list):
+        raise ValueError("Il JSON deve contenere un elenco di incassi.")
+
+    imported = []
+    errors = []
+
+    for index, row in enumerate(rows, start=1):
+        try:
+            if not isinstance(row, dict):
+                raise ValueError("riga non valida")
+            entry = normalize_entry(row)
+            if not entry.get("data"):
+                raise ValueError("data mancante")
+            imported.append(save_entry(entry))
+        except (ValueError, StorageError) as error:
+            errors.append({"row": index, "message": str(error)})
+
+    return {"imported": len(imported), "errors": errors}
+
+
 def delete_entry(entry_id):
     if use_supabase():
         delete_supabase_entry(entry_id)
@@ -119,13 +154,13 @@ def delete_entry(entry_id):
 def normalize_entry(payload):
     entry = {
         "id": payload.get("id") or str(uuid.uuid4()),
-        "data": str(payload.get("data", ""))[:10],
-        "note": str(payload.get("note", "")).strip(),
+        "data": normalize_date(first_value(payload, DATE_ALIASES)),
+        "note": str(first_value(payload, ["note", "notes", "nota"], "")).strip(),
     }
 
     for field in FIELDS:
         try:
-            entry[field] = round(float(payload.get(field) or 0), 2)
+            entry[field] = round(parse_amount(first_value(payload, FIELD_ALIASES[field], 0)), 2)
         except (TypeError, ValueError):
             entry[field] = 0
 
@@ -137,6 +172,46 @@ def normalize_loaded_entry(row):
     entry = normalize_entry(row)
     entry["id"] = row.get("id") or entry["id"]
     return entry
+
+
+def first_value(payload, names, default=None):
+    lowered = {str(key).lower(): value for key, value in payload.items()}
+    for name in names:
+        if name in payload:
+            return payload[name]
+        value = lowered.get(str(name).lower())
+        if value is not None:
+            return value
+    return default
+
+
+def normalize_date(value):
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+
+    if len(raw) >= 10 and raw[4] == "-" and raw[7] == "-":
+        return raw[:10]
+
+    for date_format in ("%d/%m/%Y", "%d-%m-%Y", "%Y/%m/%d", "%d.%m.%Y"):
+        try:
+            return datetime.strptime(raw[:10], date_format).date().isoformat()
+        except ValueError:
+            continue
+
+    return raw[:10]
+
+
+def parse_amount(value):
+    if isinstance(value, (int, float)):
+        return float(value)
+
+    raw = str(value or "0").strip().replace("€", "").replace(" ", "")
+    if "," in raw and "." in raw:
+        raw = raw.replace(".", "").replace(",", ".")
+    else:
+        raw = raw.replace(",", ".")
+    return float(raw or 0)
 
 
 class IncassiHandler(SimpleHTTPRequestHandler):
@@ -172,6 +247,19 @@ class IncassiHandler(SimpleHTTPRequestHandler):
                 self.send_json({"ok": True})
             else:
                 self.send_json({"ok": False, "message": "Password non corretta"}, status=401)
+            return
+
+        if parsed.path == "/api/import":
+            if not self.require_auth():
+                return
+
+            try:
+                result = import_entries(self.read_json())
+                self.send_json(result, status=201)
+            except (ValueError, json.JSONDecodeError) as error:
+                self.send_json({"message": str(error)}, status=400)
+            except StorageError as error:
+                self.send_json({"message": str(error)}, status=502)
             return
 
         if parsed.path != "/api/incassi":

@@ -1,6 +1,6 @@
 const fields = ["os", "contanti", "bonifici", "paypal", "altri"];
 const labels = {
-  os: "OS",
+  os: "POS",
   contanti: "Contanti",
   bonifici: "Bonifici",
   paypal: "PayPal",
@@ -16,6 +16,18 @@ const template = document.querySelector("#entryTemplate");
 const grandTotalEl = document.querySelector("#grandTotal");
 const todayTotalEl = document.querySelector("#todayTotal");
 const appError = document.querySelector("#appError");
+const statsMode = document.querySelector("#statsMode");
+const statsMonth = document.querySelector("#statsMonth");
+const statsYear = document.querySelector("#statsYear");
+const statsFrom = document.querySelector("#statsFrom");
+const statsTo = document.querySelector("#statsTo");
+const periodTotalEl = document.querySelector("#periodTotal");
+const periodDaysEl = document.querySelector("#periodDays");
+const periodAverageEl = document.querySelector("#periodAverage");
+const methodStatsEl = document.querySelector("#methodStats");
+const importFile = document.querySelector("#importFile");
+const importButton = document.querySelector("#importButton");
+const importResult = document.querySelector("#importResult");
 
 let entries = [];
 let password = localStorage.getItem("incassiPassword") || "";
@@ -29,6 +41,10 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function currentMonth() {
+  return today().slice(0, 7);
+}
+
 function readableDate(value) {
   return new Intl.DateTimeFormat("it-IT", {
     day: "2-digit",
@@ -39,6 +55,10 @@ function readableDate(value) {
 
 function numberValue(id) {
   return Number.parseFloat(document.querySelector(`#${id}`).value.replace(",", ".")) || 0;
+}
+
+function sumEntries(items) {
+  return items.reduce((sum, entry) => sum + Number(entry.totale || 0), 0);
 }
 
 function authHeaders(extra = {}) {
@@ -95,6 +115,13 @@ function resetForm() {
   form.reset();
   document.querySelector("#entryId").value = "";
   document.querySelector("#data").value = today();
+}
+
+function resetStatsDefaults() {
+  statsMonth.value = currentMonth();
+  statsYear.value = new Date().getFullYear();
+  statsFrom.value = today();
+  statsTo.value = today();
 }
 
 async function loadEntries() {
@@ -169,6 +196,38 @@ async function deleteEntry(id) {
   await loadEntries();
 }
 
+async function importJson() {
+  const file = importFile.files?.[0];
+  if (!file) {
+    importResult.textContent = "Seleziona un file JSON.";
+    return;
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(await file.text());
+  } catch {
+    importResult.textContent = "JSON non valido.";
+    return;
+  }
+
+  const response = await fetch("/api/import", {
+    method: "POST",
+    headers: authHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify(payload),
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    importResult.textContent = result.message || "Import non riuscito.";
+    return;
+  }
+
+  importResult.textContent = `Importati ${result.imported} incassi. Errori: ${result.errors?.length || 0}.`;
+  importFile.value = "";
+  await loadEntries();
+}
+
 function editEntry(entry) {
   document.querySelector("#entryId").value = entry.id;
   document.querySelector("#data").value = entry.data;
@@ -186,6 +245,7 @@ function render() {
   grandTotalEl.textContent = eur.format(grandTotal);
   todayTotalEl.textContent = eur.format(todayEntry?.totale || 0);
   entriesEl.innerHTML = "";
+  renderStats();
 
   if (entries.length === 0) {
     entriesEl.innerHTML = '<div class="empty">Nessun incasso inserito.</div>';
@@ -211,11 +271,63 @@ function render() {
   });
 }
 
+function selectedPeriodEntries() {
+  const mode = statsMode.value;
+
+  if (mode === "month") {
+    const month = statsMonth.value || currentMonth();
+    return entries.filter((entry) => entry.data?.startsWith(month));
+  }
+
+  if (mode === "year") {
+    const year = String(statsYear.value || new Date().getFullYear());
+    return entries.filter((entry) => entry.data?.startsWith(year));
+  }
+
+  const from = statsFrom.value || "0000-01-01";
+  const to = statsTo.value || "9999-12-31";
+  return entries.filter((entry) => entry.data >= from && entry.data <= to);
+}
+
+function updateFilterVisibility() {
+  const mode = statsMode.value;
+  document.querySelector("#monthFilter").hidden = mode !== "month";
+  document.querySelector("#yearFilter").hidden = mode !== "year";
+  document.querySelector("#fromFilter").hidden = mode !== "range";
+  document.querySelector("#toFilter").hidden = mode !== "range";
+}
+
+function renderStats() {
+  updateFilterVisibility();
+
+  const periodEntries = selectedPeriodEntries();
+  const periodTotal = sumEntries(periodEntries);
+  const periodDays = periodEntries.length;
+
+  periodTotalEl.textContent = eur.format(periodTotal);
+  periodDaysEl.textContent = String(periodDays);
+  periodAverageEl.textContent = eur.format(periodDays ? periodTotal / periodDays : 0);
+  methodStatsEl.innerHTML = "";
+
+  fields.forEach((field) => {
+    const value = periodEntries.reduce((sum, entry) => sum + Number(entry[field] || 0), 0);
+    const row = document.createElement("div");
+    row.innerHTML = `<dt>${labels[field]}</dt><dd>${eur.format(value)}</dd>`;
+    methodStatsEl.appendChild(row);
+  });
+}
+
 form.addEventListener("submit", saveEntry);
 loginForm.addEventListener("submit", login);
 document.querySelector("#resetButton").addEventListener("click", resetForm);
 document.querySelector("#refreshButton").addEventListener("click", loadEntries);
 document.querySelector("#logoutButton").addEventListener("click", logout);
+importButton.addEventListener("click", importJson);
+[statsMode, statsMonth, statsYear, statsFrom, statsTo].forEach((input) => {
+  input.addEventListener("input", renderStats);
+  input.addEventListener("change", renderStats);
+});
 
+resetStatsDefaults();
 resetForm();
 loadEntries();
