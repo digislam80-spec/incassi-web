@@ -21,6 +21,13 @@
   </form>
 </section>
 
+<section class="match-quickbar">
+  <div><strong>{{ summary_counts.confirmed }}/{{ match.player_limit }}</strong><small>confermati</small></div>
+  <div><strong>{{ summary_counts.waitlist }}</strong><small>lista attesa</small></div>
+  <div><strong>{{ summary_counts.declined }}</strong><small>non giocano</small></div>
+  <div><strong>{{ summary_counts.invited }}</strong><small>in attesa</small></div>
+</section>
+
 <section class="grid two">
   <div class="panel">
     <div class="panel-head">
@@ -98,7 +105,7 @@
 
 <section class="panel whatsapp-panel">
   <div class="panel-head">
-    <h2>Messaggio gruppo WhatsApp</h2>
+    <h2>Notifiche WhatsApp</h2>
     <button class="button" type="button" data-copy-target="#group-message" data-copy-label="Copia messaggio">Copia messaggio</button>
   </div>
   <textarea id="group-message" readonly rows="10">Convocazione ufficiale FantaCalcetto
@@ -119,6 +126,33 @@ Disdetta dall'account: più è vicina alla gara, più pesa su score e stelle.
 Sponsored by Digislam Print Lab
 https://digislam.shop</textarea>
   <p class="muted">Copialo nel gruppo. C'è un solo link: ogni calciatore entra col proprio account, conferma o disdice, e l'app tiene l'ordine di conferma. Sponsored by Digislam Print Lab - digislam.shop.</p>
+  <div class="notification-grid">
+    <label>Partita confermata
+      <textarea id="confirm-message" readonly rows="7">Partita confermata: {{ match.title }}
+{{ match.match_date.replace("T", " ") }} - {{ match.location }}
+
+Quota raggiunta: {{ summary_counts.confirmed }}/{{ match.player_limit }}.
+Controllate sempre la scheda evento su FantaCalcetto.</textarea>
+      <button class="button" type="button" data-copy-target="#confirm-message" data-copy-label="Copia conferma">Copia conferma</button>
+    </label>
+    <label>Squadre pronte
+      <textarea id="teams-message" readonly rows="7">Squadre FantaCalcetto pronte per {{ match.title }}:
+
+{{ match.team_a_name }} vs {{ match.team_b_name }}
+Apri la scheda partita per leggere convocati, squadre e pagelle.
+
+Sponsored by Digislam Print Lab</textarea>
+      <button class="button" type="button" data-copy-target="#teams-message" data-copy-label="Copia squadre">Copia squadre</button>
+    </label>
+    <label>Risultato finale
+      <textarea id="result-message" readonly rows="7">Risultato finale {{ match.title }}:
+{{ match.team_a_name }} {{ match.team_a_score if match.team_a_score is not none else "-" }} - {{ match.team_b_score if match.team_b_score is not none else "-" }} {{ match.team_b_name }}
+
+Pagelle e premi goliardici sono nella scheda partita.
+FantaCalcetto powered by Digislam Print Lab.</textarea>
+      <button class="button" type="button" data-copy-target="#result-message" data-copy-label="Copia risultato">Copia risultato</button>
+    </label>
+  </div>
 </section>
 
 <section class="grid two">
@@ -196,7 +230,7 @@ https://digislam.shop</textarea>
 
 <section class="panel">
   <div class="panel-head">
-    <h2>Risultato e Statistiche</h2>
+    <h2>Risultato, Statistiche e Pagelle</h2>
     <span class="pill">{{ match.status }}</span>
   </div>
   <form class="result-form" method="post" action="{{ url_for('save_result', match_id=match.id) }}">
@@ -211,12 +245,67 @@ https://digislam.shop</textarea>
           <strong>{{ p.name }}</strong>
           <label>Gol <input type="number" min="0" name="goals_{{ p.id }}" value="{{ p.match_goals }}"></label>
           <label>Assist <input type="number" min="0" name="assists_{{ p.id }}" value="{{ p.match_assists }}"></label>
+          <label>Voto <input type="number" min="1" max="10" step="0.5" name="rating_{{ p.id }}" value="{{ p.rating or '' }}" placeholder="7.5"></label>
+          <label>Pagella <input name="review_{{ p.id }}" value="{{ p.review or '' }}" placeholder="Ha corso, ha sudato, ha quasi capito il modulo"></label>
         </div>
       {% else %}
         <p class="muted">Genera prima le squadre, poi potrai inserire gol e assist.</p>
       {% endfor %}
     </div>
-    <button class="button primary" type="submit">Chiudi partita e aggiorna score</button>
+    <button class="button primary" type="submit">Salva risultato e pagelle</button>
   </form>
+</section>
+
+<section class="grid two">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Premi Goliardici</h2>
+      <span class="pill">{{ match_awards|length }} assegnati</span>
+    </div>
+    <form class="form" method="post" action="{{ url_for('save_match_awards', match_id=match.id) }}">
+      <label>Premio
+        <select name="award_type_id">
+          {% for award in award_types %}
+            <option value="{{ award.id }}">{{ award.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Calciatore
+        <select name="player_id">
+          {% for p in players if p.team or p.response in ["confirmed", "present"] %}
+            <option value="{{ p.id }}">{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Nota <input name="note" placeholder="Motivazione goliardica"></label>
+      <button class="button primary" type="submit">Assegna premio</button>
+    </form>
+    <div class="award-list">
+      {% for award in match_awards %}
+        <div class="award-row">
+          <strong>{{ award.award_name }}</strong>
+          <span>{{ award.player_name }}</span>
+          <small>{{ award.note or award.description }}</small>
+          <form method="post" action="{{ url_for('delete_match_award', match_id=match.id, award_id=award.id) }}">
+            <button class="button ghost" type="submit">Rimuovi</button>
+          </form>
+        </div>
+      {% else %}
+        <p class="muted">Nessun premio assegnato: lo spogliatoio attende verdetti.</p>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Nuovo Premio</h2>
+      <span class="pill">Modificabile</span>
+    </div>
+    <form class="form" method="post" action="{{ url_for('add_award_type') }}">
+      <input type="hidden" name="next" value="{{ url_for('match_detail', match_id=match.id) }}">
+      <label>Nome premio <input name="name" placeholder="Es. Tunnel della vergogna" required></label>
+      <label>Descrizione <input name="description" placeholder="Per meriti o demeriti sportivi"></label>
+      <button class="button" type="submit">Aggiungi premio</button>
+    </form>
+  </div>
 </section>
 {% endblock %}
