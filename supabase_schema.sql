@@ -4,9 +4,13 @@ create table if not exists public.incassi (
   os numeric(12,2) not null default 0,
   contanti numeric(12,2) not null default 0,
   bonifici numeric(12,2) not null default 0,
+  bonifici_dettagli jsonb not null default '[]'::jsonb,
   paypal numeric(12,2) not null default 0,
   altri numeric(12,2) not null default 0,
   totale numeric(12,2) not null default 0,
   note text not null default '',
   created_at timestamptz not null default now()
 );
+
+alter table public.incassi
+  add column if not exists bonifici_dettagli jsonb not null default '[]'::jsonb;

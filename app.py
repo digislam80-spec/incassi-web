@@ -24,6 +24,35 @@ FIELD_ALIASES = {
     "altri": ["altri", "altro", "other", "others", "altriMetodi", "altri_metodi"],
 }
 DATE_ALIASES = ["data", "date", "giorno", "day"]
+TRANSFER_ALIASES = ["bonifici_dettagli", "bonificiDettagli", "transfers", "bonifici_lista"]
+TRANSFER_NOTE_MARKER = "\n\n[bonifici_dettagli:"
+ITALIAN_MONTHS = {
+    "gen": 1,
+    "gennaio": 1,
+    "feb": 2,
+    "febbraio": 2,
+    "mar": 3,
+    "marzo": 3,
+    "apr": 4,
+    "aprile": 4,
+    "mag": 5,
+    "maggio": 5,
+    "giu": 6,
+    "giugno": 6,
+    "lug": 7,
+    "luglio": 7,
+    "ago": 8,
+    "agosto": 8,
+    "set": 9,
+    "sett": 9,
+    "settembre": 9,
+    "ott": 10,
+    "ottobre": 10,
+    "nov": 11,
+    "novembre": 11,
+    "dic": 12,
+    "dicembre": 12,
+}
 
 
 class StorageError(Exception):
@@ -67,12 +96,25 @@ def load_supabase_entries():
 
 
 def save_supabase_entry(entry):
-    rows = supabase_request(
-        "incassi?on_conflict=data",
-        method="POST",
-        payload=entry,
-        prefer="resolution=merge-duplicates,return=representation",
-    )
+    try:
+        rows = supabase_request(
+            "incassi?on_conflict=data",
+            method="POST",
+            payload=entry,
+            prefer="resolution=merge-duplicates,return=representation",
+        )
+    except StorageError as error:
+        if "bonifici_dettagli" not in str(error):
+            raise
+        fallback = dict(entry)
+        details = fallback.pop("bonifici_dettagli", [])
+        fallback["note"] = encode_transfer_details_in_note(fallback.get("note", ""), details)
+        rows = supabase_request(
+            "incassi?on_conflict=data",
+            method="POST",
+            payload=fallback,
+            prefer="resolution=merge-duplicates,return=representation",
+        )
     return normalize_loaded_entry(rows[0]) if rows else entry
 
 
@@ -125,6 +167,9 @@ def import_entries(payload):
     if not isinstance(rows, list):
         raise ValueError("Il JSON deve contenere un elenco di incassi.")
 
+    if looks_like_finance_export(rows):
+        rows = adapt_finance_export(rows)
+
     imported = []
     errors = []
 
@@ -152,10 +197,12 @@ def delete_entry(entry_id):
 
 
 def normalize_entry(payload):
+    transfer_details = normalize_transfer_details(payload)
     entry = {
         "id": payload.get("id") or str(uuid.uuid4()),
         "data": normalize_date(first_value(payload, DATE_ALIASES)),
         "note": str(first_value(payload, ["note", "notes", "nota"], "")).strip(),
+        "bonifici_dettagli": transfer_details,
     }
 
     for field in FIELDS:
@@ -164,11 +211,19 @@ def normalize_entry(payload):
         except (TypeError, ValueError):
             entry[field] = 0
 
+    if transfer_details:
+        entry["bonifici"] = round(sum(item["importo"] for item in transfer_details), 2)
+
     entry["totale"] = round(sum(entry[field] for field in FIELDS), 2)
     return entry
 
 
 def normalize_loaded_entry(row):
+    row = dict(row)
+    note, details = decode_transfer_details_from_note(row.get("note", ""))
+    row["note"] = note
+    if details and not row.get("bonifici_dettagli"):
+        row["bonifici_dettagli"] = details
     entry = normalize_entry(row)
     entry["id"] = row.get("id") or entry["id"]
     return entry
@@ -199,6 +254,16 @@ def normalize_date(value):
         except ValueError:
             continue
 
+    parts = raw.lower().replace(".", "").split()
+    if len(parts) == 3 and parts[1] in ITALIAN_MONTHS:
+        try:
+            day = int(parts[0])
+            month = ITALIAN_MONTHS[parts[1]]
+            year = int(parts[2])
+            return datetime(year, month, day).date().isoformat()
+        except ValueError:
+            pass
+
     return raw[:10]
 
 
@@ -209,9 +274,127 @@ def parse_amount(value):
     raw = str(value or "0").strip().replace("€", "").replace(" ", "")
     if "," in raw and "." in raw:
         raw = raw.replace(".", "").replace(",", ".")
-    else:
+    elif "," in raw:
         raw = raw.replace(",", ".")
+    elif raw.count(".") > 1:
+        raw = raw.replace(".", "")
+    elif "." in raw:
+        whole, fraction = raw.split(".", 1)
+        if len(fraction) == 3 and whole.isdigit() and fraction.isdigit():
+            raw = whole + fraction
+    else:
+        raw = raw
     return float(raw or 0)
+
+
+def normalize_transfer_details(payload):
+    raw = first_value(payload, TRANSFER_ALIASES, [])
+    details = []
+
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except json.JSONDecodeError:
+            raw = []
+
+    if isinstance(raw, dict):
+        raw = [raw]
+
+    if isinstance(raw, list):
+        for item in raw:
+            if not isinstance(item, dict):
+                continue
+            name = str(first_value(item, ["nome", "name", "cliente", "da", "from"], "")).strip()
+            amount = parse_amount(first_value(item, ["importo", "amount", "valore", "totale"], 0))
+            if name or amount:
+                details.append({"nome": name, "importo": round(amount, 2)})
+
+    if details:
+        return details
+
+    name = str(first_value(payload, ["bonifico_nome", "nome_bonifico", "nomeBonifico"], "")).strip()
+    amount = parse_amount(first_value(payload, FIELD_ALIASES["bonifici"], 0))
+    if name or amount:
+        return [{"nome": name, "importo": round(amount, 2)}]
+
+    return []
+
+
+def encode_transfer_details_in_note(note, details):
+    clean_note, _ = decode_transfer_details_from_note(note)
+    if not details:
+        return clean_note
+    return f"{clean_note}{TRANSFER_NOTE_MARKER}{json.dumps(details, ensure_ascii=False)}]"
+
+
+def decode_transfer_details_from_note(note):
+    raw = str(note or "")
+    if TRANSFER_NOTE_MARKER not in raw:
+        return raw, []
+    clean_note, encoded = raw.split(TRANSFER_NOTE_MARKER, 1)
+    encoded = encoded.rsplit("]", 1)[0]
+    try:
+        details = json.loads(encoded)
+    except json.JSONDecodeError:
+        details = []
+    return clean_note.strip(), details if isinstance(details, list) else []
+
+
+def looks_like_finance_export(rows):
+    sample = [row for row in rows[:10] if isinstance(row, dict)]
+    return bool(sample) and all({"category", "amount", "date"}.issubset(row.keys()) for row in sample)
+
+
+def adapt_finance_export(rows):
+    grouped = {}
+    unknown_categories = {}
+
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("type", "Entrate")).lower() != "entrate":
+            continue
+
+        date = normalize_date(row.get("date"))
+        if not date:
+            continue
+
+        entry = grouped.setdefault(date, {
+            "data": date,
+            "os": 0,
+            "contanti": 0,
+            "bonifici": 0,
+            "paypal": 0,
+            "altri": 0,
+            "note": "",
+            "bonifici_dettagli": [],
+        })
+
+        category = str(row.get("category", "")).strip().lower()
+        amount = parse_amount(row.get("amount", 0))
+        remark = str(row.get("remark", "")).strip()
+
+        if category == "pos":
+            entry["os"] += amount
+        elif category == "contanti":
+            entry["contanti"] += amount
+        elif category == "bonifici":
+            entry["bonifici"] += amount
+            entry["bonifici_dettagli"].append({"nome": remark, "importo": round(amount, 2)})
+        elif category in {"paypal", "pay pal"}:
+            entry["paypal"] += amount
+        else:
+            entry["altri"] += amount
+            unknown_categories.setdefault(date, set()).add(row.get("category", "Altro"))
+
+    adapted = []
+    for date, entry in grouped.items():
+        if unknown_categories.get(date):
+            names = ", ".join(sorted(str(name) for name in unknown_categories[date]))
+            entry["note"] = f"Categorie importate in Altri: {names}"
+        adapted.append(entry)
+
+    return sorted(adapted, key=lambda item: item["data"])
 
 
 class IncassiHandler(SimpleHTTPRequestHandler):

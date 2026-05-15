@@ -49,6 +49,7 @@ SHARED_PASSWORD
 ## Import JSON
 
 L'app accetta un file JSON con un elenco di incassi, oppure un oggetto con chiave `incassi`, `entries` o `data`.
+Accetta anche l'export di Gestore delle Finanze con righe separate per categoria: le righe vengono aggregate per data.
 
 Esempio:
 
@@ -58,7 +59,10 @@ Esempio:
     "data": "15/05/2026",
     "pos": "120,50",
     "contanti": "80",
-    "bonifici": 40,
+    "bonifici_dettagli": [
+      { "nome": "Mario Rossi", "importo": "25,00" },
+      { "nome": "Studio Bianchi", "importo": "15,00" }
+    ],
     "paypal": 0,
     "altri": 10,
     "note": "Import storico"
@@ -71,8 +75,13 @@ Alias accettati:
 - `POS`: `pos` oppure `os`
 - `Contanti`: `contanti`, `cash`
 - `Bonifici`: `bonifici`, `bonifico`, `bankTransfer`
+- `Bonifici dettagliati`: `bonifici_dettagli`, `bonificiDettagli`, `transfers`, `bonifici_lista`
 - `PayPal`: `paypal`
 - `Altri metodi`: `altri`, `altro`, `other`, `altriMetodi`
+
+## Backup
+
+Dalla schermata `Importa` puoi usare `Esporta backup` per scaricare un file JSON con tutti gli incassi attualmente presenti nell'app.
 
 ## Tabella Supabase
 
@@ -85,12 +94,20 @@ create table if not exists public.incassi (
   os numeric(12,2) not null default 0,
   contanti numeric(12,2) not null default 0,
   bonifici numeric(12,2) not null default 0,
+  bonifici_dettagli jsonb not null default '[]'::jsonb,
   paypal numeric(12,2) not null default 0,
   altri numeric(12,2) not null default 0,
   totale numeric(12,2) not null default 0,
   note text not null default '',
   created_at timestamptz not null default now()
 );
+```
+
+Se la tabella esiste gia, prima di pubblicare questa versione esegui anche:
+
+```sql
+alter table public.incassi
+  add column if not exists bonifici_dettagli jsonb not null default '[]'::jsonb;
 ```
 
 ## Pubblicazione online

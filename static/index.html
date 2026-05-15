@@ -8,51 +8,79 @@
     <meta name="apple-mobile-web-app-title" content="Incassi">
     <title>Incassi</title>
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/style.css?v=20260515-13">
   </head>
   <body>
     <section class="login" id="loginView">
       <form class="login-panel" id="loginForm">
-        <p class="eyebrow">Accesso condiviso</p>
-        <h1>Incassi</h1>
-        <label>
-          <span>Password</span>
-          <input id="password" name="password" type="password" autocomplete="current-password" required>
-        </label>
-        <p class="error" id="loginError" role="alert"></p>
-        <button class="primary" type="submit">Entra</button>
+        <div class="login-hero">
+          <img class="login-logo" src="/logo-digislam.png" alt="Digislam Print Lab">
+          <p class="login-title">Registro incassi</p>
+        </div>
+        <div class="login-access">
+          <label>
+            <span>Password condivisa</span>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <p class="error" id="loginError" role="alert"></p>
+          <button class="primary" type="submit">Accedi</button>
+        </div>
       </form>
     </section>
 
     <main class="shell">
       <header class="topbar">
-        <div>
-          <p class="eyebrow">Incassi condivisi</p>
-          <h1>Incassi</h1>
+        <div class="brand">
+          <img src="/logo-digislam.png" alt="Digislam Print Lab">
+          <div>
+            <p class="eyebrow">Incassi condivisi</p>
+            <h1>Registro incassi</h1>
+          </div>
         </div>
         <div class="top-actions">
+          <button class="add-button" id="newEntryButton" type="button" aria-label="Aggiungi nuovo incasso">
+            <span>+</span>
+            Aggiungi nuovo incasso
+          </button>
           <button class="icon-button" id="refreshButton" type="button" aria-label="Aggiorna">↻</button>
           <button class="icon-button" id="logoutButton" type="button" aria-label="Esci">×</button>
         </div>
       </header>
 
-      <section class="summary" aria-label="Riepilogo">
-        <div>
-          <span>Totale complessivo</span>
-          <strong id="grandTotal">€ 0,00</strong>
+      <section class="month-overview" aria-label="Andamento mese">
+        <div class="month-picker-card">
+          <label>
+            <span>Mese</span>
+            <input id="overviewMonth" type="month">
+          </label>
         </div>
-        <div>
+        <div class="month-total-card">
+          <span>Totale mese</span>
+          <strong id="monthTotal">€ 0,00</strong>
+          <p id="monthTrend">Mese precedente: € 0,00</p>
+        </div>
+        <div class="today-card">
           <span>Oggi</span>
           <strong id="todayTotal">€ 0,00</strong>
         </div>
+        <div class="month-breakdown" id="monthBreakdown"></div>
       </section>
+
+      <nav class="screen-nav" aria-label="Navigazione app">
+        <button class="secondary back-button" id="backButton" type="button" hidden>Indietro</button>
+        <button class="secondary active" data-screen-button="history" type="button">Lista rapida</button>
+        <button class="secondary" data-screen-button="stats" type="button">Statistiche</button>
+        <button class="secondary" data-screen-button="import" type="button">Importa</button>
+      </nav>
 
       <p class="error app-error" id="appError" role="alert"></p>
 
-      <section class="panel" aria-label="Statistiche">
+      <section class="panel screen" id="statsScreen" data-screen="stats" aria-label="Statistiche" hidden>
         <div class="panel-head">
           <h2>Statistiche</h2>
           <select id="statsMode" aria-label="Periodo statistiche">
+            <option value="day">Giorno</option>
+            <option value="week">Settimana</option>
             <option value="month">Mese</option>
             <option value="year">Anno</option>
             <option value="range">Intervallo</option>
@@ -60,6 +88,14 @@
         </div>
 
         <div class="filters">
+          <label id="dayFilter">
+            <span>Giorno</span>
+            <input id="statsDay" type="date">
+          </label>
+          <label id="weekFilter" hidden>
+            <span>Settimana</span>
+            <input id="statsWeek" type="week">
+          </label>
           <label id="monthFilter">
             <span>Mese</span>
             <input id="statsMonth" type="month">
@@ -94,15 +130,38 @@
         </div>
 
         <dl class="method-stats" id="methodStats"></dl>
+
+        <div class="charts">
+          <div class="chart-box">
+            <h3>Metodi</h3>
+            <canvas id="methodChart" width="320" height="220"></canvas>
+            <div class="chart-legend" id="methodLegend"></div>
+          </div>
+          <div class="chart-box">
+            <h3>Andamento</h3>
+            <canvas id="dailyChart" width="320" height="220"></canvas>
+          </div>
+        </div>
       </section>
 
-      <form class="entry-form" id="entryForm">
+      <form class="entry-form screen" id="entryForm" data-screen="form" hidden>
         <input type="hidden" id="entryId">
 
-        <label>
-          <span>Data</span>
-          <input id="data" name="data" type="date" required>
-        </label>
+        <div class="form-head">
+          <h2 id="formTitle">Aggiungi nuovo incasso</h2>
+          <button class="icon-button" id="closeFormButton" type="button" aria-label="Chiudi">×</button>
+        </div>
+
+        <div class="date-row">
+          <div class="quick-dates" aria-label="Date rapide">
+            <button class="secondary" id="yesterdayButton" type="button">Ieri</button>
+            <button class="secondary" id="todayButton" type="button">Oggi</button>
+          </div>
+          <label>
+            <span>Data</span>
+            <input id="data" name="data" type="date" required>
+          </label>
+        </div>
 
         <div class="grid">
           <label>
@@ -114,10 +173,6 @@
             <input id="contanti" name="contanti" type="text" inputmode="decimal" placeholder="0,00">
           </label>
           <label>
-            <span>Bonifici</span>
-            <input id="bonifici" name="bonifici" type="text" inputmode="decimal" placeholder="0,00">
-          </label>
-          <label>
             <span>PayPal</span>
             <input id="paypal" name="paypal" type="text" inputmode="decimal" placeholder="0,00">
           </label>
@@ -127,51 +182,57 @@
           </label>
         </div>
 
+        <section class="transfer-panel" aria-label="Bonifici">
+          <div class="panel-head compact">
+            <div>
+              <h2>Bonifici</h2>
+              <p class="hint">Aggiungi una riga per ogni bonifico ricevuto.</p>
+            </div>
+            <button class="secondary" id="addTransferButton" type="button">Aggiungi</button>
+          </div>
+          <div class="transfer-list" id="transferList"></div>
+          <div class="transfer-total">
+            <span>Totale bonifici</span>
+            <strong id="transferTotal">€ 0,00</strong>
+          </div>
+        </section>
+
         <label>
           <span>Note</span>
           <textarea id="note" name="note" rows="2" placeholder="Facoltative"></textarea>
         </label>
 
         <div class="form-actions">
+          <button class="danger" id="deleteCurrentButton" type="button" hidden>Elimina</button>
           <button class="secondary" id="resetButton" type="button">Pulisci</button>
           <button class="primary" type="submit">Salva</button>
         </div>
       </form>
 
-      <section class="panel" aria-label="Importa incassi">
+      <section class="panel screen" id="importScreen" data-screen="import" aria-label="Importa incassi" hidden>
         <div class="panel-head">
-          <h2>Importa JSON</h2>
+          <h2>Importa / backup</h2>
         </div>
         <div class="import-row">
           <input id="importFile" type="file" accept="application/json,.json">
           <button class="secondary" id="importButton" type="button">Importa</button>
+          <button class="primary" id="exportButton" type="button">Esporta backup</button>
         </div>
         <p class="hint" id="importResult"></p>
       </section>
 
-      <section class="history" aria-label="Storico incassi">
-        <h2>Storico</h2>
+      <section class="history screen" id="historyScreen" data-screen="history" aria-label="Storico incassi">
+        <div class="history-head">
+          <h2>Lista storica rapida</h2>
+          <button class="add-button compact" id="historyAddButton" type="button" aria-label="Aggiungi nuovo incasso">
+            <span>+</span>
+            Nuovo
+          </button>
+        </div>
         <div id="entries" class="entries"></div>
       </section>
     </main>
 
-    <template id="entryTemplate">
-      <article class="entry">
-        <div class="entry-head">
-          <div>
-            <h3></h3>
-            <p></p>
-          </div>
-          <strong></strong>
-        </div>
-        <dl class="methods"></dl>
-        <div class="entry-actions">
-          <button class="secondary edit" type="button">Modifica</button>
-          <button class="danger delete" type="button">Elimina</button>
-        </div>
-      </article>
-    </template>
-
-    <script src="/app.js"></script>
+    <script src="/app.js?v=20260515-13"></script>
   </body>
 </html>
