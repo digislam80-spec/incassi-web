@@ -6,6 +6,7 @@ import uuid
 from decimal import Decimal
 from datetime import datetime, timedelta
 from functools import wraps
+from threading import Lock
 
 from flask import Flask, Response, g, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -26,6 +27,7 @@ USE_POSTGRES = bool(DATABASE_URL)
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "calcetto-local-demo")
 ADMIN_PIN = os.environ.get("CALCETTO_ADMIN_PIN", "1234")
+DB_INIT_LOCK = Lock()
 
 TEAM_NAMES = [
     ("Real Madrink", "Atletico Ma Non Troppo"),
@@ -145,13 +147,18 @@ def is_admin():
 
 
 def current_player():
+    if "current_player_value" in g:
+        return g.current_player_value
     player_id = session.get("player_id")
     if not player_id:
+        g.current_player_value = None
         return None
     player = query("select * from players where id = ?", (player_id,), one=True)
     if player and player["account_status"] in ("rejected", "removed"):
         session.pop("player_id", None)
+        g.current_player_value = None
         return None
+    g.current_player_value = player
     return player
 
 
@@ -528,7 +535,12 @@ def seed_initial_data():
 
 @app.before_request
 def ensure_db():
-    init_db()
+    if app.config.get("DB_READY"):
+        return
+    with DB_INIT_LOCK:
+        if not app.config.get("DB_READY"):
+            init_db()
+            app.config["DB_READY"] = True
 
 
 def power_value(power):
