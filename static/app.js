@@ -182,7 +182,7 @@ function logout() {
   showLogin();
 }
 
-function showScreen(name, push = true) {
+function showScreen(name, push = true, options = {}) {
   currentScreen = name;
   screens.forEach((screen) => {
     screen.hidden = screen.dataset.screen !== name;
@@ -196,7 +196,7 @@ function showScreen(name, push = true) {
   }
 
   backButton.hidden = screenStack.length <= 1;
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: options.instant ? "auto" : "smooth" });
 }
 
 function goBack() {
@@ -207,7 +207,8 @@ function goBack() {
 
 function openForm(entry = null) {
   resetForm(entry);
-  showScreen("form");
+  showScreen("form", true, { instant: true });
+  focusFormStart();
 }
 
 function closeForm() {
@@ -235,6 +236,13 @@ function resetForm(entry = null) {
     : [{ nome: "", importo: entry?.bonifici || "" }];
   details.forEach((item) => addTransferRow(item));
   updateTransferTotal();
+}
+
+function focusFormStart() {
+  requestAnimationFrame(() => {
+    form.scrollIntoView({ block: "start", behavior: "auto" });
+    document.querySelector("#data").focus({ preventScroll: true });
+  });
 }
 
 function resetStatsDefaults() {
