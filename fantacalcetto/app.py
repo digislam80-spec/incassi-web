@@ -76,6 +76,8 @@ MASCOTS = {
 
 
 def db():
+    if not app.config.get("DB_INITIALIZING"):
+        ensure_database_ready()
     if "db" not in g:
         if USE_POSTGRES:
             if psycopg is None:
@@ -533,14 +535,17 @@ def seed_initial_data():
             )
 
 
-@app.before_request
-def ensure_db():
+def ensure_database_ready():
     if app.config.get("DB_READY"):
         return
     with DB_INIT_LOCK:
         if not app.config.get("DB_READY"):
-            init_db()
-            app.config["DB_READY"] = True
+            app.config["DB_INITIALIZING"] = True
+            try:
+                init_db()
+                app.config["DB_READY"] = True
+            finally:
+                app.config["DB_INITIALIZING"] = False
 
 
 def power_value(power):
@@ -1059,7 +1064,7 @@ def admin_login():
             session["is_admin"] = True
             return redirect(request.args.get("next") or url_for("admin_dashboard"))
         error = "PIN sbagliato. Il mister non ti riconosce."
-    return render_template("login.html", error=error, match=latest_match())
+    return render_template("login.html", error=error)
 
 
 @app.route("/admin/logout", methods=["POST"])
@@ -1109,14 +1114,13 @@ def register_player():
                     uuid.uuid4().hex,
                 ),
             )
-            return render_template("register_done.html", match=latest_match())
+            return render_template("register_done.html")
     return render_template(
         "register.html",
         error=error,
         mascots=MASCOTS,
         foot_labels=FOOT_LABELS,
         rules=RULES,
-        match=latest_match(),
     )
 
 
@@ -1129,11 +1133,11 @@ def player_login():
         if player and player["password_hash"] and check_password_hash(player["password_hash"], request.form["password"]):
             if player["account_status"] in ("rejected", "removed"):
                 error = "Account non attivo. Parla col mister prima di entrare nello spogliatoio."
-                return render_template("player_login.html", error=error, match=latest_match())
+                return render_template("player_login.html", error=error)
             session["player_id"] = player["id"]
             return redirect(request.args.get("next") or url_for("player_dashboard"))
         error = "Credenziali sbagliate. Riprova senza tunnel."
-    return render_template("player_login.html", error=error, match=latest_match())
+    return render_template("player_login.html", error=error)
 
 
 @app.route("/player/logout", methods=["POST"])
