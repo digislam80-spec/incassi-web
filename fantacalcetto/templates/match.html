@@ -224,6 +224,38 @@ FantaCalcetto powered by Digislam Print Lab.</textarea>
 
 <section class="panel">
   <div class="panel-head">
+    <h2>Modifica Squadre</h2>
+    <span class="pill">Controllo mister</span>
+  </div>
+  <form class="team-editor-form" method="post" action="{{ url_for('update_match_teams', match_id=match.id) }}">
+    <div class="team-name-grid">
+      <label>Nome squadra A <input name="team_a_name" value="{{ match.team_a_name }}"></label>
+      <label>Nome squadra B <input name="team_b_name" value="{{ match.team_b_name }}"></label>
+    </div>
+    <div class="team-editor-list">
+      {% for p in players if p.response in ["confirmed", "present"] or p.team %}
+        <div class="team-editor-row">
+          <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
+          <div>
+            <strong>{{ p.name }}</strong>
+            <small>{{ p.role }} · {{ p.power|stars }} · OVR {{ p|overall_rating }}</small>
+          </div>
+          <select name="team_{{ p.id }}">
+            <option value="" {% if not p.team %}selected{% endif %}>Senza squadra</option>
+            <option value="A" {% if p.team == "A" %}selected{% endif %}>{{ match.team_a_name }}</option>
+            <option value="B" {% if p.team == "B" %}selected{% endif %}>{{ match.team_b_name }}</option>
+          </select>
+        </div>
+      {% else %}
+        <p class="muted">Prima servono confermati o presenti, poi il mister può spostarli a mano.</p>
+      {% endfor %}
+    </div>
+    <button class="button primary" type="submit">Salva squadre manuali</button>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
     <h2>Risultato, Statistiche e Pagelle</h2>
     <span class="pill">{{ match.status }}</span>
   </div>

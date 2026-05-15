@@ -1,4 +1,5 @@
 import itertools
+import json
 import os
 import random
 import sqlite3
@@ -23,11 +24,13 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DB_PATH = os.environ.get("FANTACALCETTO_DB_PATH", os.path.join(BASE_DIR, "calcetto.db"))
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 USE_POSTGRES = bool(DATABASE_URL)
+SEED_DEMO_DATA = os.environ.get("FANTACALCETTO_SEED_DEMO", "").lower() in ("1", "true", "yes")
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "calcetto-local-demo")
 ADMIN_PIN = os.environ.get("CALCETTO_ADMIN_PIN", "1234")
 DB_INIT_LOCK = Lock()
+DATA_TABLES = ["players", "matches", "match_players", "award_types", "match_awards"]
 
 TEAM_NAMES = [
     ("Real Madrink", "Atletico Ma Non Troppo"),
@@ -494,6 +497,8 @@ def seed_award_types():
 
 
 def seed_initial_data():
+    if not SEED_DEMO_DATA:
+        return
     if not query("select id from players limit 1", one=True):
         seed_players = [
             ("Riccardo", "Il Pres", "3331110001", "Jolly", 4, "jolly"),
@@ -533,6 +538,78 @@ def seed_initial_data():
                 "insert into match_players (match_id, player_id, response) values (?, ?, ?)",
                 (match_id, player["id"], response),
             )
+
+
+def json_ready(value):
+    if isinstance(value, Decimal):
+        numeric = float(value)
+        return int(numeric) if numeric.is_integer() else numeric
+    if isinstance(value, datetime):
+        return value.isoformat()
+    return value
+
+
+def table_rows_for_backup(table):
+    return [
+        {key: json_ready(row[key]) for key in row.keys()}
+        for row in query(f"select * from {table}")
+    ]
+
+
+def export_payload():
+    return {
+        "app": "FantaCalcetto",
+        "version": 1,
+        "exported_at": datetime.now().isoformat(timespec="seconds"),
+        "tables": {table: table_rows_for_backup(table) for table in DATA_TABLES},
+    }
+
+
+def clear_data_tables(connection, include_award_types=False):
+    tables = ["match_awards", "match_players", "matches", "players"]
+    if include_award_types:
+        tables.append("award_types")
+    for table in tables:
+        connection.execute(sql_for_backend(f"delete from {table}"))
+
+
+def insert_backup_rows(connection, table, rows):
+    if not rows:
+        return
+    columns = list(rows[0].keys())
+    placeholders = ", ".join(["?"] * len(columns))
+    column_list = ", ".join(columns)
+    statement = sql_for_backend(f"insert into {table} ({column_list}) values ({placeholders})")
+    for row in rows:
+        connection.execute(statement, tuple(row.get(column) for column in columns))
+
+
+def reset_identity_sequences(connection):
+    if USE_POSTGRES:
+        for table in ("players", "matches", "award_types", "match_awards"):
+            connection.execute(
+                f"""
+                select setval(
+                    pg_get_serial_sequence('{table}', 'id'),
+                    coalesce((select max(id) from {table}), 1),
+                    (select count(*) > 0 from {table})
+                )
+                """
+            )
+    else:
+        for table in ("players", "matches", "award_types", "match_awards"):
+            connection.execute("delete from sqlite_sequence where name = ?", (table,))
+
+
+def import_payload(payload):
+    tables = payload.get("tables", {})
+    connection = db()
+    clear_data_tables(connection, include_award_types=True)
+    for table in ("players", "matches", "award_types", "match_players", "match_awards"):
+        insert_backup_rows(connection, table, tables.get(table, []))
+    reset_identity_sequences(connection)
+    connection.commit()
+    seed_award_types()
 
 
 def ensure_database_ready():
@@ -1071,6 +1148,42 @@ def admin_login():
 def admin_logout():
     session.clear()
     return redirect(url_for("dashboard"))
+
+
+@app.route("/admin/backup")
+@require_admin
+def admin_backup():
+    payload = export_payload()
+    filename = f"fantacalcetto-backup-{datetime.now().strftime('%Y%m%d-%H%M')}.json"
+    return Response(
+        json.dumps(payload, ensure_ascii=False, indent=2),
+        mimetype="application/json",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@app.route("/admin/import", methods=["POST"])
+@require_admin
+def admin_import():
+    uploaded = request.files.get("backup_file")
+    if not uploaded:
+        return redirect(url_for("admin_dashboard"))
+    payload = json.loads(uploaded.read().decode("utf-8"))
+    if payload.get("app") == "FantaCalcetto" and isinstance(payload.get("tables"), dict):
+        import_payload(payload)
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin/reset-data", methods=["POST"])
+@require_admin
+def admin_reset_data():
+    if request.form.get("confirm_text", "").strip().upper() != "RESET":
+        return redirect(url_for("admin_dashboard"))
+    connection = db()
+    clear_data_tables(connection)
+    reset_identity_sequences(connection)
+    connection.commit()
+    return redirect(url_for("admin_dashboard"))
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -1638,6 +1751,37 @@ def generate_teams(match_id):
     match = get_match(match_id)
     if match and match["status"] != "cancelled":
         apply_team_generation(match_id)
+    return redirect(url_for("match_detail", match_id=match_id))
+
+
+@app.route("/matches/<int:match_id>/teams", methods=["POST"])
+@require_admin
+def update_match_teams(match_id):
+    if get_match(match_id):
+        execute(
+            """
+            update matches
+            set team_a_name = ?, team_b_name = ?
+            where id = ?
+            """,
+            (
+                request.form.get("team_a_name", "Squadra A").strip() or "Squadra A",
+                request.form.get("team_b_name", "Squadra B").strip() or "Squadra B",
+                match_id,
+            ),
+        )
+        for key, value in request.form.items():
+            if key.startswith("team_") and key.replace("team_", "").isdigit():
+                player_id = int(key.replace("team_", ""))
+                team = value if value in ("A", "B") else None
+                execute(
+                    """
+                    update match_players
+                    set team = ?, response = case when ? is not null then 'present' else response end
+                    where match_id = ? and player_id = ?
+                    """,
+                    (team, team, match_id, player_id),
+                )
     return redirect(url_for("match_detail", match_id=match_id))
 
 

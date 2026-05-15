@@ -29,6 +29,25 @@
   </div>
 </section>
 
+<section class="panel data-panel">
+  <div class="panel-head">
+    <h2>Dati Reali</h2>
+    <span class="pill">Backup e import</span>
+  </div>
+  <div class="data-actions">
+    <a class="button primary" href="{{ url_for('admin_backup') }}">Scarica backup dati</a>
+    <form class="data-import-form" method="post" action="{{ url_for('admin_import') }}" enctype="multipart/form-data">
+      <label>Importa backup JSON <input type="file" name="backup_file" accept="application/json" required></label>
+      <button class="button" type="submit">Importa dati</button>
+    </form>
+    <form class="data-reset-form" method="post" action="{{ url_for('admin_reset_data') }}" onsubmit="return confirm('Sicuro? Verranno eliminati giocatori, partite, convocazioni, squadre, pagelle e premi assegnati. Prima scarica il backup.');">
+      <label>Scrivi RESET per svuotare demo <input name="confirm_text" placeholder="RESET" autocomplete="off"></label>
+      <button class="button danger" type="submit">Svuota tutto</button>
+    </form>
+  </div>
+  <p class="muted">Usa il backup prima di ogni pulizia. L'admin resta via PIN, quindi puoi ripartire con iscrizioni vere senza utenti demo.</p>
+</section>
+
 {% if pending_players %}
 <section class="panel">
   <div class="panel-head">
