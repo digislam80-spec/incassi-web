@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+incassi.json
+.DS_Store

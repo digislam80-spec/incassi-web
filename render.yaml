@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: incassi-web
+    runtime: python
+    plan: free
+    buildCommand: ""
+    startCommand: "python3 app.py"
+    envVars:
+      - key: SHARED_PASSWORD
+        sync: false
+      - key: DATA_DIR
+        value: /var/data
+    disk:
+      name: incassi-data
+      mountPath: /var/data
+      sizeGB: 1

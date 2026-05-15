@@ -1,0 +1,315 @@
+:root {
+  color-scheme: light;
+  --bg: #f6f7f4;
+  --surface: #ffffff;
+  --text: #18211f;
+  --muted: #64706d;
+  --line: #dbe3df;
+  --accent: #0f766e;
+  --accent-dark: #115e59;
+  --danger: #b42318;
+  --shadow: 0 10px 28px rgba(21, 33, 31, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.shell {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  padding: max(18px, env(safe-area-inset-top)) 16px 36px;
+}
+
+.login {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: var(--bg);
+}
+
+.login[hidden] {
+  display: none;
+}
+
+.login-panel {
+  width: min(420px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.login-panel h1 {
+  margin-bottom: 18px;
+}
+
+.login-panel .primary {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.error {
+  min-height: 20px;
+  margin-top: 8px;
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.top-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.eyebrow {
+  margin: 0 0 2px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 38px;
+  letter-spacing: 0;
+}
+
+h2 {
+  margin: 22px 0 12px;
+  font-size: 22px;
+}
+
+.icon-button {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--accent-dark);
+  font-size: 24px;
+  box-shadow: var(--shadow);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.summary div,
+.entry-form,
+.entry {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.summary div {
+  padding: 14px;
+}
+
+.summary span,
+label span {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.summary strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.entry-form {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+input,
+textarea {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfb;
+  color: var(--text);
+  padding: 10px 12px;
+  outline: none;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
+}
+
+.form-actions,
+.entry-actions {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-weight: 800;
+}
+
+.primary {
+  flex: 1;
+  background: var(--accent);
+  color: white;
+}
+
+.secondary {
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--accent-dark);
+}
+
+.danger {
+  border: 1px solid #f2b8b5;
+  background: #fff7f6;
+  color: var(--danger);
+}
+
+.entries {
+  display: grid;
+  gap: 12px;
+}
+
+.entry {
+  padding: 14px;
+}
+
+.entry-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.entry-head h3 {
+  font-size: 18px;
+}
+
+.entry-head p {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.entry-head strong {
+  white-space: nowrap;
+  font-size: 19px;
+}
+
+.methods {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.methods div {
+  border-radius: 8px;
+  background: #eef5f3;
+  padding: 10px;
+}
+
+.methods dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.methods dd {
+  margin: 4px 0 0;
+  font-weight: 800;
+}
+
+.empty {
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 22px;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 430px) {
+  .shell {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  h1 {
+    font-size: 34px;
+  }
+
+  .summary,
+  .grid,
+  .methods {
+    grid-template-columns: 1fr;
+  }
+
+  .entry-head {
+    display: block;
+  }
+
+  .entry-head strong {
+    display: block;
+    margin-top: 8px;
+  }
+}

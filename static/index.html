@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0f766e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Incassi">
+    <title>Incassi</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <section class="login" id="loginView">
+      <form class="login-panel" id="loginForm">
+        <p class="eyebrow">Accesso condiviso</p>
+        <h1>Incassi</h1>
+        <label>
+          <span>Password</span>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <p class="error" id="loginError" role="alert"></p>
+        <button class="primary" type="submit">Entra</button>
+      </form>
+    </section>
+
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Incassi condivisi</p>
+          <h1>Incassi</h1>
+        </div>
+        <div class="top-actions">
+          <button class="icon-button" id="refreshButton" type="button" aria-label="Aggiorna">↻</button>
+          <button class="icon-button" id="logoutButton" type="button" aria-label="Esci">×</button>
+        </div>
+      </header>
+
+      <section class="summary" aria-label="Riepilogo">
+        <div>
+          <span>Totale periodo</span>
+          <strong id="grandTotal">€ 0,00</strong>
+        </div>
+        <div>
+          <span>Oggi</span>
+          <strong id="todayTotal">€ 0,00</strong>
+        </div>
+      </section>
+
+      <form class="entry-form" id="entryForm">
+        <input type="hidden" id="entryId">
+
+        <label>
+          <span>Data</span>
+          <input id="data" name="data" type="date" required>
+        </label>
+
+        <div class="grid">
+          <label>
+            <span>OS</span>
+            <input id="os" name="os" type="text" inputmode="decimal" placeholder="0,00">
+          </label>
+          <label>
+            <span>Contanti</span>
+            <input id="contanti" name="contanti" type="text" inputmode="decimal" placeholder="0,00">
+          </label>
+          <label>
+            <span>Bonifici</span>
+            <input id="bonifici" name="bonifici" type="text" inputmode="decimal" placeholder="0,00">
+          </label>
+          <label>
+            <span>PayPal</span>
+            <input id="paypal" name="paypal" type="text" inputmode="decimal" placeholder="0,00">
+          </label>
+          <label>
+            <span>Altri metodi</span>
+            <input id="altri" name="altri" type="text" inputmode="decimal" placeholder="0,00">
+          </label>
+        </div>
+
+        <label>
+          <span>Note</span>
+          <textarea id="note" name="note" rows="2" placeholder="Facoltative"></textarea>
+        </label>
+
+        <div class="form-actions">
+          <button class="secondary" id="resetButton" type="button">Pulisci</button>
+          <button class="primary" type="submit">Salva</button>
+        </div>
+      </form>
+
+      <section class="history" aria-label="Storico incassi">
+        <h2>Storico</h2>
+        <div id="entries" class="entries"></div>
+      </section>
+    </main>
+
+    <template id="entryTemplate">
+      <article class="entry">
+        <div class="entry-head">
+          <div>
+            <h3></h3>
+            <p></p>
+          </div>
+          <strong></strong>
+        </div>
+        <dl class="methods"></dl>
+        <div class="entry-actions">
+          <button class="secondary edit" type="button">Modifica</button>
+          <button class="danger delete" type="button">Elimina</button>
+        </div>
+      </article>
+    </template>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

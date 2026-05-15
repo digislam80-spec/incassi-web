@@ -1,0 +1,9 @@
+{
+  "name": "Incassi Condivisi",
+  "short_name": "Incassi",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f4",
+  "theme_color": "#0f766e",
+  "icons": []
+}
