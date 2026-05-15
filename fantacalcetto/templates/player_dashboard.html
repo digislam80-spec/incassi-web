@@ -1,23 +1,26 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="hero">
+<section class="hero profile-hero">
   <div>
     <p class="eyebrow">Profilo calciatore</p>
     <h1>{{ player.name }}</h1>
     <p class="lede">{{ player.nickname or "Soprannome ancora da spogliatoio" }} · {{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.account_status|account_status_label }}</p>
-    <button class="button profile-help-button" type="button" onclick="document.getElementById('player-help').showModal()">Cosa posso fare qui?</button>
+    <div class="hero-actions">
+      <a class="button primary" href="#profile-edit">Modifica profilo</a>
+      <button class="button profile-help-button" type="button" onclick="document.getElementById('player-help').showModal()">Cosa posso fare qui?</button>
+    </div>
   </div>
-  <div class="match-strip">
-    <span>La tua carta</span>
-    <div class="overall-badge fifa-card">
+  <div class="profile-card-stage" aria-label="Card calciatore">
+    <div class="overall-badge fifa-card fifa-shield-card">
       <div class="fifa-card-top">
         <strong>{{ player|overall_rating }}</strong>
         <span>{{ player.role[:3]|upper }}</span>
       </div>
-      <img src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
+      <img class="fifa-card-mascot" src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
       <b>{{ player.nickname or player.name }}</b>
-      <small>{{ player.power|stars }} · {{ player.preferred_foot|foot_label }}</small>
+      <small>{{ player.power|stars }}</small>
       <em>Score {{ player.score }} · Affidabilità {{ player.reliability }}%</em>
+      <span class="fifa-card-foot">{{ player.preferred_foot|foot_label }}</span>
     </div>
   </div>
 </section>
@@ -124,7 +127,7 @@
       <div><strong>{{ player.wins }}</strong><small>vittorie</small></div>
     </div>
   </div>
-  <div class="panel">
+  <div class="panel" id="profile-edit">
     <div class="panel-head">
       <h2>Modifica profilo</h2>
       <a class="button ghost" href="{{ url_for('rules') }}">Leggi regolamento</a>
@@ -133,13 +136,6 @@
       <label>Nome visualizzato <input name="name" value="{{ player.name }}" required></label>
       <label>Soprannome <input name="nickname" value="{{ player.nickname or '' }}" placeholder="Es. Trivela"></label>
       <label>WhatsApp <input name="phone" value="{{ player.phone or '' }}" placeholder="333..." required></label>
-      <label>Mascotte
-        <select name="mascot">
-          {% for key, mascot in mascots.items() %}
-            <option value="{{ key }}" {% if player.mascot == key %}selected{% endif %}>{{ mascot.label }}</option>
-          {% endfor %}
-        </select>
-      </label>
       <label>Nome mascotte <input name="mascot_name" value="{{ player.mascot_name or '' }}" placeholder="Es. O' Mast d'a fascia"></label>
       <label>Piede preferito
         <select name="preferred_foot">
@@ -148,9 +144,13 @@
           {% endfor %}
         </select>
       </label>
-      <div class="mascot-choice-grid">
+      <div class="mascot-avatar-grid">
         {% for key, mascot in mascots.items() %}
-          <span class="mascot-badge compact mascot-{{ key }} {{ mascot.class }}"><b>{{ mascot.code }}</b><small>{{ mascot.label }}</small></span>
+          <label class="mascot-avatar-choice mascot-{{ key }} {{ mascot.class }}">
+            <input type="radio" name="mascot" value="{{ key }}" {% if player.mascot == key %}checked{% endif %}>
+            <span class="avatar-art"><img src="{{ url_for('static', filename='mascots/' ~ key ~ '.png') }}" alt=""></span>
+            <strong>{{ mascot.label }}</strong>
+          </label>
         {% endfor %}
       </div>
       <button class="button" type="submit">Salva profilo</button>

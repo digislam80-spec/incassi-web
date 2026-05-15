@@ -45,6 +45,16 @@ DATA_TABLES = [
 
 APP_UPDATES = [
     {
+        "title": "Card profilo più professionale",
+        "body": "La figurina calciatore diventa uno scudo stile card calcistica: overall più grande, mascotte protagonista e niente box inutile.",
+        "tag": "Grafica",
+    },
+    {
+        "title": "Mascotte selezionabili al click",
+        "body": "Nel profilo il dropdown mascotte lascia spazio a una griglia di avatar grandi: clicchi la mascotte e la scegli.",
+        "tag": "Profilo",
+    },
+    {
         "title": "Aiuto rapido nel profilo",
         "body": "Nel profilo calciatore c'è un tasto che apre una spiegazione veloce di cosa si può fare con l'app.",
         "tag": "Guida",

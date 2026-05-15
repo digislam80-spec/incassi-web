@@ -14,6 +14,7 @@
 }
 
 * { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
   margin: 0;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -133,6 +134,25 @@ h2 { margin: 0; font-size: 21px; }
 .match-strip strong { display: block; margin: 7px 0; font-size: 24px; }
 .match-strip .button { margin-top: 14px; }
 .match-strip .overall-badge { margin-bottom: 12px; }
+.profile-hero {
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 330px);
+  align-items: center;
+  overflow: hidden;
+}
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+.profile-card-stage {
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  width: min(100%, 330px);
+  min-height: 340px;
+}
+#profile-edit { scroll-margin-top: 96px; }
 
 .fun-strip {
   display: grid;
@@ -540,10 +560,10 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
 .overall-badge {
   display: grid;
   place-items: center;
-  min-width: 128px;
-  min-height: 172px;
-  border: 2px solid rgba(255,255,255,.72);
-  border-radius: 8px 8px 18px 18px;
+  min-width: 146px;
+  min-height: 190px;
+  border: 0;
+  border-radius: 8px;
   background:
     linear-gradient(135deg, rgba(255,255,255,.46), transparent 26%),
     linear-gradient(160deg, #f5d979 0%, #d49b12 52%, #8a6311 100%);
@@ -564,54 +584,96 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
   position: relative;
   align-items: center;
   justify-items: center;
-  gap: 5px;
-  width: min(100%, 190px);
-  padding: 12px 12px 14px;
+  gap: 4px;
+  width: min(100%, 270px);
+  min-height: 330px;
+  padding: 22px 22px 34px;
   overflow: hidden;
   isolation: isolate;
 }
-.fifa-card::before {
+.fifa-shield-card {
+  clip-path: polygon(50% 0, 89% 9%, 98% 54%, 90% 78%, 50% 100%, 10% 78%, 2% 54%, 11% 9%);
+  background:
+    radial-gradient(circle at 50% 32%, rgba(255,255,255,.45), transparent 22%),
+    linear-gradient(135deg, rgba(255,255,255,.56), transparent 22%),
+    linear-gradient(160deg, #ffe28a 0%, #d9a629 48%, #946810 100%);
+  box-shadow: 0 24px 40px rgba(0,0,0,.32);
+}
+.fifa-card::before,
+.fifa-card::after {
   content: "";
   position: absolute;
-  inset: 7px;
-  border: 1px solid rgba(255,255,255,.55);
-  border-radius: 6px 6px 14px 14px;
+  pointer-events: none;
+}
+.fifa-card::before {
+  inset: 10px;
+  border: 2px solid rgba(255,255,255,.72);
+  clip-path: polygon(50% 0, 89% 9%, 98% 54%, 90% 78%, 50% 100%, 10% 78%, 2% 54%, 11% 9%);
+  z-index: -1;
+}
+.fifa-card::after {
+  inset: 16px 22px 26px;
+  background:
+    linear-gradient(90deg, transparent 0 46%, rgba(255,255,255,.52) 47% 53%, transparent 54%),
+    linear-gradient(0deg, transparent 0 63%, rgba(255,255,255,.48) 64% 66%, transparent 67%);
+  opacity: .7;
   z-index: -1;
 }
 .fifa-card-top {
   display: flex;
-  width: 100%;
+  width: calc(100% - 78px);
   align-items: start;
   justify-content: space-between;
   gap: 8px;
+  justify-self: center;
+}
+.fifa-card-top strong {
+  font-size: clamp(58px, 8vw, 82px);
+  letter-spacing: 0;
 }
 .fifa-card-top span {
-  padding-top: 5px;
-  font-size: 13px;
+  padding-top: 7px;
+  font-size: 16px;
   font-weight: 950;
   color: rgba(36,27,8,.72);
 }
-.fifa-card img {
-  width: 96px;
-  height: 96px;
+.fifa-card-mascot {
+  width: min(75%, 172px);
+  height: 160px;
+  margin: -8px 0 -2px;
   object-fit: contain;
-  filter: drop-shadow(0 10px 8px rgba(0,0,0,.24));
+  filter: drop-shadow(0 16px 11px rgba(0,0,0,.28));
 }
 .fifa-card b {
   max-width: 100%;
   overflow-wrap: anywhere;
   text-align: center;
-  font-size: 16px;
+  font-size: clamp(18px, 3vw, 23px);
   line-height: 1.05;
   text-transform: uppercase;
+}
+.fifa-card small {
+  color: rgba(36,27,8,.74);
+  font-size: 15px;
 }
 .fifa-card em {
   margin-top: 2px;
   color: rgba(36,27,8,.74);
-  font-size: 11px;
+  font-size: 12px;
   font-style: normal;
   font-weight: 900;
   text-align: center;
+}
+.fifa-card-foot {
+  display: inline-flex;
+  margin-top: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.32);
+  color: rgba(36,27,8,.82);
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
 }
 .overall-mini {
   display: inline-grid;
@@ -794,6 +856,59 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 8px;
+}
+.mascot-avatar-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 10px;
+}
+.mascot-avatar-choice {
+  position: relative;
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+  align-content: start;
+  min-height: 160px;
+  padding: 10px 8px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcf9;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease, background .16s ease;
+}
+.mascot-avatar-choice:hover {
+  transform: translateY(-2px);
+  border-color: rgba(22,107,79,.48);
+  box-shadow: 0 12px 22px rgba(25,33,31,.10);
+}
+.mascot-avatar-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.mascot-avatar-choice:has(input:checked) {
+  border-color: var(--green);
+  background: #eef8ef;
+  box-shadow: 0 0 0 4px rgba(22,107,79,.12);
+}
+.avatar-art {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+}
+.avatar-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 8px rgba(25,33,31,.18));
+}
+.mascot-avatar-choice strong {
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.15;
 }
 .rules-box {
   display: grid;
