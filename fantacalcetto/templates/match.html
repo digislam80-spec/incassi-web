@@ -32,20 +32,23 @@
     <h2>Messaggio gruppo WhatsApp</h2>
     <button class="button" type="button" data-copy-target="#group-message" data-copy-label="Copia messaggio">Copia messaggio</button>
   </div>
-  <textarea id="group-message" readonly rows="12">Convocazione ufficiale FantaCalcetto
+  <textarea id="group-message" readonly rows="10">Convocazione ufficiale FantaCalcetto
 
 {{ match.title }}
 {{ match.match_date.replace("T", " ") }} - {{ match.location }}
 
-Confermate cliccando sul vostro nome:
-{% for p in players %}
-{{ p.name }}{% if p.nickname %} "{{ p.nickname }}"{% endif %}: {{ request.host_url.rstrip('/') }}{{ url_for('public_confirm', token=p.invite_token, match_id=match.id) }}
-{% endfor %}
-Regola non scritta: chi conferma e poi sparisce offre il pallone.
+Per giocare entra nel tuo account e premi Confermo:
+{{ request.host_url.rstrip('/') }}{{ url_for('player_login') }}
+
+Se non hai account, registrati qui e aspetta l'approvazione del mister:
+{{ request.host_url.rstrip('/') }}{{ url_for('register_player') }}
+
+Posti disponibili: {{ match.player_limit }}. Chi prima conferma, prima partecipa.
+Disdetta dall'account: piu e vicina alla gara, piu pesa su score e stelle.
 
 Sponsored by Digislam Print Lab
 https://digislam.shop</textarea>
-  <p class="muted">Copialo nel gruppo. Ogni link e personale: quando Riccardo clicca il suo, l'app sa gia che e Riccardo. Sponsored by Digislam Print Lab - digislam.shop.</p>
+  <p class="muted">Copialo nel gruppo. C'e un solo link: ogni calciatore entra col proprio account, conferma o disdice, e l'app tiene l'ordine di conferma. Sponsored by Digislam Print Lab - digislam.shop.</p>
 </section>
 
 <section class="grid two">
@@ -62,7 +65,7 @@ https://digislam.shop</textarea>
             <strong>{{ p.name }}</strong>
             <small>{{ p.nickname }} · {{ p.role }} · <span class="stars">{{ p.power|stars }}</span></small>
             <em>{{ p.power|player_title }}</em>
-            <small class="invite-link">{{ request.host_url.rstrip('/') }}{{ url_for('public_confirm', token=p.invite_token, match_id=match.id) }}</small>
+            {% if p.responded_at %}<small class="invite-link">Risposta: {{ p.responded_at }}</small>{% endif %}
           </div>
           <select name="response_{{ p.id }}">
             <option value="invited" {% if p.response == "invited" %}selected{% endif %}>Invitato</option>

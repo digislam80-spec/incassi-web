@@ -35,7 +35,7 @@
     <div class="panel-head">
       <h2>Regole crescita</h2>
     </div>
-    <p class="muted">Vittoria, gol e assist alzano lo score. Risposte puntuali aiutano l'affidabilita. Disdire vicino alla gara toglie piu punti: sotto 24h pesa, sotto 3h pesa parecchio.</p>
+    <p class="muted">Confermare vale +1 score e +2 affidabilita. In partita: vittoria +3, pareggio +1, gol +2, assist +1. Se fai almeno 5 punti in una partita prendi +0.5 stella. Disdire costa score e affidabilita: sotto 24h perdi anche 0.5 stella, sotto 3h perdi 1 stella.</p>
     <form class="form login-form" method="post" action="{{ url_for('player_update_mascot_name') }}">
       <label>Nome mascotte <input name="mascot_name" value="{{ player.mascot_name or '' }}" placeholder="Es. O' Mast d'a fascia"></label>
       <button class="button" type="submit">Salva nome mascotte</button>
@@ -52,7 +52,7 @@
       <div class="mini-card">
         <strong>{{ m.title }}</strong>
         <span>{{ m.match_date.replace("T", " ") }} · {{ m.location }}</span>
-        <small>Stato: {{ (m.response or "non invitato")|response_label }}{% if m.penalty_points %} · penalita {{ m.penalty_points }}{% endif %}</small>
+        <small>Stato: {{ (m.response or "non invitato")|response_label }}{% if m.responded_at %} · ordine conferma registrato{% endif %}{% if m.penalty_points %} · penalita {{ m.penalty_points }}{% endif %}</small>
         {% if player.account_status == "approved" %}
           <form class="inline-actions" method="post" action="{{ url_for('player_confirm', match_id=m.id) }}">
             <button class="button primary" type="submit">Confermo</button>

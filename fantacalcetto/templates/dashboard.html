@@ -26,7 +26,7 @@
   </div>
   <div>
     <h2>Mister Automatico attivo</h2>
-    <p>Link registrazione calciatori: <strong>{{ request.host_url.rstrip('/') }}{{ url_for('register_player') }}</strong>. Il giorno della partita, se ci sono confermati o presenti, l'app fa le squadre da sola. Sponsor ufficiale: <a href="https://digislam.shop" target="_blank" rel="noopener">Digislam Print Lab</a>.</p>
+    <p>Link unico spogliatoio: <strong>{{ request.host_url.rstrip('/') }}{{ url_for('player_login') }}</strong>. Chi non ha account si registra, chi e approvato entra e conferma. A parita di posti vale l'ordine di conferma. Sponsor ufficiale: <a href="https://digislam.shop" target="_blank" rel="noopener">Digislam Print Lab</a>.</p>
   </div>
 </section>
 
@@ -85,7 +85,9 @@
       </label>
       <label>Potenza
         <select name="power">
-          <option value="1">1 stella</option><option value="2">2 stelle</option><option value="3" selected>3 stelle</option><option value="4">4 stelle</option><option value="5">5 stelle</option>
+          {% for value in [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] %}
+            <option value="{{ value }}" {% if value == 3 %}selected{% endif %}>{{ value|format_power }} stelle</option>
+          {% endfor %}
         </select>
       </label>
       <label>Mascotte
@@ -133,8 +135,8 @@
             <form class="mini-select-form" method="post" action="{{ url_for('update_player_power', player_id=p.id) }}">
               <span class="stars">{{ p.power|stars }}</span>
               <select name="power" onchange="this.form.submit()">
-                {% for value in [1, 2, 3, 4, 5] %}
-                  <option value="{{ value }}" {% if p.power == value %}selected{% endif %}>{{ value }} stelle</option>
+                {% for value in [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] %}
+                  <option value="{{ value }}" {% if p.power|float == value %}selected{% endif %}>{{ value|format_power }} stelle</option>
                 {% endfor %}
               </select>
             </form>

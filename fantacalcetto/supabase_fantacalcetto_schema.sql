@@ -9,7 +9,7 @@ create table if not exists public.players (
   role text not null default 'Jolly',
   mascot text not null default 'jolly',
   mascot_name text default '',
-  power integer not null default 3 check(power between 1 and 5),
+  power numeric(2,1) not null default 3 check(power between 1 and 5),
   score integer not null default 0,
   goals integer not null default 0,
   assists integer not null default 0,
@@ -43,9 +43,16 @@ create table if not exists public.match_players (
   goals integer not null default 0,
   assists integer not null default 0,
   cancelled_at timestamptz,
+  responded_at timestamptz,
   penalty_points integer not null default 0,
   primary key(match_id, player_id)
 );
+
+alter table public.players
+  alter column power type numeric(2,1) using power::numeric;
+
+alter table public.match_players
+  add column if not exists responded_at timestamptz;
 
 create index if not exists idx_fantacalcetto_players_status
   on public.players(account_status, active);

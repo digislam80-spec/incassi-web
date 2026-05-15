@@ -3,6 +3,7 @@ import os
 import random
 import sqlite3
 import uuid
+from decimal import Decimal
 from datetime import datetime, timedelta
 from functools import wraps
 
@@ -92,9 +93,11 @@ def sql_for_backend(sql):
     if not USE_POSTGRES:
         return sql
     translated = sql.replace("?", "%s")
-    translated = translated.replace("datetime('now', '-1 day')", "now() - interval '1 day'")
+    translated = translated.replace("m.match_date >= datetime('now', '-1 day')", "m.match_date::timestamp >= now() - interval '1 day'")
     translated = translated.replace("max(0, score - %s)", "greatest(0, score - %s)")
     translated = translated.replace("max(0, reliability - %s)", "greatest(0, reliability - %s)")
+    translated = translated.replace("min(100, reliability + %s)", "least(100, reliability + %s)")
+    translated = translated.replace("min(5, max(1, power + %s))", "least(5, greatest(1, power + %s))")
     translated = translated.replace(
         "min(5, max(1, power + case when score + %s >= power * 25 then 1 else 0 end))",
         "least(5, greatest(1, power + case when score + %s >= power * 25 then 1 else 0 end))",
@@ -190,7 +193,7 @@ def init_db():
                 role text not null default 'Jolly',
                 mascot text not null default 'jolly',
                 mascot_name text default '',
-                power integer not null default 3 check(power between 1 and 5),
+                power numeric(2,1) not null default 3 check(power between 1 and 5),
                 score integer not null default 0,
                 goals integer not null default 0,
                 assists integer not null default 0,
@@ -230,6 +233,7 @@ def init_db():
                 goals integer not null default 0,
                 assists integer not null default 0,
                 cancelled_at timestamptz,
+                responded_at timestamptz,
                 penalty_points integer not null default 0,
                 primary key(match_id, player_id)
             )
@@ -237,6 +241,15 @@ def init_db():
         )
         connection.execute(
             "update matches set title = 'Calcetto del Venerdi' where title = 'Calcetto del Giovedi'"
+        )
+        connection.execute("alter table players alter column power type numeric(2,1) using power::numeric")
+        connection.execute("alter table match_players add column if not exists responded_at timestamptz")
+        connection.execute(
+            """
+            update match_players
+            set responded_at = current_timestamp
+            where response in ('confirmed', 'present') and responded_at is null
+            """
         )
         connection.commit()
         seed_initial_data()
@@ -255,7 +268,7 @@ def init_db():
             role text not null default 'Jolly',
             mascot text not null default 'jolly',
             mascot_name text default '',
-            power integer not null default 3 check(power between 1 and 5),
+            power numeric not null default 3 check(power between 1 and 5),
             score integer not null default 0,
             goals integer not null default 0,
             assists integer not null default 0,
@@ -289,6 +302,7 @@ def init_db():
             goals integer not null default 0,
             assists integer not null default 0,
             cancelled_at text,
+            responded_at text,
             penalty_points integer not null default 0,
             primary key(match_id, player_id)
         );
@@ -309,11 +323,19 @@ def init_db():
     match_player_columns = [row["name"] for row in query("pragma table_info(match_players)")]
     match_player_migrations = {
         "cancelled_at": "alter table match_players add column cancelled_at text",
+        "responded_at": "alter table match_players add column responded_at text",
         "penalty_points": "alter table match_players add column penalty_points integer not null default 0",
     }
     for column, sql in match_player_migrations.items():
         if column not in match_player_columns:
             connection.execute(sql)
+    connection.execute(
+        """
+        update match_players
+        set responded_at = current_timestamp
+        where response in ('confirmed', 'present') and responded_at is null
+        """
+    )
     connection.execute(
         "update matches set title = 'Calcetto del Venerdi' where title = 'Calcetto del Giovedi'"
     )
@@ -406,15 +428,29 @@ def ensure_db():
     init_db()
 
 
+def power_value(power):
+    return float(power or 0)
+
+
+def format_power(power):
+    value = power_value(power)
+    return str(int(value)) if value.is_integer() else f"{value:.1f}"
+
+
 def stars(power):
-    return "★" * int(power) + "☆" * (5 - int(power))
+    value = max(1.0, min(5.0, power_value(power)))
+    full = int(value)
+    half = value - full >= 0.5
+    empty = 5 - full - (1 if half else 0)
+    return "★" * full + ("½" if half else "") + "☆" * empty
 
 
 app.jinja_env.filters["stars"] = stars
+app.jinja_env.filters["format_power"] = format_power
 
 
 def player_title(power):
-    return PLAYER_TITLES.get(int(power), "Mistero tattico")
+    return PLAYER_TITLES.get(round(power_value(power)), "Mistero tattico")
 
 
 def status_label(status):
@@ -494,12 +530,15 @@ def get_match(match_id):
 def invited_players(match_id):
     return query(
         """
-        select p.*, mp.response, mp.team, mp.goals as match_goals, mp.assists as match_assists
+        select p.*, mp.response, mp.team, mp.goals as match_goals, mp.assists as match_assists,
+               mp.responded_at, mp.cancelled_at, mp.penalty_points
         from players p
         join match_players mp on mp.player_id = p.id
         where mp.match_id = ?
         order by
             case mp.response when 'present' then 1 when 'confirmed' then 2 when 'invited' then 3 else 4 end,
+            mp.responded_at is null,
+            mp.responded_at asc,
             p.power desc,
             p.name
         """,
@@ -514,7 +553,13 @@ def roster_for_generation(match_id):
         from players p
         join match_players mp on mp.player_id = p.id
         where mp.match_id = ? and mp.response in ('present', 'confirmed')
-        order by p.power desc, p.role, p.name
+        order by
+            case mp.response when 'present' then 1 when 'confirmed' then 2 else 3 end,
+            mp.responded_at is null,
+            mp.responded_at asc,
+            p.power desc,
+            p.role,
+            p.name
         """,
         (match_id,),
     )
@@ -527,13 +572,13 @@ def generate_balanced_teams(players):
     if total < 2:
         return [], []
     team_size = total // 2
-    target = sum(player["power"] for player in players) / 2
+    target = sum(power_value(player["power"]) for player in players) / 2
     best_combo = None
     best_score = None
 
     # Exact combinations are fine for a calcetto roster. For bigger groups, limit to the selected player_limit.
     for combo in itertools.combinations(range(total), team_size):
-        team_power = sum(players[index]["power"] for index in combo)
+        team_power = sum(power_value(players[index]["power"]) for index in combo)
         role_penalty = abs(
             sum(1 for index in combo if players[index]["role"] == "Portiere")
             - sum(1 for index in range(total) if index not in combo and players[index]["role"] == "Portiere")
@@ -628,15 +673,24 @@ def cancellation_penalty(match):
     try:
         match_time = datetime.fromisoformat(match["match_date"])
     except ValueError:
-        return 1, "Disdetta registrata"
+        return 1, 0, "Disdetta registrata"
     hours_left = (match_time - datetime.now()).total_seconds() / 3600
     if hours_left <= 3:
-        return 8, "Disdetta last minute: multa sportiva pesante"
+        return 8, 1.0, "Disdetta last minute: multa sportiva pesante"
     if hours_left <= 12:
-        return 5, "Disdetta a ridosso: il gruppo mugugna"
+        return 5, 0.5, "Disdetta a ridosso: il gruppo mugugna"
     if hours_left <= 24:
-        return 3, "Disdetta sotto le 24h"
-    return 1, "Disdetta in tempo umano"
+        return 3, 0.5, "Disdetta sotto le 24h"
+    return 1, 0, "Disdetta in tempo umano"
+
+
+def adjust_player_power(player_id, delta):
+    if not delta:
+        return
+    execute(
+        "update players set power = min(5, max(1, power + ?)) where id = ?",
+        (delta, player_id),
+    )
 
 
 @app.route("/")
@@ -777,7 +831,7 @@ def player_dashboard():
     my_matches = query(
         """
         select m.*, mp.response, mp.team, mp.goals as match_goals, mp.assists as match_assists,
-               mp.cancelled_at, mp.penalty_points
+               mp.cancelled_at, mp.responded_at, mp.penalty_points
         from matches m
         left join match_players mp on mp.match_id = m.id and mp.player_id = ?
         where m.match_date >= datetime('now', '-1 day')
@@ -795,17 +849,36 @@ def player_confirm(match_id):
     player = current_player()
     if player["account_status"] != "approved":
         return redirect(url_for("player_dashboard"))
+    previous = query(
+        "select response from match_players where match_id = ? and player_id = ?",
+        (match_id, player["id"]),
+        one=True,
+    )
     execute(
         """
-        insert into match_players (match_id, player_id, response)
-        values (?, ?, 'confirmed')
+        insert into match_players (match_id, player_id, response, responded_at)
+        values (?, ?, 'confirmed', current_timestamp)
         on conflict(match_id, player_id) do update set
             response = 'confirmed',
             cancelled_at = null,
-            penalty_points = 0
+            penalty_points = 0,
+            responded_at = case
+                when responded_at is null then current_timestamp
+                else responded_at
+            end
         """,
         (match_id, player["id"]),
     )
+    if not previous or previous["response"] not in ("confirmed", "present"):
+        execute(
+            """
+            update players
+            set score = score + 1,
+                reliability = min(100, reliability + ?)
+            where id = ?
+            """,
+            (2, player["id"]),
+        )
     maybe_auto_generate(get_match(match_id))
     return redirect(url_for("player_dashboard"))
 
@@ -819,14 +892,15 @@ def player_cancel(match_id):
     match = get_match(match_id)
     if not match:
         return redirect(url_for("player_dashboard"))
-    penalty, _message = cancellation_penalty(match)
+    penalty, power_penalty, _message = cancellation_penalty(match)
     execute(
         """
-        insert into match_players (match_id, player_id, response, cancelled_at, penalty_points)
-        values (?, ?, 'declined', current_timestamp, ?)
+        insert into match_players (match_id, player_id, response, cancelled_at, responded_at, penalty_points)
+        values (?, ?, 'declined', current_timestamp, current_timestamp, ?)
         on conflict(match_id, player_id) do update set
             response = 'declined',
             cancelled_at = current_timestamp,
+            responded_at = current_timestamp,
             penalty_points = excluded.penalty_points
         """,
         (match_id, player["id"], penalty),
@@ -840,6 +914,7 @@ def player_cancel(match_id):
         """,
         (penalty, penalty * 2, player["id"]),
     )
+    adjust_player_power(player["id"], -power_penalty)
     return redirect(url_for("player_dashboard"))
 
 
@@ -867,7 +942,7 @@ def add_player():
             request.form.get("nickname", "").strip(),
             request.form["phone"].strip(),
             request.form.get("role", "Jolly"),
-            int(request.form.get("power", 3)),
+            float(request.form.get("power", 3)),
             request.form.get("mascot", "jolly"),
             uuid.uuid4().hex,
         ),
@@ -889,7 +964,7 @@ def update_player(player_id):
             request.form.get("nickname", "").strip(),
             request.form["phone"].strip(),
             request.form.get("role", "Jolly"),
-            int(request.form.get("power", 3)),
+            float(request.form.get("power", 3)),
             int(request.form.get("reliability", 80)),
             request.form.get("mascot", "jolly"),
             player_id,
@@ -921,7 +996,7 @@ def update_player_mascot_name(player_id):
 @app.route("/players/<int:player_id>/power", methods=["POST"])
 @require_admin
 def update_player_power(player_id):
-    power = max(1, min(5, int(request.form.get("power", 3))))
+    power = max(1, min(5, float(request.form.get("power", 3))))
     execute("update players set power = ? where id = ?", (power, player_id))
     return redirect(url_for("admin_dashboard"))
 
@@ -1038,8 +1113,17 @@ def update_responses(match_id):
         if key.startswith("response_"):
             player_id = int(key.replace("response_", ""))
             execute(
-                "update match_players set response = ? where match_id = ? and player_id = ?",
-                (value, match_id, player_id),
+                """
+                update match_players
+                set response = ?,
+                    responded_at = case
+                        when ? in ('confirmed', 'present') and responded_at is null then current_timestamp
+                        when ? = 'declined' then current_timestamp
+                        else responded_at
+                    end
+                where match_id = ? and player_id = ?
+                """,
+                (value, value, value, match_id, player_id),
             )
     maybe_auto_generate(get_match(match_id))
     return redirect(url_for("match_detail", match_id=match_id))
@@ -1069,6 +1153,7 @@ def save_result(match_id):
         won = (row["team"] == "A" and team_a_score > team_b_score) or (row["team"] == "B" and team_b_score > team_a_score)
         points = 3 if won else 1 if team_a_score == team_b_score else 0
         points += goals * 2 + assists
+        power_bonus = 0.5 if points >= 5 else 0
         execute(
             "update match_players set goals = ?, assists = ? where match_id = ? and player_id = ?",
             (goals, assists, match_id, row["player_id"]),
@@ -1080,12 +1165,12 @@ def save_result(match_id):
                 goals = goals + ?,
                 assists = assists + ?,
                 wins = wins + ?,
-                score = score + ?,
-                power = min(5, max(1, power + case when score + ? >= power * 25 then 1 else 0 end))
+                score = score + ?
             where id = ?
             """,
-            (goals, assists, 1 if won else 0, points, points, row["player_id"]),
+            (goals, assists, 1 if won else 0, points, row["player_id"]),
         )
+        adjust_player_power(row["player_id"], power_bonus)
     return redirect(url_for("match_detail", match_id=match_id))
 
 
