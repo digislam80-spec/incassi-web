@@ -439,6 +439,11 @@ input, select {
   color: white;
   box-shadow: inset 0 0 0 2px rgba(255,255,255,.22);
 }
+.button.confirm-neutral-button {
+  border-color: #cfd8d2;
+  background: #f7f8f4;
+  color: var(--muted);
+}
 .button.waitlist-button {
   border-color: #d7b13b;
   background: #fff3c4;

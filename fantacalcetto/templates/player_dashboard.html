@@ -82,7 +82,7 @@
             <button class="button waitlist-button" type="button" disabled>In lista d'attesa</button>
           {% else %}
             <form class="inline-actions" method="post" action="{{ url_for('player_confirm', match_id=m.id) }}">
-              <button class="button primary" type="submit">{% if m.response == "declined" %}Riconfermo{% else %}Confermo{% endif %}</button>
+              <button class="button confirm-neutral-button" type="submit">{% if m.response == "declined" %}Riconferma presenza{% else %}Da confermare{% endif %}</button>
             </form>
           {% endif %}
           <form class="inline-actions" method="post" action="{{ url_for('player_cancel', match_id=m.id) }}">
