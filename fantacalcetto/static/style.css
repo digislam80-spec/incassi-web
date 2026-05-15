@@ -592,6 +592,74 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
 .stat-cards small { color: var(--muted); font-weight: 900; }
 
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.admin-player-list {
+  display: grid;
+  gap: 10px;
+  max-height: 72vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.admin-player-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcf9;
+}
+.admin-player-card summary {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) minmax(120px, auto) auto auto 28px;
+  align-items: center;
+  gap: 10px;
+  min-height: 76px;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+}
+.admin-player-card summary::-webkit-details-marker { display: none; }
+.admin-player-card summary::after {
+  content: "+";
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #eef4ea;
+  color: var(--green);
+  font-weight: 950;
+}
+.admin-player-card summary .mascot-badge.compact { margin-top: 0; }
+.admin-player-card[open] summary::after { content: "-"; }
+.admin-player-main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.admin-player-main strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-player-main small { color: var(--muted); font-weight: 800; }
+.admin-player-body {
+  display: grid;
+  gap: 12px;
+  padding: 0 12px 12px;
+}
+.admin-player-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+.admin-player-stats span {
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+}
+.admin-player-stats strong { display: block; font-size: 20px; }
+.admin-player-stats small { color: var(--muted); font-size: 11px; font-weight: 900; }
+.admin-player-form {
+  padding-top: 2px;
+}
 .mini-card {
   display: grid;
   gap: 5px;
@@ -694,7 +762,17 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
 @media (max-width: 820px) {
   .hero, .match-header, .fun-strip, .grid.two, .teams { grid-template-columns: 1fr; }
   .topbar { align-items: flex-start; gap: 12px; flex-direction: column; }
-  .form, .roster-row, .stat-row, .scoreline, .stat-cards, .admin-actions { grid-template-columns: 1fr; }
+  .form, .roster-row, .stat-row, .scoreline, .stat-cards, .admin-actions, .admin-player-stats { grid-template-columns: 1fr; }
+  .admin-player-list { max-height: none; padding-right: 0; }
+  .admin-player-card summary {
+    grid-template-columns: minmax(0, 1fr) auto auto 28px;
+    min-height: 70px;
+  }
+  .admin-player-card summary .admin-player-main { grid-column: 1; grid-row: 1; }
+  .admin-player-card summary .stars { grid-column: 2; grid-row: 1; justify-self: end; }
+  .admin-player-card summary .overall-mini { grid-column: 3; grid-row: 1; }
+  .admin-player-card summary::after { grid-column: 4; grid-row: 1; }
+  .admin-player-card summary .mascot-badge { grid-column: 1 / -1; grid-row: 2; }
   .scoreline span { display: none; }
   h1 { font-size: 42px; }
   .pitch-doodle { min-height: 130px; }

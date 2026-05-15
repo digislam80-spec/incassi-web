@@ -1141,7 +1141,7 @@ def update_player(player_id):
     execute(
         """
         update players
-        set name = ?, nickname = ?, phone = ?, role = ?, power = ?, reliability = ?, mascot = ?
+        set name = ?, nickname = ?, phone = ?, role = ?, power = ?, reliability = ?, mascot = ?, mascot_name = ?
         where id = ?
         """,
         (
@@ -1152,6 +1152,7 @@ def update_player(player_id):
             float(request.form.get("power", 3)),
             int(request.form.get("reliability", 80)),
             request.form.get("mascot", "jolly"),
+            request.form.get("mascot_name", "").strip(),
             player_id,
         ),
     )
