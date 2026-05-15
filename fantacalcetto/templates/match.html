@@ -44,6 +44,7 @@ Se non hai account, registrati qui e aspetta l'approvazione del mister:
 {{ request.host_url.rstrip('/') }}{{ url_for('register_player') }}
 
 Posti disponibili: {{ match.player_limit }}. Chi prima conferma, prima partecipa.
+Se i posti sono finiti, vai in lista d'attesa e vieni ripescato automaticamente se qualcuno disdice.
 Disdetta dall'account: piu e vicina alla gara, piu pesa su score e stelle.
 
 Sponsored by Digislam Print Lab
@@ -70,6 +71,7 @@ https://digislam.shop</textarea>
           <select name="response_{{ p.id }}">
             <option value="invited" {% if p.response == "invited" %}selected{% endif %}>Invitato</option>
             <option value="confirmed" {% if p.response == "confirmed" %}selected{% endif %}>Confermato</option>
+            <option value="waitlist" {% if p.response == "waitlist" %}selected{% endif %}>Lista d'attesa</option>
             <option value="present" {% if p.response == "present" %}selected{% endif %}>Presente</option>
             <option value="declined" {% if p.response == "declined" %}selected{% endif %}>Non gioca</option>
           </select>

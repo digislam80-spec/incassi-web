@@ -53,7 +53,10 @@
       <div class="mini-card">
         <strong>{{ m.title }}</strong>
         <span>{{ m.match_date.replace("T", " ") }} · {{ m.location }}</span>
-        <small>Stato: {{ (m.response or "non invitato")|response_label }}{% if m.responded_at %} · ordine conferma registrato{% endif %}{% if m.penalty_points %} · penalita {{ m.penalty_points }}{% endif %}</small>
+        <small>Stato: {{ (m.response or "non invitato")|response_label }}{% if m.response == "waitlist" and waitlist_positions.get(m.id) %} · posizione {{ waitlist_positions.get(m.id) }}{% elif m.responded_at %} · ordine conferma registrato{% endif %}{% if m.penalty_points %} · penalita {{ m.penalty_points }}{% endif %}</small>
+        {% if m.response == "waitlist" %}
+          <p class="waitlist-note">Numero massimo raggiunto: sei nella panchina d'onore. Se qualcuno disdice, entri automaticamente in lista.</p>
+        {% endif %}
         {% if player.account_status == "approved" %}
           <form class="inline-actions" method="post" action="{{ url_for('player_confirm', match_id=m.id) }}">
             <button class="button primary" type="submit">Confermo</button>

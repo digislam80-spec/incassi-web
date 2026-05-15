@@ -556,6 +556,16 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
   background: #fbfcf9;
 }
 .mini-card span, .mini-card small, .muted { color: var(--muted); }
+.waitlist-note {
+  margin: 4px 0 0;
+  padding: 9px 10px;
+  border: 1px dashed #d6a12f;
+  border-radius: 8px;
+  background: #fff7df;
+  color: #6d4d08;
+  font-size: 13px;
+  font-weight: 800;
+}
 .whatsapp-panel textarea {
   width: 100%;
   min-height: 260px;

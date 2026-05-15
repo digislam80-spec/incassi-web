@@ -467,6 +467,7 @@ def response_label(response):
     labels = {
         "invited": "In attesa di risposta",
         "confirmed": "Ha confermato",
+        "waitlist": "In lista d'attesa",
         "present": "Presente in lista",
         "declined": "Non puo giocare",
         "non invitato": "Non ancora invitato",
@@ -536,7 +537,7 @@ def invited_players(match_id):
         join match_players mp on mp.player_id = p.id
         where mp.match_id = ?
         order by
-            case mp.response when 'present' then 1 when 'confirmed' then 2 when 'invited' then 3 else 4 end,
+            case mp.response when 'present' then 1 when 'confirmed' then 2 when 'waitlist' then 3 when 'invited' then 4 else 5 end,
             mp.responded_at is null,
             mp.responded_at asc,
             p.power desc,
@@ -565,6 +566,102 @@ def roster_for_generation(match_id):
     )
     match = get_match(match_id)
     return players[: match["player_limit"]]
+
+
+def roster_slots_used(match_id, exclude_player_id=None):
+    params = [match_id]
+    player_filter = ""
+    if exclude_player_id:
+        player_filter = "and player_id != ?"
+        params.append(exclude_player_id)
+    row = query(
+        f"""
+        select count(*) as total
+        from match_players
+        where match_id = ? and response in ('confirmed', 'present') {player_filter}
+        """,
+        tuple(params),
+        one=True,
+    )
+    return row["total"] if row else 0
+
+
+def has_roster_slot(match_id, player_id=None):
+    match = get_match(match_id)
+    if not match:
+        return False
+    return roster_slots_used(match_id, exclude_player_id=player_id) < match["player_limit"]
+
+
+def waitlist_positions(match_id):
+    rows = query(
+        """
+        select player_id
+        from match_players
+        where match_id = ? and response = 'waitlist'
+        order by responded_at is null, responded_at asc, player_id asc
+        """,
+        (match_id,),
+    )
+    return {row["player_id"]: index + 1 for index, row in enumerate(rows)}
+
+
+def sync_waitlist(match_id):
+    match = get_match(match_id)
+    if not match:
+        return
+    limit = match["player_limit"]
+    present = query(
+        """
+        select player_id
+        from match_players
+        where match_id = ? and response = 'present'
+        order by responded_at is null, responded_at asc, player_id asc
+        """,
+        (match_id,),
+    )
+    confirmed = query(
+        """
+        select player_id
+        from match_players
+        where match_id = ? and response = 'confirmed'
+        order by responded_at is null, responded_at asc, player_id asc
+        """,
+        (match_id,),
+    )
+    confirmed_slots = max(0, limit - len(present))
+    for row in confirmed[confirmed_slots:]:
+        execute(
+            """
+            update match_players
+            set response = 'waitlist', team = null
+            where match_id = ? and player_id = ?
+            """,
+            (match_id, row["player_id"]),
+        )
+
+    used_slots = len(present) + min(len(confirmed), confirmed_slots)
+    open_slots = max(0, limit - used_slots)
+    if not open_slots:
+        return
+    waiting = query(
+        """
+        select player_id
+        from match_players
+        where match_id = ? and response = 'waitlist'
+        order by responded_at is null, responded_at asc, player_id asc
+        """,
+        (match_id,),
+    )
+    for row in waiting[:open_slots]:
+        execute(
+            """
+            update match_players
+            set response = 'confirmed', cancelled_at = null, penalty_points = 0
+            where match_id = ? and player_id = ?
+            """,
+            (match_id, row["player_id"]),
+        )
 
 
 def generate_balanced_teams(players):
@@ -672,7 +769,7 @@ def approved_players_sql():
 RULES = [
     "Si entra in campo per giocare, correre il giusto e lamentarsi con stile: la polemica e ammessa solo se fa ridere.",
     "La conferma vale come stretta di mano: chi clicca Confermo si prende il posto finche non disdice dall'account.",
-    "Chi prima conferma, prima partecipa. Se i posti finiscono, il mister puo ripescare solo per emergenza spogliatoio.",
+    "Chi prima conferma, prima partecipa. Dal posto numero 11 scatta la lista d'attesa: pettorina in mano e speranza nel cuore.",
     "La disdetta e libera, ma non gratis: piu e vicina alla partita, piu pesa su score, affidabilita e stelle.",
     "Gol, assist, vittorie e presenza fanno crescere. Il talento sale, ma pure la puntualita conta.",
     "Le stelle sono sacre ma non eterne: il mister assegna la base, poi il campo e le disdette fanno il resto.",
@@ -872,7 +969,17 @@ def player_dashboard():
         """,
         (player["id"],),
     )
-    return render_template("player_dashboard.html", player=player, matches=my_matches, match=match)
+    my_waitlist_positions = {}
+    for my_match in my_matches:
+        if my_match["response"] == "waitlist":
+            my_waitlist_positions[my_match["id"]] = waitlist_positions(my_match["id"]).get(player["id"])
+    return render_template(
+        "player_dashboard.html",
+        player=player,
+        matches=my_matches,
+        match=match,
+        waitlist_positions=my_waitlist_positions,
+    )
 
 
 @app.route("/player/matches/<int:match_id>/confirm", methods=["POST"])
@@ -886,12 +993,16 @@ def player_confirm(match_id):
         (match_id, player["id"]),
         one=True,
     )
+    if previous and previous["response"] == "present":
+        return redirect(url_for("player_dashboard"))
+    response = "confirmed" if has_roster_slot(match_id, player["id"]) else "waitlist"
     execute(
         """
         insert into match_players (match_id, player_id, response, responded_at)
-        values (?, ?, 'confirmed', current_timestamp)
+        values (?, ?, ?, current_timestamp)
         on conflict(match_id, player_id) do update set
-            response = 'confirmed',
+            response = excluded.response,
+            team = null,
             cancelled_at = null,
             penalty_points = 0,
             responded_at = case
@@ -899,9 +1010,9 @@ def player_confirm(match_id):
                 else responded_at
             end
         """,
-        (match_id, player["id"]),
+        (match_id, player["id"], response),
     )
-    if not previous or previous["response"] not in ("confirmed", "present"):
+    if response == "confirmed" and (not previous or previous["response"] not in ("confirmed", "present")):
         execute(
             """
             update players
@@ -911,6 +1022,7 @@ def player_confirm(match_id):
             """,
             (2, player["id"]),
         )
+    sync_waitlist(match_id)
     maybe_auto_generate(get_match(match_id))
     return redirect(url_for("player_dashboard"))
 
@@ -947,6 +1059,8 @@ def player_cancel(match_id):
         (penalty, penalty * 2, player["id"]),
     )
     adjust_player_power(player["id"], -power_penalty)
+    sync_waitlist(match_id)
+    maybe_auto_generate(get_match(match_id))
     return redirect(url_for("player_dashboard"))
 
 
@@ -1149,7 +1263,7 @@ def update_responses(match_id):
                 update match_players
                 set response = ?,
                     responded_at = case
-                        when ? in ('confirmed', 'present') and responded_at is null then current_timestamp
+                        when ? in ('confirmed', 'present', 'waitlist') and responded_at is null then current_timestamp
                         when ? = 'declined' then current_timestamp
                         else responded_at
                     end
@@ -1157,6 +1271,7 @@ def update_responses(match_id):
                 """,
                 (value, value, value, match_id, player_id),
             )
+    sync_waitlist(match_id)
     maybe_auto_generate(get_match(match_id))
     return redirect(url_for("match_detail", match_id=match_id))
 
@@ -1223,10 +1338,21 @@ def public_confirm(token, match_id):
 
     if request.method == "POST":
         response = request.form["response"]
+        if response == "confirmed" and not has_roster_slot(match_id, player["id"]):
+            response = "waitlist"
         execute(
-            "update match_players set response = ? where match_id = ? and player_id = ?",
-            (response, match_id, player["id"]),
+            """
+            update match_players
+            set response = ?,
+                responded_at = case
+                    when ? in ('confirmed', 'waitlist') and responded_at is null then current_timestamp
+                    else responded_at
+                end
+            where match_id = ? and player_id = ?
+            """,
+            (response, response, match_id, player["id"]),
         )
+        sync_waitlist(match_id)
         maybe_auto_generate(get_match(match_id))
         return redirect(url_for("public_confirm", token=token, match_id=match_id))
     return render_template("confirm.html", player=player, match=match, relation=relation)
