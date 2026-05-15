@@ -4,6 +4,15 @@
   <p class="eyebrow">Registrazione calciatore</p>
   <h1>Entra nella lista arruolabili.</h1>
   <p class="lede">Scegli account, numero WhatsApp e mascotte. L'admin ti approva e poi diventi convocabile. Powered by Digislam Print Lab.</p>
+  <div class="rules-box">
+    <h2>Patto goliardico della Lega del Venerdi</h2>
+    <p>Prima di indossare la maglia immaginaria, giura solennemente di rispettare il pallone, il gruppo e le disdette fatte in tempo umano.</p>
+    <ol>
+      {% for rule in rules[:6] %}
+        <li>{{ rule }}</li>
+      {% endfor %}
+    </ol>
+  </div>
   {% if error %}
     <div class="notice soft">{{ error }}</div>
   {% endif %}
@@ -27,6 +36,10 @@
         <span class="mascot-badge compact mascot-{{ key }} {{ mascot.class }}"><b>{{ mascot.code }}</b><small>{{ mascot.label }}</small></span>
       {% endfor %}
     </div>
+    <label class="check-consent">
+      <input type="checkbox" name="accepted_rules" value="yes" required>
+      <span>Accetto il regolamento: confermo quando gioco, disdico dall'account se non posso, e se faccio il fenomeno mi assumo la penalita con dignita.</span>
+    </label>
     <button class="button primary" type="submit">Manda richiesta al mister</button>
   </form>
 </section>

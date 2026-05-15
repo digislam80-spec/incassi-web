@@ -669,6 +669,20 @@ def approved_players_sql():
     return "active = 1 and account_status = 'approved'"
 
 
+RULES = [
+    "Si entra in campo per giocare, correre il giusto e lamentarsi con stile: la polemica e ammessa solo se fa ridere.",
+    "La conferma vale come stretta di mano: chi clicca Confermo si prende il posto finche non disdice dall'account.",
+    "Chi prima conferma, prima partecipa. Se i posti finiscono, il mister puo ripescare solo per emergenza spogliatoio.",
+    "La disdetta e libera, ma non gratis: piu e vicina alla partita, piu pesa su score, affidabilita e stelle.",
+    "Gol, assist, vittorie e presenza fanno crescere. Il talento sale, ma pure la puntualita conta.",
+    "Le stelle sono sacre ma non eterne: il mister assegna la base, poi il campo e le disdette fanno il resto.",
+    "Mascotte e soprannomi devono essere goliardici, non offensivi: si ride insieme, non addosso.",
+    "Il gruppo WhatsApp serve per il folklore; la verita ufficiale sta dentro FantaCalcetto.",
+    "Chi sparisce dopo aver confermato entra nella leggenda, ma dalla porta sbagliata.",
+    "Digislam Print Lab veglia sulla lega: rispetto, calcetto e terzo tempo con dignita variabile.",
+]
+
+
 def cancellation_penalty(match):
     try:
         match_time = datetime.fromisoformat(match["match_date"])
@@ -695,8 +709,23 @@ def adjust_player_power(player_id, delta):
 
 @app.route("/")
 def dashboard():
+    if current_player():
+        return redirect(url_for("player_dashboard"))
+    if is_admin():
+        return redirect(url_for("admin_dashboard"))
+    return redirect(url_for("player_login", next=request.path))
+
+
+@app.route("/rules")
+def rules():
     if not is_admin() and not current_player():
         return redirect(url_for("player_login", next=request.path))
+    return render_template("rules.html", rules=RULES, match=latest_match())
+
+
+@app.route("/league")
+@require_admin
+def league_overview():
     match = latest_match()
     maybe_auto_generate(match)
     match = latest_match()
@@ -772,10 +801,13 @@ def register_player():
         mascot = request.form.get("mascot", "jolly")
         if mascot not in MASCOTS:
             mascot = "jolly"
+        accepted_rules = request.form.get("accepted_rules") == "yes"
         if query("select id from players where lower(username) = lower(?)", (username,), one=True):
             error = "Username gia preso: serve un nome da spogliatoio originale."
         elif len(password) < 4:
             error = "Password troppo corta: almeno 4 caratteri, senza fare i fenomeni."
+        elif not accepted_rules:
+            error = "Prima serve il giuramento da spogliatoio: accetta il regolamento."
         else:
             execute(
                 """
@@ -795,7 +827,7 @@ def register_player():
                 ),
             )
             return render_template("register_done.html", match=latest_match())
-    return render_template("register.html", error=error, mascots=MASCOTS, match=latest_match())
+    return render_template("register.html", error=error, mascots=MASCOTS, rules=RULES, match=latest_match())
 
 
 @app.route("/player/login", methods=["GET", "POST"])

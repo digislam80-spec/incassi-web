@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="public-card">
+  <p class="eyebrow">Regolamento ufficiale</p>
+  <h1>Il codice dello spogliatoio.</h1>
+  <p class="lede">Poche regole, abbastanza serie da funzionare e abbastanza goliardiche da non rovinarci il venerdi.</p>
+  <div class="rules-box full">
+    <ol>
+      {% for rule in rules %}
+        <li>{{ rule }}</li>
+      {% endfor %}
+    </ol>
+  </div>
+  <a class="button primary" href="{{ url_for('player_dashboard') if current_player else url_for('admin_dashboard') }}">Torna allo spogliatoio</a>
+</section>
+{% endblock %}

@@ -498,6 +498,33 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 8px;
 }
+.rules-box {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0;
+  padding: 18px;
+  border: 1px solid #d7e3c6;
+  border-radius: 8px;
+  background: #f5f8ee;
+}
+.rules-box h2 { margin: 0; font-size: 20px; }
+.rules-box p { margin: 0; color: var(--muted); font-weight: 800; }
+.rules-box ol { margin: 0; padding-left: 22px; color: var(--ink); }
+.rules-box li { margin: 8px 0; font-weight: 800; line-height: 1.35; }
+.rules-box.full li { margin: 12px 0; }
+.check-consent {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcf9;
+  font-weight: 900;
+}
+.check-consent input { width: 18px; min-height: 18px; margin-top: 2px; }
 .inline-actions { margin: 0; }
 .inline-actions .button { width: 100%; margin-top: 8px; }
 .pending-card { align-content: start; }

@@ -34,6 +34,7 @@
   <div class="panel">
     <div class="panel-head">
       <h2>Regole crescita</h2>
+      <a class="button ghost" href="{{ url_for('rules') }}">Leggi regolamento</a>
     </div>
     <p class="muted">Confermare vale +1 score e +2 affidabilita. In partita: vittoria +3, pareggio +1, gol +2, assist +1. Se fai almeno 5 punti in una partita prendi +0.5 stella. Disdire costa score e affidabilita: sotto 24h perdi anche 0.5 stella, sotto 3h perdi 1 stella.</p>
     <form class="form login-form" method="post" action="{{ url_for('player_update_mascot_name') }}">

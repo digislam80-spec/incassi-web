@@ -18,24 +18,25 @@
       </span>
     </a>
     <nav>
-      {% if current_player or is_admin %}
-        <a href="{{ url_for('dashboard') }}">Analisi</a>
-      {% endif %}
       {% if current_player %}
         <a href="{{ url_for('player_dashboard') }}">Il mio profilo</a>
+        <a href="{{ url_for('rules') }}">Regolamento</a>
       {% else %}
         <a href="{{ url_for('register_player') }}">Registrati</a>
         <a href="{{ url_for('player_login') }}">Login calciatore</a>
       {% endif %}
-      {% if is_admin %}
+      {% if is_admin and not current_player %}
         <a href="{{ url_for('admin_dashboard') }}">Admin</a>
+        <a href="{{ url_for('league_overview') }}">Analisi lega</a>
       {% else %}
-        <a href="{{ url_for('admin_login') }}">Login admin</a>
+        {% if not current_player %}
+          <a href="{{ url_for('admin_login') }}">Login admin</a>
+        {% endif %}
       {% endif %}
-      {% if is_admin and match is defined and match %}
+      {% if is_admin and not current_player and match is defined and match %}
         <a href="{{ url_for('match_detail', match_id=match.id) }}">Partita</a>
       {% endif %}
-      {% if is_admin %}
+      {% if is_admin and not current_player %}
         <form class="nav-form" method="post" action="{{ url_for('admin_logout') }}">
           <button type="submit">Esci</button>
         </form>
