@@ -29,6 +29,42 @@
   </div>
 </section>
 
+<section class="grid two">
+  <div class="panel news-panel">
+    <div class="panel-head">
+      <h2>Cronache Spogliatoio</h2>
+      <span class="pill">{{ news_items|length }} news</span>
+    </div>
+    <div class="news-list">
+      {% for item in news_items %}
+        <article class="news-item">
+          <span>{{ item.event_type }}</span>
+          <strong>{{ item.title }}</strong>
+          <p>{{ item.body }}</p>
+          <small>{{ item.created_at }}{% if item.actor_name %} · {{ item.actor_name }}{% endif %}</small>
+        </article>
+      {% else %}
+        <p class="muted">Ancora nessuna cronaca: lo spogliatoio è pulito, evento raro.</p>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="panel news-panel">
+    <div class="panel-head">
+      <h2>Novità App</h2>
+      <span class="pill">Diario lavori</span>
+    </div>
+    <div class="news-list">
+      {% for item in app_updates %}
+        <article class="news-item app-update">
+          <span>{{ item.tag }}</span>
+          <strong>{{ item.title }}</strong>
+          <p>{{ item.body }}</p>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
 <section class="panel data-panel">
   <div class="panel-head">
     <h2>Dati Reali</h2>

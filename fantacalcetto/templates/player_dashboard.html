@@ -26,6 +26,42 @@
 {% endif %}
 
 <section class="grid two">
+  <div class="panel news-panel">
+    <div class="panel-head">
+      <h2>Cronache Spogliatoio</h2>
+      <span class="pill">Lega live</span>
+    </div>
+    <div class="news-list">
+      {% for item in news_items %}
+        <article class="news-item">
+          <span>{{ item.event_type }}</span>
+          <strong>{{ item.title }}</strong>
+          <p>{{ item.body }}</p>
+          <small>{{ item.created_at }}{% if item.actor_name %} · {{ item.actor_name }}{% endif %}</small>
+        </article>
+      {% else %}
+        <p class="muted">Ancora nessuna cronaca. Qualcuno faccia qualcosa di calcisticamente discutibile.</p>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="panel news-panel">
+    <div class="panel-head">
+      <h2>Novità App</h2>
+      <span class="pill">Cosa cambia</span>
+    </div>
+    <div class="news-list">
+      {% for item in app_updates %}
+        <article class="news-item app-update">
+          <span>{{ item.tag }}</span>
+          <strong>{{ item.title }}</strong>
+          <p>{{ item.body }}</p>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="grid two">
   <div class="panel">
     <div class="panel-head">
       <h2>Statistiche</h2>
