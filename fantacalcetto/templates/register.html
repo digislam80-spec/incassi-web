@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="public-card">
-  <p class="eyebrow">Registrazione Lega Bombonera</p>
+  <p class="eyebrow">Registrazione FantaCalcetto</p>
   <h1>Entra nello spogliatoio.</h1>
   <p class="lede">Puoi entrare subito come supporter/tifoso. Se vuoi giocare, chiedi la promozione a calciatore: Mister o Develop ti renderanno arruolabile per questa lega.</p>
   <div class="rules-box">
@@ -17,6 +17,20 @@
     <div class="notice soft">{{ error }}</div>
   {% endif %}
   <form class="form register-form" method="post">
+    <div class="league-choice-grid">
+      <strong>Scegli la lega</strong>
+      <span>Se chiedi di diventare calciatore, Mister e Develop vedranno la richiesta nella lega scelta.</span>
+      {% for lega in leagues %}
+        <label class="league-choice">
+          <input type="radio" name="league_id" value="{{ lega.id }}" {% if loop.first %}checked{% endif %}>
+          <img src="{{ url_for('static', filename=lega.logo or 'league-bombonera.svg') }}" alt="{{ lega.name }}">
+          <span>
+            <b>{{ lega.name }}</b>
+            <small>{{ "Lega attiva" if lega.active else "Lega chiusa" }}</small>
+          </span>
+        </label>
+      {% endfor %}
+    </div>
     <div class="role-choice-grid">
       <label class="role-choice">
         <input type="radio" name="requested_role" value="supporter" checked>
@@ -74,7 +88,7 @@
       <input type="checkbox" name="accepted_rules" value="yes" required>
       <span>Accetto il regolamento: confermo quando gioco, disdico dall'account se non posso, e se faccio il fenomeno mi assumo la penalità con dignità.</span>
     </label>
-    <button class="button primary" type="submit">Entra in Lega Bombonera</button>
+    <button class="button primary" type="submit">Entra nella lega scelta</button>
   </form>
 </section>
 {% endblock %}

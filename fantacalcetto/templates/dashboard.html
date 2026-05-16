@@ -46,10 +46,27 @@
   </form>
   <div class="cards">
     {% for lega in leagues %}
-      <article class="mini-card">
-        <strong>{{ lega.name }}</strong>
-        <span>{{ lega.slug }} · {{ "attiva" if lega.active else "pausata" }}</span>
-        <small>Logo: {{ lega.logo or "nessun logo" }}</small>
+      <article class="mini-card league-edit-card">
+        <form class="form" method="post" action="{{ url_for('update_league', league_id=lega.id) }}">
+          <div class="league-logo-row compact">
+            <img class="league-logo-preview" src="{{ url_for('static', filename=lega.logo or 'league-bombonera.svg') }}" alt="{{ lega.name }}">
+            <div>
+              <strong>{{ lega.name }}</strong>
+              <small>{{ lega.slug }}</small>
+            </div>
+          </div>
+          <label>Nome lega <input name="name" value="{{ lega.name }}"></label>
+          <label>Logo <input name="logo" value="{{ lega.logo or '' }}" placeholder="league-bombonera.svg"></label>
+          <label>Colore principale <input name="primary_color" value="{{ lega.primary_color or '#0f6b4f' }}"></label>
+          <label>Colore secondario <input name="secondary_color" value="{{ lega.secondary_color or '#f2c94c' }}"></label>
+          <label>Stato
+            <select name="active">
+              <option value="1" {% if lega.active %}selected{% endif %}>Attiva</option>
+              <option value="0" {% if not lega.active %}selected{% endif %}>Pausata</option>
+            </select>
+          </label>
+          <button class="button primary" type="submit">Salva lega</button>
+        </form>
       </article>
     {% endfor %}
   </div>

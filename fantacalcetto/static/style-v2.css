@@ -248,6 +248,18 @@ h2 { margin: 0; font-size: 21px; }
 }
 .league-logo-row strong { display: block; font-size: 22px; }
 .league-logo-row small { display: block; margin-top: 4px; color: var(--muted); font-weight: 850; }
+.league-logo-row.compact {
+  margin: 0;
+  padding: 8px;
+}
+.league-logo-row.compact .league-logo-preview {
+  width: 54px;
+  height: 54px;
+}
+.league-edit-card .form {
+  grid-template-columns: 1fr;
+  margin-top: 0;
+}
 .fun-strip {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
@@ -705,6 +717,43 @@ h2 { margin: 0; font-size: 21px; }
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+.league-choice-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(22,107,79,.18);
+  border-radius: var(--radius);
+  background: #fbfcf7;
+}
+.league-choice-grid > strong { font-size: 20px; }
+.league-choice-grid > span { color: var(--muted); font-weight: 850; }
+.league-choice {
+  display: grid;
+  grid-template-columns: auto 54px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-height: 76px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  cursor: pointer;
+}
+.league-choice input { width: 20px; height: 20px; accent-color: var(--green); }
+.league-choice img {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 8px rgba(25,33,31,.12));
+}
+.league-choice b { display: block; font-size: 17px; }
+.league-choice small { display: block; margin-top: 3px; color: var(--muted); font-weight: 850; }
+.league-choice:has(input:checked) {
+  border-color: #e5bd42;
+  background: #fff8d8;
+  box-shadow: inset 0 0 0 1px #e5bd42;
 }
 .role-choice {
   display: grid;
@@ -1842,7 +1891,7 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
   .page { width: min(100% - 20px, 1180px); margin-top: 14px; }
   .hero, .match-header { min-height: 0; padding: 20px; }
   .site-footer { padding-bottom: 92px; }
-  .form, .roster-row, .stat-row, .quick-pagella-row, .scoreline, .stat-cards, .admin-actions, .admin-player-stats, .league-card, .league-metrics, .match-quickbar, .notification-grid, .award-row, .data-actions, .password-request-row, .password-reset-form, .team-name-grid, .team-editor-row, .comment-form, .help-grid, .admin-hub-grid, .admin-split, .admin-inline-buttons, .sticky-form-actions, .role-choice-grid { grid-template-columns: 1fr; }
+  .form, .roster-row, .stat-row, .quick-pagella-row, .scoreline, .stat-cards, .admin-actions, .admin-player-stats, .league-card, .league-metrics, .match-quickbar, .notification-grid, .award-row, .data-actions, .password-request-row, .password-reset-form, .team-name-grid, .team-editor-row, .comment-form, .help-grid, .admin-hub-grid, .admin-split, .admin-inline-buttons, .sticky-form-actions, .role-choice-grid, .league-choice-grid { grid-template-columns: 1fr; }
   .admin-hub-grid { gap: 8px; }
   .hub-tile { min-height: 82px; }
   .admin-accordion > summary { padding: 16px; }

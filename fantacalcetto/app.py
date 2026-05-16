@@ -53,6 +53,16 @@ PUBLIC_DEVELOP_FALLBACK_PASSWORD = "Bombonera2026!"
 
 APP_UPDATES = [
     {
+        "title": "Scelta lega in registrazione",
+        "body": "Chi si registra sceglie subito la lega: supporter e richieste calciatore finiscono nello spogliatoio corretto.",
+        "tag": "Leghe",
+    },
+    {
+        "title": "Identità lega modificabile",
+        "body": "Il Develop può ritoccare nome, logo e colori delle leghe esistenti senza toccare giocatori e storico.",
+        "tag": "Develop",
+    },
+    {
         "title": "Lega Bombonera ufficiale",
         "body": "I dati attuali sono stati agganciati alla Lega Bombonera. Il Develop può creare nuove leghe e assegnare Mister dedicati.",
         "tag": "Develop",
@@ -1947,9 +1957,44 @@ def create_league():
     return redirect(url_for("admin_dashboard"))
 
 
+@app.route("/develop/leagues/<int:league_id>", methods=["POST"])
+@require_admin
+def update_league(league_id):
+    if not is_develop():
+        return redirect(url_for("admin_dashboard"))
+    league = query("select * from leagues where id = ?", (league_id,), one=True)
+    if not league:
+        return redirect(url_for("admin_dashboard"))
+    name = request.form.get("name", "").strip() or league["name"]
+    logo = request.form.get("logo", "").strip() or league["logo"] or DEFAULT_LEAGUE_LOGO
+    primary_color = request.form.get("primary_color", "").strip() or league["primary_color"] or "#0f6b4f"
+    secondary_color = request.form.get("secondary_color", "").strip() or league["secondary_color"] or "#f2c94c"
+    active = 1 if request.form.get("active") == "1" else 0
+    execute(
+        """
+        update leagues
+        set name = ?, logo = ?, primary_color = ?, secondary_color = ?, active = ?
+        where id = ?
+        """,
+        (name, logo, primary_color, secondary_color, active, league_id),
+    )
+    log_league_event(
+        "Lega aggiornata",
+        f"Il Develop ha ritoccato identità e logo di {name}. Stemma pulito, polemiche pronte.",
+        "develop",
+        visibility="admin",
+        league_id=league_id,
+    )
+    return redirect(url_for("admin_dashboard"))
+
+
 @app.route("/register", methods=["GET", "POST"])
 def register_player():
     error = None
+    leagues = query("select * from leagues where active = 1 order by name")
+    if not leagues:
+        ensure_default_league_and_roles()
+        leagues = query("select * from leagues where active = 1 order by name")
     if request.method == "POST":
         name = request.form["name"].strip()
         surname = request.form.get("surname", "").strip()
@@ -1966,10 +2011,21 @@ def register_player():
         if preferred_foot not in FOOT_LABELS:
             preferred_foot = "right"
         accepted_rules = request.form.get("accepted_rules") == "yes"
+        try:
+            selected_league_id = int(request.form.get("league_id") or 0)
+        except (TypeError, ValueError):
+            selected_league_id = 0
+        selected_league = query(
+            "select * from leagues where id = ? and active = 1",
+            (selected_league_id,),
+            one=True,
+        )
         if query("select id from players where lower(username) = lower(?)", (username,), one=True):
             error = "Username già preso: serve un nome da spogliatoio originale."
         elif len(password) < 4:
             error = "Password troppo corta: almeno 4 caratteri, senza fare i fenomeni."
+        elif not selected_league:
+            error = "Scegli la lega giusta: il mister deve sapere in quale spogliatoio buttarti."
         elif not accepted_rules:
             error = "Prima serve il giuramento da spogliatoio: accetta il regolamento."
         else:
@@ -1981,6 +2037,7 @@ def register_player():
                 if requested_role == "player"
                 else f"{f'{name} {surname}'.strip()} è entrato in LegaGram come supporter goliardico."
             )
+            event_body = f"{event_body} Lega scelta: {selected_league['name']}."
             execute(
                 """
                 insert into players
@@ -1995,7 +2052,7 @@ def register_player():
                     generate_password_hash(password),
                     account_status,
                     account_type,
-                    current_league_id(),
+                    selected_league["id"],
                     request.form.get("supporter_player_name", "").strip(),
                     request.form.get("supporter_relation", "").strip(),
                     mascot,
@@ -2016,6 +2073,7 @@ def register_player():
         mascots=MASCOTS,
         foot_labels=FOOT_LABELS,
         rules=RULES,
+        leagues=leagues,
     )
 
 
