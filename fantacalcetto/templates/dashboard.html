@@ -25,19 +25,30 @@
 
 <nav class="admin-section-nav" aria-label="{% if is_develop %}Menu Develop{% else %}Menu Mister{% endif %}">
   {% if is_develop %}
-    <a href="#develop">Develop</a>
-    <a href="#admin-partita">Partita</a>
-    <a href="#approvals">Approvazioni</a>
-    <a href="#roster">Profili</a>
-    <a href="#settings">Strumenti</a>
+    <a href="#develop"><span>★</span><b>Develop</b></a>
+    <a href="#admin-partita"><span>🏟️</span><b>Partita</b></a>
+    <a href="#approvals"><span>✅</span><b>Approva</b></a>
+    <a href="#roster"><span>👥</span><b>Profili</b></a>
+    <a href="#settings"><span>🧰</span><b>Strumenti</b></a>
   {% else %}
-    <a href="#admin-partita">Partita</a>
-    <a href="#new-match">Crea</a>
-    <a href="#history">Storico</a>
-    <a href="#roster">Rosa</a>
-    <a href="#mercato">Mercato</a>
+    <a href="#admin-partita"><span>🏟️</span><b>Partita</b></a>
+    <a href="#new-match"><span>📅</span><b>Crea</b></a>
+    <a href="#history"><span>📚</span><b>Storico</b></a>
+    <a href="#roster"><span>👥</span><b>Rosa</b></a>
+    <a href="#mercato"><span>🔁</span><b>Mercato</b></a>
   {% endif %}
 </nav>
+
+{% if current_player and can_manage %}
+<nav class="role-view-switch" aria-label="Cambia vista">
+  <a href="{{ url_for('player_dashboard') }}"><span>⚽</span><b>Calciatore</b></a>
+  <a class="{% if not is_develop %}active{% endif %}" href="{{ url_for('admin_dashboard') }}#admin-partita"><span>🧢</span><b>Mister</b></a>
+  {% if is_develop %}
+    <a class="active" href="{{ url_for('admin_dashboard') }}#develop"><span>★</span><b>Develop</b></a>
+    <a href="{{ url_for('player_dashboard') }}?preview=supporter#legagram"><span>🎟️</span><b>Supporter test</b></a>
+  {% endif %}
+</nav>
+{% endif %}
 
 {% if is_develop %}
 <section class="develop-flow-panel">
@@ -408,7 +419,7 @@
       <details class="admin-player-card">
         <summary>
           <span class="admin-player-main">
-            <strong>{{ p.name }}</strong>
+            <strong>{% if p.app_role == "develop" %}<span class="role-badge develop">★</span>{% elif p.app_role == "mister" %}<span class="role-badge mister">★</span>{% endif %}{{ p.name }}</strong>
             <small>{{ p.nickname or "senza soprannome" }} · {{ p.role }} · {{ p.preferred_foot|foot_label }} · {{ p.permanent_team_name or "senza squadra stabile" }}{% if is_develop %} · {{ p.league_name or "senza lega" }} · {{ p.account_type }} · {{ p.account_status|account_status_label }}{% endif %}</small>
           </span>
           <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>

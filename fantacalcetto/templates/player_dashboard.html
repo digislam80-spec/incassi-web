@@ -8,7 +8,11 @@
       <div>
         <p class="eyebrow">Big Match del Venerdì</p>
         <h2>{{ featured.title }}</h2>
-        <p>{{ featured.match_date|datetime_it }} · {{ featured.location }}</p>
+        <div class="match-date-line">
+          <span>{{ featured.match_date|datetime_it }}</span>
+          <span>{{ featured.location }}</span>
+          <strong data-live-pill>LIVE</strong>
+        </div>
       </div>
       <span class="status-chip">{{ phase.label }}</span>
     </div>
@@ -115,7 +119,10 @@
 <section class="hero profile-hero" id="profilo">
   <div>
         <p class="eyebrow">{% if player.account_type == "supporter" %}Profilo supporter{% else %}Profilo calciatore{% endif %}</p>
-    <h1>{{ player.name }}</h1>
+    <h1>
+      {% if is_develop %}<span class="role-badge develop" title="Develop">★</span>{% elif can_manage %}<span class="role-badge mister" title="Mister">★</span>{% endif %}
+      {{ player.name }}
+    </h1>
     <p class="lede">
       {% if player.account_type == "supporter" %}
         {{ player.nickname or "Tifoso di tribuna" }} · supporter{% if player.supporter_player_name %} di {{ player.supporter_player_name }}{% endif %}{% if player.supporter_relation %} · {{ player.supporter_relation }}{% endif %}
@@ -176,11 +183,26 @@
 </section>
 
 <nav class="player-section-nav" aria-label="Menu calciatore">
-  <a href="#profilo">Profilo</a>
-  <a href="#partita">Partita</a>
-  <a href="#storico">Storico</a>
-  <a href="#legagram">LegaGram</a>
+  <a href="#profilo"><span>👤</span><b>Profilo</b></a>
+  <a href="#partita"><span>🏟️</span><b>Partita</b></a>
+  <a href="#storico"><span>📚</span><b>Storico</b></a>
+  <a href="#legagram"><span>💬</span><b>LegaGram</b></a>
 </nav>
+
+{% if player.account_type != "supporter" and can_manage %}
+<nav class="role-view-switch" aria-label="Cambia vista">
+  <a class="active" href="{{ url_for('player_dashboard') }}"><span>⚽</span><b>Calciatore</b></a>
+  <a href="{{ url_for('admin_dashboard') }}#admin-partita"><span>🧢</span><b>Mister</b></a>
+  {% if is_develop %}
+    <a href="{{ url_for('admin_dashboard') }}#develop"><span>★</span><b>Develop</b></a>
+    <a href="{{ url_for('player_dashboard') }}?preview=supporter#legagram"><span>🎟️</span><b>Supporter test</b></a>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% if request.args.get("preview") == "supporter" and is_develop %}
+  <div class="notice soft">Preview supporter: stai controllando come deve respirare la zona tifosi. Non cambia il tuo ruolo reale.</div>
+{% endif %}
 
 <dialog class="app-modal" id="player-help">
   <form method="dialog">

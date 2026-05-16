@@ -54,17 +54,17 @@
   </footer>
   {% if current_player %}
     <nav class="bottom-nav">
-      <a href="{{ url_for('player_dashboard') }}#profilo">Profilo</a>
-      <a href="{{ url_for('player_dashboard') }}#partita">Partita</a>
-      <a href="{{ url_for('player_dashboard') }}#storico">Storico</a>
-      <a href="{{ url_for('player_dashboard') }}#legagram">LegaGram</a>
+      <a href="{{ url_for('player_dashboard') }}#profilo"><span>👤</span><b>Profilo</b></a>
+      <a href="{{ url_for('player_dashboard') }}#partita"><span>🏟️</span><b>Partita</b></a>
+      <a href="{{ url_for('player_dashboard') }}#storico"><span>📚</span><b>Storico</b></a>
+      <a href="{{ url_for('player_dashboard') }}#legagram"><span>💬</span><b>LegaGram</b></a>
     </nav>
   {% elif is_admin %}
     <nav class="bottom-nav">
-      <a href="{{ url_for('admin_dashboard') }}">Oggi</a>
-      {% if match is defined and match %}<a href="{{ url_for('match_detail', match_id=match.id) }}">Partita</a>{% endif %}
-      <a href="{{ url_for('admin_dashboard') }}#new-match">Nuova</a>
-      <a href="{{ url_for('admin_dashboard') }}#history">Storico</a>
+      <a href="{{ url_for('admin_dashboard') }}"><span>🧢</span><b>Oggi</b></a>
+      {% if match is defined and match %}<a href="{{ url_for('match_detail', match_id=match.id) }}"><span>🏟️</span><b>Partita</b></a>{% endif %}
+      <a href="{{ url_for('admin_dashboard') }}#new-match"><span>📅</span><b>Nuova</b></a>
+      <a href="{{ url_for('admin_dashboard') }}#history"><span>📚</span><b>Storico</b></a>
     </nav>
   {% endif %}
   <script>
