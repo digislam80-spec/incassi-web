@@ -94,6 +94,7 @@
   {% endif %}
   <a class="hub-tile" href="#history"><strong>Archivio</strong><span>Future e giocate, senza mischiare tutto.</span></a>
   <a class="hub-tile" href="#roster"><strong>{% if is_develop %}Profili{% else %}Rosa{% endif %}</strong><span>{{ players|length }} {% if is_develop %}account modificabili{% else %}approvati e modificabili{% endif %}.</span></a>
+  <a class="hub-tile" href="#mercato"><strong>SkySpogliatoio</strong><span>{{ transfer_requests|length }} trattative in attesa di firma.</span></a>
   <a class="hub-tile" href="#settings"><strong>News e strumenti</strong><span>Cronache, link e cose leggere. Backup solo Develop.</span></a>
 </section>
 
@@ -288,6 +289,33 @@
 </details>
 {% endif %}
 
+<section class="panel" id="mercato">
+  <div class="panel-head">
+    <h2>SkySpogliatoio Mercato</h2>
+    <span class="pill">{{ transfer_requests|length }} in attesa</span>
+  </div>
+  <p class="muted section-intro">Il Mister può fissare una squadra stabile al calciatore e proporre prestiti o cessioni. Il calciatore deve firmare dall'account: se rifiuta, perde affidabilità e score.</p>
+  <div class="compact-match-list">
+    {% for item in transfer_requests %}
+      <article class="mini-card market-row">
+        <strong>{{ item.player_name }}</strong>
+        <span>{{ item.from_team or "Svincolati di lusso" }} -> {{ item.to_team }} · {{ "prestito" if item.transfer_type == "loan" else "titolo definitivo" }}</span>
+        <small>Offerta: {{ item.offer_label }} · in attesa di firma</small>
+      </article>
+    {% else %}
+      <div class="mini-card">
+        <strong>Nessuna trattativa aperta</strong>
+        <span>Apri una scheda calciatore qui sotto e lancia il mercato con una proposta goliardica.</span>
+      </div>
+    {% endfor %}
+  </div>
+  <datalist id="market-team-ideas">
+    {% for team_name in market_team_ideas %}
+      <option value="{{ team_name }}"></option>
+    {% endfor %}
+  </datalist>
+</section>
+
 <section class="panel" id="roster">
   <div class="panel-head">
     <h2>{% if is_develop %}Profili e ruoli piattaforma{% else %}Approvati e Arruolabili{% endif %}</h2>
@@ -299,7 +327,7 @@
         <summary>
           <span class="admin-player-main">
             <strong>{{ p.name }}</strong>
-            <small>{{ p.nickname or "senza soprannome" }} · {{ p.role }} · {{ p.preferred_foot|foot_label }}{% if is_develop %} · {{ p.league_name or "senza lega" }} · {{ p.account_type }} · {{ p.account_status|account_status_label }}{% endif %}</small>
+            <small>{{ p.nickname or "senza soprannome" }} · {{ p.role }} · {{ p.preferred_foot|foot_label }} · {{ p.permanent_team_name or "senza squadra stabile" }}{% if is_develop %} · {{ p.league_name or "senza lega" }} · {{ p.account_type }} · {{ p.account_status|account_status_label }}{% endif %}</small>
           </span>
           <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
           <span class="stars">{{ p.power|stars }}</span>
@@ -347,6 +375,7 @@
               </select>
             </label>
             <label>Nome mascotte <input name="mascot_name" value="{{ p.mascot_name or '' }}" placeholder="Nome mascotte personalizzato"></label>
+            <label>Squadra stabile <input name="permanent_team_name" value="{{ p.permanent_team_name or '' }}" list="market-team-ideas" placeholder="Es. Real Madrink"></label>
             {% if is_develop %}
               <label>Lega
                 <select name="league_id">
@@ -379,6 +408,30 @@
             {% endif %}
             <button class="button primary" type="submit">Salva scheda</button>
           </form>
+          {% if p.account_type == "player" and p.account_status == "approved" %}
+            <form class="form transfer-form" method="post" action="{{ url_for('propose_player_transfer', player_id=p.id) }}">
+              <div class="panel-head compact-head">
+                <h3>Proposta mercato</h3>
+                <span class="pill">firma calciatore</span>
+              </div>
+              <label>Nuova squadra <input name="to_team" list="market-team-ideas" placeholder="Es. Dinamo Spritz" required></label>
+              <label>Formula
+                <select name="transfer_type">
+                  <option value="loan">Prestito con diritto di sfotto'</option>
+                  <option value="permanent">Titolo definitivo</option>
+                </select>
+              </label>
+              <label>Offerta rapida
+                <select name="offer_label">
+                  {% for offer in market_offers %}
+                    <option value="{{ offer }}">{{ offer }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <label>Offerta manuale <input name="custom_offer" placeholder="Es. una graffa e una Coca Zero"></label>
+              <button class="button" type="submit">Invia proposta SkySpogliatoio</button>
+            </form>
+          {% endif %}
           {% if is_develop %}
             <form class="inline-actions" method="post" action="{{ url_for('remove_player', player_id=p.id) }}" onsubmit="return confirm('Rimuovere {{ p.name }} dalla rosa arruolabili? Lo storico resta salvato.');">
               <button class="button danger" type="submit">Rimuovi dalla rosa</button>

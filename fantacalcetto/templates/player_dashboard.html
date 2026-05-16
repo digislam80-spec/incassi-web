@@ -82,7 +82,7 @@
       {% if player.account_type == "supporter" %}
         {{ player.nickname or "Tifoso di tribuna" }} · supporter{% if player.supporter_player_name %} di {{ player.supporter_player_name }}{% endif %}{% if player.supporter_relation %} · {{ player.supporter_relation }}{% endif %}
       {% else %}
-        {{ player.nickname or "Soprannome ancora da spogliatoio" }} · {{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.account_status|account_status_label }}
+        {{ player.nickname or "Soprannome ancora da spogliatoio" }} · {{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.permanent_team_name or "Svincolato di lusso" }} · {{ player.account_status|account_status_label }}
       {% endif %}
     </p>
     <div class="hero-actions">
@@ -167,9 +167,35 @@
 {% endif %}
 
 {% if player.account_status != "approved" %}
-  <div class="notice soft">Sei già dentro come supporter: puoi guardare e commentare. Mister o Develop devono ancora promuoverti a calciatore arruolabile.</div>
+  <div class="notice soft">Sei già dentro come supporter: puoi guardare e commentare. Il Develop deve ancora promuoverti a calciatore arruolabile.</div>
 {% elif player.account_type == "supporter" %}
   <div class="notice soft">Modalità supporter: puoi seguire partite, pagelle e LegaGram. Non entri nelle convocazioni finché non vieni promosso a calciatore.</div>
+{% endif %}
+
+{% if pending_transfers %}
+<section class="panel transfer-sign-panel">
+  <div class="panel-head">
+    <h2>Firma mercato richiesta</h2>
+    <span class="pill">SkySpogliatoio</span>
+  </div>
+  {% for transfer in pending_transfers %}
+    <article class="mini-card transfer-offer-card">
+      <strong>{{ transfer.from_team or "Svincolati di lusso" }} -> {{ transfer.to_team }}</strong>
+      <span>{{ "Prestito" if transfer.transfer_type == "loan" else "Titolo definitivo" }} · offerta: {{ transfer.offer_label }}</span>
+      <small>Se accetti cambi squadra stabile. Se rifiuti: -2 score e -5 affidabilità. Il mercato è crudele, ma almeno fa ridere.</small>
+      <div class="admin-inline-buttons">
+        <form method="post" action="{{ url_for('respond_transfer', transfer_id=transfer.id) }}">
+          <input type="hidden" name="decision" value="accept">
+          <button class="button primary" type="submit">Firmo e vado</button>
+        </form>
+        <form method="post" action="{{ url_for('respond_transfer', transfer_id=transfer.id) }}">
+          <input type="hidden" name="decision" value="decline">
+          <button class="button ghost" type="submit">Rifiuto la destinazione</button>
+        </form>
+      </div>
+    </article>
+  {% endfor %}
+</section>
 {% endif %}
 
 <section class="panel">

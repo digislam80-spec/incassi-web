@@ -704,6 +704,30 @@ h2 { margin: 0; font-size: 21px; }
   display: grid;
   gap: 10px;
 }
+.market-row,
+.transfer-offer-card {
+  border-color: rgba(242, 201, 76, .48);
+  background:
+    linear-gradient(135deg, rgba(255,246,190,.92), rgba(255,255,255,.98));
+}
+.transfer-sign-panel {
+  border-color: rgba(15,107,79,.35);
+  background:
+    linear-gradient(135deg, rgba(238,248,231,.96), rgba(255,255,255,.98));
+}
+.transfer-form {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.compact-head {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.compact-head h3 {
+  margin: 0;
+  font-size: 18px;
+}
 .match-list-card {
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
