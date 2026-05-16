@@ -7,11 +7,25 @@
   {% if error %}
     <div class="notice soft">{{ error }}</div>
   {% endif %}
+  {% if notice %}
+    <div class="notice">{{ notice }}</div>
+  {% endif %}
   <form class="form login-form" method="post">
     <label>Username <input name="username" autocomplete="username" required autofocus></label>
     <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
     <button class="button primary" type="submit">Entra</button>
   </form>
   <p class="login-help"><a href="{{ url_for('forgot_player_password') }}">Password dimenticata? Chiedi soccorso al mister</a></p>
+  <details class="mini-card league-request-login">
+    <summary><strong>Vuoi creare una nuova lega?</strong><span>Fai richiesta al Develop e, se approvata, diventi Mister della tua lega.</span></summary>
+    <form class="form login-form" method="post" action="{{ url_for('request_new_league') }}">
+      <label>Il tuo username <input name="username" placeholder="username già registrato"></label>
+      <label>Nome e cognome <input name="display_name" placeholder="Es. Mario Rossi"></label>
+      <label>WhatsApp <input name="phone" placeholder="Numero per farti riconoscere"></label>
+      <label>Nome nuova lega <input name="league_name" placeholder="Es. Lega del Mercoledì" required></label>
+      <label>Nota al Develop <input name="note" placeholder="Perché vuoi aprire questa gloriosa competizione?"></label>
+      <button class="button primary" type="submit">Chiedi la lavagna da Mister</button>
+    </form>
+  </details>
 </section>
 {% endblock %}

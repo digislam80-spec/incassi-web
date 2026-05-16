@@ -39,7 +39,7 @@
     </div>
 
     <div class="tv-news-ticker">
-      <strong>SkyCalcetto24</strong>
+      <strong>Sky Calcetto 24 · Diretta</strong>
       <div>
         <span>{% if featured.response in ["confirmed", "present"] %}{{ player.nickname or player.name }} risulta presente: firma depositata in segreteria.{% elif featured.response == "waitlist" %}Lista d'attesa attiva: pettorina calda e speranza in panchina.{% else %}Convocazione aperta: serve risposta prima che partano gli audio lunghi.{% endif %}</span>
         <span>{% if featured.status in ["teams", "teams_auto"] %}Formazioni ufficiali pronte, la regia prepara il campo tattico.{% else %}Probabili formazioni in costruzione: il mister sta facendo calcoli da Champions.{% endif %}</span>
@@ -207,6 +207,21 @@
 
 {% if request.args.get("preview") == "supporter" and is_develop %}
   <div class="notice soft" data-app-section="profilo">Preview supporter: stai controllando come deve respirare la zona tifosi. Non cambia il tuo ruolo reale.</div>
+{% endif %}
+
+{% if memberships and memberships|length > 1 %}
+<form class="league-context-switch" method="post" action="{{ url_for('switch_player_league') }}" data-app-section="profilo legagram partita">
+  <label>Stai seguendo
+    <select name="league_id" onchange="this.form.submit()">
+      {% for membership in memberships %}
+        <option value="{{ membership.league_id }}" {% if current_league and membership.league_id == current_league.id %}selected{% endif %}>
+          {{ membership.league_name }} · {% if membership.role == "mister" %}Mister{% elif membership.role == "player" %}Calciatore{% else %}Supporter{% endif %}
+        </option>
+      {% endfor %}
+    </select>
+  </label>
+  <span>Cambi lega, cambi feed e partita: niente miscugli da spogliatoio.</span>
+</form>
 {% endif %}
 
 <dialog class="app-modal" id="player-help" data-app-section="profilo">

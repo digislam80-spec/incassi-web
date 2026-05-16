@@ -205,7 +205,7 @@
 <section class="panel" id="approvals" data-admin-section="approvals">
   <div class="panel-head">
     <h2>Approvazioni e accessi</h2>
-    <span class="pill">{{ pending_players|length }} iscrizioni</span>
+    <span class="pill">{{ pending_players|length }} iscrizioni · {{ league_requests|length }} leghe</span>
   </div>
   <div class="admin-split">
     <div>
@@ -239,6 +239,31 @@
           <div class="mini-card">
             <strong>Nessuno in attesa</strong>
             <span>Chi si registra come supporter entra già; qui appaiono solo quelli che chiedono di diventare calciatori.</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div>
+      <h3>Richieste nuove leghe</h3>
+      <div class="compact-match-list">
+        {% for item in league_requests %}
+          <article class="mini-card pending-card league-request-card">
+            <strong>{{ item.league_name }}</strong>
+            <span>{{ item.player_name or item.display_name or item.username or "Aspirante mister" }} · {{ item.phone or "WhatsApp non indicato" }}</span>
+            {% if item.note %}<small>{{ item.note }}</small>{% endif %}
+            <div class="admin-inline-buttons">
+              <form method="post" action="{{ url_for('approve_league_request', request_id=item.id) }}">
+                <button class="button primary" type="submit">Crea lega e nomina Mister</button>
+              </form>
+              <form method="post" action="{{ url_for('reject_league_request', request_id=item.id) }}">
+                <button class="button ghost" type="submit">Rimanda in tribuna</button>
+              </form>
+            </div>
+          </article>
+        {% else %}
+          <div class="mini-card">
+            <strong>Nessuna lega richiesta</strong>
+            <span>Quando qualcuno chiede un nuovo torneo, il Develop lo approva da qui.</span>
           </div>
         {% endfor %}
       </div>
