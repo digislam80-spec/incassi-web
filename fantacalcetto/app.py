@@ -844,10 +844,11 @@ def ensure_default_league_and_roles():
     riccardo = query(
         """
         select * from players
-        where lower(name) like 'riccardo%' or lower(username) in ('riccardo', 'riccardo.muollo')
-        order by case when lower(name) like '%muollo%' then 0 else 1 end, id
+        where lower(name) like ? or lower(username) in (?, ?)
+        order by case when lower(name) like ? then 0 else 1 end, id
         limit 1
         """,
+        ("riccardo%", "riccardo", "riccardo.muollo", "%muollo%"),
         one=True,
     )
     if riccardo:
