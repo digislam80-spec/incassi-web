@@ -19,7 +19,7 @@
 
     <div class="versus" data-match-date="{{ featured.match_date }}">
       <div class="mock-team">
-        <div class="team-crest crest-1"></div>
+        <div class="team-crest {{ featured.team_a_logo or 'crest-1' }}"></div>
         <strong>{{ featured.team_a_name or "Squadra A" }}</strong>
         <span>{% if featured.status in ["teams", "teams_auto"] %}Formazione pronta{% else %}Spogliatoio in attesa{% endif %}</span>
       </div>
@@ -29,7 +29,7 @@
         <i>VS</i>
       </div>
       <div class="mock-team">
-        <div class="team-crest crest-2"></div>
+        <div class="team-crest {{ featured.team_b_logo or 'crest-2' }}"></div>
         <strong>{{ featured.team_b_name or "Squadra B" }}</strong>
         <span>{% if featured.status in ["teams", "teams_auto"] %}Formazione pronta{% else %}Mister al telefono{% endif %}</span>
       </div>
@@ -325,8 +325,8 @@
         {% if p.team == "A" or (featured.status not in ["teams", "teams_auto"] and loop.index is odd) %}
           <div class="player-row">
             <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
-            <strong>{{ p.nickname or p.name }}</strong>
-            <small>{{ p.role[:3]|upper }}</small>
+            <strong>{% if p.app_role == "develop" %}<span class="role-badge develop">★</span>{% elif p.app_role == "mister" %}<span class="role-badge mister">★</span>{% endif %}{{ p.name }}</strong>
+            <small>{{ p.nickname or "senza soprannome" }} · {{ p.role[:3]|upper }} · OVR {{ p|overall_rating }}</small>
           </div>
         {% endif %}
       {% else %}
@@ -361,8 +361,8 @@
         {% if p.team == "B" or (featured.status not in ["teams", "teams_auto"] and loop.index is even) %}
           <div class="player-row">
             <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
-            <strong>{{ p.nickname or p.name }}</strong>
-            <small>{{ p.role[:3]|upper }}</small>
+            <strong>{% if p.app_role == "develop" %}<span class="role-badge develop">★</span>{% elif p.app_role == "mister" %}<span class="role-badge mister">★</span>{% endif %}{{ p.name }}</strong>
+            <small>{{ p.nickname or "senza soprannome" }} · {{ p.role[:3]|upper }} · OVR {{ p|overall_rating }}</small>
           </div>
         {% endif %}
       {% else %}
@@ -432,18 +432,14 @@
   </div>
   <div class="compact-match-list">
     {% for m in past_matches %}
-      <article class="mini-card match-list-card muted-card">
+      <a class="mini-card match-list-card muted-card" href="{{ url_for('match_detail', match_id=m.id) }}">
         <div>
           <strong>{{ m.title }}</strong>
           <span>{{ m.match_date|datetime_it }} · {{ m.location }}</span>
         </div>
         <small>{{ m.status|status_label }} · {{ (m.response or "non invitato")|response_label }}</small>
-        <div class="comment-list">
-          {% for comment in match_comments.get(m.id, []) %}
-            <small><b>{{ comment.player_name or "Spogliatoio" }}</b>: {{ comment.body }}</small>
-          {% endfor %}
-        </div>
-      </article>
+        <small>Apri scheda partita per statistiche, pagelle, premi e risultato completo.</small>
+      </a>
     {% else %}
       <div class="mini-card">
         <strong>Nessuno storico</strong>
@@ -506,6 +502,7 @@
       <article class="post-card">
         <div class="post-avatar">
           <img src="{{ url_for('static', filename='mascots/' ~ (player.mascot or 'jolly') ~ '.png') }}" alt="">
+          <span class="social-role-icon {% if item.event_type == 'mercato' %}source{% elif item.event_type == 'cronaca' %}player{% else %}news{% endif %}">{% if item.event_type == "mercato" %}S{% elif item.event_type == "cronaca" %}{% if is_develop %}★{% elif can_manage %}M{% elif player.account_type == "supporter" %}T{% else %}C{% endif %}{% else %}F{% endif %}</span>
         </div>
         <div>
           <header>

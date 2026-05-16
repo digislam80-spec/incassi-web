@@ -171,12 +171,21 @@ APP_UPDATES = [
 ]
 
 TEAM_NAMES = [
-    ("Real Madrink", "Atletico Ma Non Troppo"),
-    ("AC Tua", "Dinamo Spritz"),
-    ("Boca Senior", "Paris San Gennar"),
-    ("Lokomotiv Arrosto", "Sporting Aperitivo"),
-    ("Scapoli FC", "Ammogliati United"),
+    ("Real Madrink", "Atletico Ma Non Troppo"), ("AC Tua", "Dinamo Spritz"),
+    ("Boca Senior", "Paris San Gennar"), ("Lokomotiv Arrosto", "Sporting Aperitivo"),
+    ("Scapoli FC", "Ammogliati United"), ("Birrareal", "Frittatina City"),
+    ("Panchina Hotspur", "Borussia Porchetta"), ("Real Vesuvio", "Atletico Sciorta"),
+    ("Dinamo Frittur", "Sporting Sasicc"), ("New Team E Nient", "Longobarda 2.0"),
+    ("Real Cornetto", "Celta Vino"), ("Pro Secco FC", "Bayern Miez"),
+    ("Ajax Sapone", "Manchester Sinty"), ("Intervallo FC", "Napoli Centrale"),
+    ("Lazio di Sole", "Roma Capoccia"), ("Juve Stabirra", "Milanese Imbruttiti"),
+    ("Udinese Ma Non Troppo", "Sampdoria di Panza"), ("Torino Sbagliato", "Fiorentina 5+"),
+    ("Salernitana Subito", "Genoa Gin Tonic"), ("Real Sciatavinn", "Atletico Ma Chi"),
+    ("Dinamo Appanzati", "Boca Lievito"), ("Sporting Panuozzo", "Paris Saint Gennar"),
+    ("Lokomotiv Cuzzetiello", "Aston Birra"), ("Crystal Pallon", "Tottenham Hotspurch"),
 ]
+
+TEAM_LOGOS = [f"crest-{index}" for index in range(1, 21)]
 
 MARKET_TEAM_IDEAS = [
     "Real Madrink",
@@ -515,6 +524,8 @@ def init_db():
                 status text not null default 'open',
                 team_a_name text default 'Squadra A',
                 team_b_name text default 'Squadra B',
+                team_a_logo text not null default 'crest-1',
+                team_b_logo text not null default 'crest-2',
                 team_a_score integer,
                 team_b_score integer,
                 result_processed integer not null default 0,
@@ -647,6 +658,8 @@ def init_db():
             "alter table players add column if not exists permanent_team_name text default ''",
             "alter table matches add column if not exists league_id integer",
             "alter table matches add column if not exists result_processed integer not null default 0",
+            "alter table matches add column if not exists team_a_logo text not null default 'crest-1'",
+            "alter table matches add column if not exists team_b_logo text not null default 'crest-2'",
             "alter table league_events add column if not exists league_id integer",
             "alter table match_players add column if not exists responded_at timestamptz",
             "alter table match_players add column if not exists rating numeric(3,1)",
@@ -738,6 +751,8 @@ def init_db():
             status text not null default 'open',
             team_a_name text default 'Squadra A',
             team_b_name text default 'Squadra B',
+            team_a_logo text not null default 'crest-1',
+            team_b_logo text not null default 'crest-2',
             team_a_score integer,
             team_b_score integer,
             result_processed integer not null default 0,
@@ -860,6 +875,10 @@ def init_db():
         connection.execute("alter table matches add column league_id integer")
     if "result_processed" not in match_columns:
         connection.execute("alter table matches add column result_processed integer not null default 0")
+    if "team_a_logo" not in match_columns:
+        connection.execute("alter table matches add column team_a_logo text not null default 'crest-1'")
+    if "team_b_logo" not in match_columns:
+        connection.execute("alter table matches add column team_b_logo text not null default 'crest-2'")
     event_columns = [row["name"] for row in query("pragma table_info(league_events)")]
     if "league_id" not in event_columns:
         connection.execute("alter table league_events add column league_id integer")
@@ -3025,6 +3044,8 @@ def match_detail(match_id):
         mascots=MASCOTS,
         foot_labels=FOOT_LABELS,
         notice=request.args.get("notice", ""),
+        team_name_ideas=MARKET_TEAM_IDEAS,
+        team_logos=TEAM_LOGOS,
     )
 
 
@@ -3245,12 +3266,14 @@ def update_match_teams(match_id):
         execute(
             """
             update matches
-            set team_a_name = ?, team_b_name = ?
+            set team_a_name = ?, team_b_name = ?, team_a_logo = ?, team_b_logo = ?
             where id = ?
             """,
             (
                 request.form.get("team_a_name", "Squadra A").strip() or "Squadra A",
                 request.form.get("team_b_name", "Squadra B").strip() or "Squadra B",
+                request.form.get("team_a_logo", "crest-1") if request.form.get("team_a_logo") in TEAM_LOGOS else "crest-1",
+                request.form.get("team_b_logo", "crest-2") if request.form.get("team_b_logo") in TEAM_LOGOS else "crest-2",
                 match_id,
             ),
         )

@@ -247,9 +247,33 @@ FantaCalcetto powered by Digislam Print Lab.</textarea>
   </div>
   <form class="team-editor-form" method="post" action="{{ url_for('update_match_teams', match_id=match.id) }}">
     <div class="team-name-grid">
-      <label>Nome squadra A <input name="team_a_name" value="{{ match.team_a_name }}"></label>
-      <label>Nome squadra B <input name="team_b_name" value="{{ match.team_b_name }}"></label>
+      <label>Nome squadra A <input name="team_a_name" value="{{ match.team_a_name }}" list="team-name-ideas"></label>
+      <label>Nome squadra B <input name="team_b_name" value="{{ match.team_b_name }}" list="team-name-ideas"></label>
+      <label>Logo squadra A
+        <select name="team_a_logo">
+          {% for logo in team_logos %}
+            <option value="{{ logo }}" {% if (match.team_a_logo or "crest-1") == logo %}selected{% endif %}>Logo {{ loop.index }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Logo squadra B
+        <select name="team_b_logo">
+          {% for logo in team_logos %}
+            <option value="{{ logo }}" {% if (match.team_b_logo or "crest-2") == logo %}selected{% endif %}>Logo {{ loop.index }}</option>
+          {% endfor %}
+        </select>
+      </label>
     </div>
+    <div class="logo-pick-row">
+      {% for logo in team_logos %}
+        <span class="team-crest {{ logo }}" title="Logo {{ loop.index }}"></span>
+      {% endfor %}
+    </div>
+    <datalist id="team-name-ideas">
+      {% for team_name in team_name_ideas %}
+        <option value="{{ team_name }}"></option>
+      {% endfor %}
+    </datalist>
     <div class="team-editor-list">
       {% for p in players if p.response in ["confirmed", "present"] or p.team %}
         <div class="team-editor-row">
