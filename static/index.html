@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-title" content="Incassi">
     <title>Incassi</title>
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="stylesheet" href="/style.css?v=20260516-5">
+    <link rel="stylesheet" href="/style.css?v=20260516-6">
   </head>
   <body>
     <section class="login" id="loginView">
@@ -187,28 +187,46 @@
         </div>
 
         <section class="quick-entry" id="quickEntry">
-          <div class="quick-entry-grid">
-            <label>
-              <span>Data</span>
-              <input id="quickData" type="date" required>
-            </label>
-            <label>
-              <span>Tipo incasso</span>
-              <select id="quickType">
-                <option value="os">POS</option>
-                <option value="contanti">Contanti</option>
-                <option value="bonifici">Bonifico</option>
-                <option value="paypal">PayPal</option>
-                <option value="altri">Altri metodi</option>
-              </select>
-            </label>
-          </div>
-          <div class="quick-dates compact" aria-label="Date rapide nuovo incasso">
+          <div class="date-picker quick-dates compact" aria-label="Date rapide nuovo incasso">
             <button class="secondary" id="quickYesterdayButton" type="button">Ieri</button>
-            <button class="secondary" id="quickTodayButton" type="button">Oggi</button>
+            <button class="secondary active" id="quickTodayButton" type="button">Oggi</button>
+            <button class="secondary" id="quickDateButton" type="button">Data</button>
           </div>
-          <label>
-            <span>Importo</span>
+          <label class="quick-date-field" id="quickDateField" hidden>
+            <span>Data</span>
+            <input id="quickData" type="date" required>
+          </label>
+          <select id="quickType" aria-label="Tipo incasso">
+            <option value="os">POS</option>
+            <option value="contanti">Contanti</option>
+            <option value="bonifici">Bonifico</option>
+            <option value="paypal">PayPal</option>
+            <option value="altri">Altri metodi</option>
+          </select>
+          <div class="amount-grid quick-type-grid" aria-label="Tipo incasso">
+            <button class="quick-type-card pos active" data-quick-type="os" type="button">
+              <span>POS</span>
+              <strong id="quickPreviewOs">0,00</strong>
+            </button>
+            <button class="quick-type-card cash" data-quick-type="contanti" type="button">
+              <span>Contanti</span>
+              <strong id="quickPreviewContanti">0,00</strong>
+            </button>
+            <button class="quick-type-card transfer" data-quick-type="bonifici" type="button">
+              <span>Bonifici</span>
+              <strong id="quickPreviewBonifici">0,00</strong>
+            </button>
+            <button class="quick-type-card paypal" data-quick-type="paypal" type="button">
+              <span>PayPal</span>
+              <strong id="quickPreviewPaypal">0,00</strong>
+            </button>
+            <button class="quick-type-card other" data-quick-type="altri" type="button">
+              <span>Altri</span>
+              <strong id="quickPreviewAltri">0,00</strong>
+            </button>
+          </div>
+          <label class="quick-amount-field">
+            <span id="quickAmountLabel">Importo POS</span>
             <input id="quickAmount" type="text" inputmode="decimal" placeholder="0,00">
           </label>
           <label id="quickTransferNameRow" hidden>
@@ -303,6 +321,6 @@
       </section>
     </main>
 
-    <script src="/app.js?v=20260516-5"></script>
+    <script src="/app.js?v=20260516-6"></script>
   </body>
 </html>

@@ -49,6 +49,10 @@ const quickEntry = document.querySelector("#quickEntry");
 const quickData = document.querySelector("#quickData");
 const quickType = document.querySelector("#quickType");
 const quickAmount = document.querySelector("#quickAmount");
+const quickAmountLabel = document.querySelector("#quickAmountLabel");
+const quickTypeCards = document.querySelectorAll("[data-quick-type]");
+const quickDateField = document.querySelector("#quickDateField");
+const quickDateButton = document.querySelector("#quickDateButton");
 const quickTransferNameRow = document.querySelector("#quickTransferNameRow");
 const quickTransferName = document.querySelector("#quickTransferName");
 const quickYesterdayButton = document.querySelector("#quickYesterdayButton");
@@ -76,6 +80,13 @@ const eur = new Intl.NumberFormat("it-IT", {
   currency: "EUR",
 });
 const chartColors = ["#111827", "#c71f36", "#0f766e", "#7c3aed", "#6b7280"];
+const quickPreviewIds = {
+  os: "quickPreviewOs",
+  contanti: "quickPreviewContanti",
+  bonifici: "quickPreviewBonifici",
+  paypal: "quickPreviewPaypal",
+  altri: "quickPreviewAltri",
+};
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -245,7 +256,7 @@ function resetForm(entry = null) {
 
   document.querySelector("#entryId").value = entry?.id || "";
   document.querySelector("#data").value = entry?.data || today();
-  quickData.value = entry?.data || today();
+  setQuickDate(entry?.data || today(), "today");
   quickType.value = "os";
   quickAmount.value = "";
   quickTransferName.value = "";
@@ -276,7 +287,36 @@ function focusFormStart(isEditing = false) {
 }
 
 function updateQuickTransferVisibility() {
-  quickTransferNameRow.hidden = quickType.value !== "bonifici";
+  const selected = quickType.value;
+  quickTransferNameRow.hidden = selected !== "bonifici";
+  quickAmountLabel.textContent = `Importo ${labels[selected]}`;
+  quickTypeCards.forEach((button) => {
+    button.classList.toggle("active", button.dataset.quickType === selected);
+  });
+  updateQuickPreview();
+}
+
+function updateQuickPreview() {
+  fields.forEach((field) => {
+    const target = document.querySelector(`#${quickPreviewIds[field]}`);
+    if (!target) return;
+    target.textContent = field === quickType.value ? formatPlainAmount(parseNumber(quickAmount.value)) : "0,00";
+  });
+}
+
+function formatPlainAmount(value) {
+  return new Intl.NumberFormat("it-IT", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(value || 0));
+}
+
+function setQuickDate(value, mode = "") {
+  quickData.value = value;
+  quickDateField.hidden = mode !== "custom";
+  quickYesterdayButton.classList.toggle("active", mode === "yesterday");
+  quickTodayButton.classList.toggle("active", mode !== "yesterday" && mode !== "custom");
+  quickDateButton.classList.toggle("active", mode === "custom");
 }
 
 function resetStatsDefaults() {
@@ -840,12 +880,24 @@ todayButton.addEventListener("click", () => {
   document.querySelector("#data").value = today();
 });
 quickYesterdayButton.addEventListener("click", () => {
-  quickData.value = addDays(today(), -1);
+  setQuickDate(addDays(today(), -1), "yesterday");
 });
 quickTodayButton.addEventListener("click", () => {
-  quickData.value = today();
+  setQuickDate(today(), "today");
+});
+quickDateButton.addEventListener("click", () => {
+  setQuickDate(quickData.value || today(), "custom");
+  quickData.focus();
 });
 quickType.addEventListener("change", updateQuickTransferVisibility);
+quickTypeCards.forEach((button) => {
+  button.addEventListener("click", () => {
+    quickType.value = button.dataset.quickType;
+    updateQuickTransferVisibility();
+    quickAmount.focus();
+  });
+});
+quickAmount.addEventListener("input", updateQuickPreview);
 importButton.addEventListener("click", importJson);
 exportButton.addEventListener("click", exportBackup);
 overviewMonth.addEventListener("input", renderOverview);

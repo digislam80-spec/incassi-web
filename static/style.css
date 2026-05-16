@@ -786,7 +786,7 @@ label > span,
   bottom: 0;
   z-index: 8;
   display: grid;
-  gap: 12px;
+  gap: 8px;
   width: min(430px, 100vw);
   max-height: min(88vh, 720px);
   overflow-y: auto;
@@ -820,24 +820,125 @@ label > span,
 .quick-entry,
 .transfer-panel {
   display: grid;
-  gap: 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #f7f8f6;
-  padding: 10px;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  padding: 0;
 }
 
-.quick-entry-grid,
+.quick-entry #quickType {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.date-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f7f8f6, #ecefed);
+  padding: 5px;
+}
+
+.date-picker button {
+  min-height: 36px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.date-picker .active {
+  background: linear-gradient(180deg, #232323, #111);
+  color: white;
+}
+
+.quick-date-field {
+  margin-top: -2px;
+}
+
+.amount-grid,
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 7px;
 }
 
-.quick-dates {
+.quick-type-card {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 7px;
+  gap: 5px;
+  min-height: 72px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  padding: 9px;
+  text-align: left;
+  box-shadow: var(--highlight), 0 8px 16px rgba(21, 21, 21, 0.05);
+}
+
+.quick-type-card::before {
+  display: block;
+  width: 28px;
+  height: 3px;
+  border-radius: 999px;
+  content: "";
+}
+
+.quick-type-card.pos::before {
+  background: #111827;
+}
+
+.quick-type-card.cash::before {
+  background: var(--red);
+}
+
+.quick-type-card.transfer::before {
+  background: var(--green);
+}
+
+.quick-type-card.paypal::before {
+  background: var(--purple);
+}
+
+.quick-type-card.other::before {
+  background: var(--gray);
+}
+
+.quick-type-card.active {
+  border-color: rgba(21, 21, 21, 0.24);
+  box-shadow: var(--highlight), 0 12px 28px rgba(21, 21, 21, 0.13);
+}
+
+.quick-type-card span,
+.quick-amount-field span,
+#quickTransferNameRow span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.quick-type-card strong {
+  color: var(--ink);
+  font-size: 22px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.quick-type-card.other {
+  grid-column: 1 / -1;
+  min-height: 58px;
+}
+
+.quick-amount-field input {
+  border-color: rgba(15, 118, 110, 0.22);
+  font-size: 26px;
+  font-weight: 950;
 }
 
 .quick-dates button,
