@@ -563,7 +563,7 @@
             {% if is_supporter_profile %}
               <small>{{ p.nickname or "senza soprannome" }} · Supporter · Fede {{ p.faith_score or 0 }}{% if p.supporter_player_name %} · tifa {{ p.supporter_player_name }}{% endif %}{% if p.supporter_relation %} · {{ p.supporter_relation }}{% endif %}{% if is_develop %} · {{ p.league_name or "senza lega" }} · {{ p.account_status|account_status_label }}{% endif %}</small>
             {% else %}
-              <small>{{ p.nickname or "senza soprannome" }} · {{ p.role }} · {{ p.preferred_foot|foot_label }} · {{ p.permanent_team_name or "senza squadra stabile" }}{% if is_develop %} · {{ p.league_name or "senza lega" }} · Calciatore · {{ p.account_status|account_status_label }}{% endif %}</small>
+              <small>{{ p.nickname or "senza soprannome" }}{% if p.birth_date|age_label %} · {{ p.birth_date|age_label }}{% endif %} · {{ p.role }} · {{ p.preferred_foot|foot_label }} · {{ p.permanent_team_name or "senza squadra stabile" }}{% if is_develop %} · {{ p.league_name or "senza lega" }} · Calciatore · {{ p.account_status|account_status_label }}{% endif %}</small>
             {% endif %}
           </span>
           <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
@@ -595,6 +595,7 @@
             <label>Nome <input name="name" value="{{ p.name }}" required></label>
             <label>Soprannome <input name="nickname" value="{{ p.nickname or '' }}"></label>
             <label>Telefono <input name="phone" value="{{ p.phone }}" required></label>
+            <label>Data di nascita <input type="date" name="birth_date" value="{{ p.birth_date or '' }}"></label>
             {% if is_supporter_profile %}
               <label>Supporter di <input name="supporter_player_name" value="{{ p.supporter_player_name or '' }}" placeholder="Nome calciatore o squadra del cuore"></label>
               <label>Grado di parentela / amicizia <input name="supporter_relation" value="{{ p.supporter_relation or '' }}" placeholder="Es. fratello, moglie, amico, ultrà"></label>

@@ -100,6 +100,18 @@
 </dialog>
 {% endif %}
 
+{% if not player.birth_date %}
+<dialog class="app-modal birth-date-modal" id="birth-date-modal" data-auto-open-birth>
+  <form method="post" action="{{ url_for('player_save_birth_date') }}">
+    <p class="eyebrow">Dati figurina</p>
+    <h2>Inserisci la tua data di nascita</h2>
+    <p class="muted">Serve per mostrare l'età nelle news, nel mercato e nelle schede. Promesso: niente visita medica, solo anagrafe da spogliatoio.</p>
+    <label>Data di nascita <input type="date" name="birth_date" required></label>
+    <button class="button primary" type="submit">Salva età e continua</button>
+  </form>
+</dialog>
+{% endif %}
+
 <section class="pre-match-strip" data-app-section="partita">
   <article class="pre-card">
     <small>Spogliatoio live</small>
@@ -140,7 +152,7 @@
         {% if effective_supporter %}
           {{ player.nickname or "Tifoso di tribuna" }} · supporter{% if player.supporter_player_name %} di {{ player.supporter_player_name }}{% endif %}{% if player.supporter_relation %} · {{ player.supporter_relation }}{% endif %}
         {% else %}
-          {{ player.nickname or "Soprannome ancora da spogliatoio" }} · {{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.permanent_team_name or "Svincolato di lusso" }} · {{ player.account_status|account_status_label }}
+          {{ player.nickname or "Soprannome ancora da spogliatoio" }}{% if player.birth_date|age_label %} · {{ player.birth_date|age_label }}{% endif %} · {{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.permanent_team_name or "Svincolato di lusso" }} · {{ player.account_status|account_status_label }}
         {% endif %}
       </p>
     </div>
@@ -190,7 +202,7 @@
     </div>
     <div class="player-card-modal-actions">
       <strong>{{ player.name }}</strong>
-      <span>{{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.permanent_team_name or "Svincolato di lusso" }}</span>
+      <span>{{ player.role }}{% if player.birth_date|age_label %} · {{ player.birth_date|age_label }}{% endif %} · piede {{ player.preferred_foot|foot_label }} · {{ player.permanent_team_name or "Svincolato di lusso" }}</span>
       <button class="button primary" type="button" onclick="window.print()">Salva/Stampa card</button>
       <form method="dialog">
         <button class="button ghost" type="submit">Esci</button>
@@ -644,9 +656,13 @@
 </div>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+    const birthModal = document.getElementById("birth-date-modal");
     const marketModal = document.getElementById("market-sign-modal");
     const modal = document.getElementById("confirm-match-modal");
-    if (marketModal && marketModal.showModal && marketModal.dataset.autoOpenMarket !== "done") {
+    if (birthModal && birthModal.showModal && birthModal.dataset.autoOpenBirth !== "done") {
+      birthModal.dataset.autoOpenBirth = "done";
+      setTimeout(() => birthModal.showModal(), 250);
+    } else if (marketModal && marketModal.showModal && marketModal.dataset.autoOpenMarket !== "done") {
       marketModal.dataset.autoOpenMarket = "done";
       setTimeout(() => marketModal.showModal(), 300);
     } else if (modal && modal.showModal && modal.dataset.autoOpenConfirm !== "done") {

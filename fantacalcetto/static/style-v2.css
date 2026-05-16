@@ -3963,6 +3963,16 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
 .market-sign-modal .transfer-offer-card {
   margin-top: 12px;
 }
+.birth-date-modal {
+  max-width: min(92vw, 480px);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(242,201,76,.24), transparent 36%),
+    #ffffff;
+}
+.birth-date-modal form {
+  display: grid;
+  gap: 12px;
+}
 .confirm-modal-app::backdrop {
   background: rgba(5, 28, 21, .66);
   backdrop-filter: blur(5px);

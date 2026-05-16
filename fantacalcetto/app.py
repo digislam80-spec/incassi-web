@@ -63,6 +63,11 @@ DEFAULT_TEAM_B_NAME = "Dinamo Spritz"
 
 APP_UPDATES = [
     {
+        "title": "Eta' in scheda calciatore",
+        "body": "La registrazione chiede la data di nascita. Chi non l'ha ancora inserita la completa al prossimo accesso: nelle news arriva anche l'eta'.",
+        "tag": "Profilo",
+    },
+    {
         "title": "Svincolati prima del mercato",
         "body": "I calciatori senza squadra partono da svincolati: prima firmano per una squadra, poi possono entrare nel Fantamercato vero.",
         "tag": "Mercato",
@@ -568,6 +573,7 @@ def init_db():
                 phone text not null,
                 username text default '',
                 password_hash text default '',
+                birth_date text default '',
                 account_status text not null default 'approved',
                 account_type text not null default 'player',
                 app_role text not null default 'member',
@@ -784,6 +790,7 @@ def init_db():
         for statement in (
             "alter table players alter column power type numeric(2,1) using power::numeric",
             "alter table players add column if not exists preferred_foot text not null default 'right'",
+            "alter table players add column if not exists birth_date text default ''",
             "alter table players add column if not exists is_guest integer not null default 0",
             "alter table players add column if not exists account_type text not null default 'player'",
             "alter table players add column if not exists app_role text not null default 'member'",
@@ -870,6 +877,7 @@ def init_db():
             phone text not null,
             username text default '',
             password_hash text default '',
+            birth_date text default '',
             account_status text not null default 'approved',
             account_type text not null default 'player',
             app_role text not null default 'member',
@@ -1016,6 +1024,7 @@ def init_db():
         "mascot_name": "alter table players add column mascot_name text default ''",
         "username": "alter table players add column username text default ''",
         "password_hash": "alter table players add column password_hash text default ''",
+        "birth_date": "alter table players add column birth_date text default ''",
         "account_status": "alter table players add column account_status text not null default 'approved'",
         "account_type": "alter table players add column account_type text not null default 'player'",
         "app_role": "alter table players add column app_role text not null default 'member'",
@@ -2236,6 +2245,46 @@ def transfer_phrase(phrases, player, to_team, from_team, kind, offer):
     )
 
 
+def normalize_birth_date(value):
+    value = (value or "").strip()
+    if not value:
+        return ""
+    try:
+        parsed = datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        return ""
+    today = datetime.now().date()
+    if parsed > today or parsed.year < 1930:
+        return ""
+    return parsed.isoformat()
+
+
+def age_from_birth_date(value):
+    value = normalize_birth_date(value)
+    if not value:
+        return None
+    born = datetime.strptime(value, "%Y-%m-%d").date()
+    today = datetime.now().date()
+    return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+
+
+def player_age_label(player):
+    if not player or "birth_date" not in player.keys():
+        return ""
+    age = age_from_birth_date(player["birth_date"])
+    return f"{age} anni" if age is not None else ""
+
+
+def player_market_name(player):
+    age_label = player_age_label(player)
+    if not player:
+        return "Un calciatore"
+    return f"{player['name']} ({age_label})" if age_label else player["name"]
+
+
+app.jinja_env.filters["age_label"] = lambda value: f"{age_from_birth_date(value)} anni" if age_from_birth_date(value) is not None else ""
+
+
 def pending_transfer_for_player(player_id):
     return query(
         """
@@ -2276,7 +2325,47 @@ def apply_team_generation(match_id, automatic=False):
         """,
         ("teams_auto" if automatic else "teams", name_a, name_b, match_id),
     )
+    assign_first_team_contracts(match_id)
     return True
+
+
+def assign_first_team_contracts(match_id):
+    match = get_match(match_id)
+    if not match:
+        return 0
+    rows = query(
+        """
+        select p.id, p.name, p.birth_date, mp.team
+        from match_players mp
+        join players p on p.id = mp.player_id
+        where mp.match_id = ? and mp.team in ('A', 'B')
+          and coalesce(p.permanent_team_name, '') = ''
+          and coalesce(p.account_type, 'player') = 'player'
+          and coalesce(p.is_guest, 0) = 0
+        """,
+        (match_id,),
+    )
+    assigned = 0
+    for row in rows:
+        team_name = match["team_a_name"] if row["team"] == "A" else match["team_b_name"]
+        offer = random.choice(MARKET_OFFERS)
+        execute("update players set permanent_team_name = ? where id = ?", (team_name, row["id"]))
+        log_league_event(
+            "SkySpogliatoio: svincolato tesserato",
+            transfer_phrase(
+                FREE_AGENT_ACCEPT_PHRASES,
+                player_market_name(row),
+                team_name,
+                "Svincolati di lusso",
+                "permanent",
+                offer,
+            ),
+            "mercato",
+            row["id"],
+            league_id=match["league_id"],
+        )
+        assigned += 1
+    return assigned
 
 
 def maybe_auto_generate(match):
@@ -2854,6 +2943,7 @@ def register_player():
         username = request.form["username"].strip().lower()
         phone = request.form["phone"].strip()
         password = request.form["password"]
+        birth_date = normalize_birth_date(request.form.get("birth_date"))
         requested_role = request.form.get("requested_role", "supporter")
         if requested_role not in ("supporter", "player"):
             requested_role = "supporter"
@@ -2879,6 +2969,8 @@ def register_player():
             error = "Password troppo corta: almeno 4 caratteri, senza fare i fenomeni."
         elif not selected_league:
             error = "Scegli la lega giusta: il mister deve sapere in quale spogliatoio buttarti."
+        elif not birth_date:
+            error = "Inserisci una data di nascita valida: ci serve per calcolare l'età da figurina."
         elif not accepted_rules:
             error = "Prima serve il giuramento da spogliatoio: accetta il regolamento."
         else:
@@ -2894,8 +2986,8 @@ def register_player():
             player_id = execute(
                 """
                 insert into players
-                    (name, nickname, phone, username, password_hash, account_status, account_type, league_id, supporter_player_name, supporter_relation, active, mascot, mascot_name, preferred_foot, invite_token)
-                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)
+                    (name, nickname, phone, username, password_hash, birth_date, account_status, account_type, league_id, supporter_player_name, supporter_relation, active, mascot, mascot_name, preferred_foot, invite_token)
+                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)
                 """,
                 (
                     f"{name} {surname}".strip(),
@@ -2903,6 +2995,7 @@ def register_player():
                     phone,
                     username,
                     generate_password_hash(password),
+                    birth_date,
                     account_status,
                     account_type,
                     selected_league["id"],
@@ -3373,6 +3466,7 @@ def player_update_profile():
     name = request.form.get("name", "").strip() or player["name"]
     nickname = request.form.get("nickname", "").strip()
     phone = request.form.get("phone", "").strip() or player["phone"]
+    birth_date = normalize_birth_date(request.form.get("birth_date")) or (player["birth_date"] if "birth_date" in player.keys() else "")
     mascot = request.form.get("mascot", player["mascot"] or "jolly")
     preferred_foot = request.form.get("preferred_foot", "right")
     if mascot not in MASCOTS:
@@ -3382,13 +3476,14 @@ def player_update_profile():
     execute(
         """
         update players
-        set name = ?, nickname = ?, phone = ?, mascot = ?, mascot_name = ?, preferred_foot = ?
+        set name = ?, nickname = ?, phone = ?, birth_date = ?, mascot = ?, mascot_name = ?, preferred_foot = ?
         where id = ?
         """,
         (
             name,
             nickname,
             phone,
+            birth_date,
             mascot,
             request.form.get("mascot_name", "").strip(),
             preferred_foot,
@@ -3402,6 +3497,18 @@ def player_update_profile():
         player["id"],
     )
     return redirect(url_for("player_dashboard", notice="Profilo aggiornato. La figurina è stata rimessa in posa."))
+
+
+@app.route("/player/birth-date", methods=["POST"])
+@require_player
+def player_save_birth_date():
+    player = current_player()
+    birth_date = normalize_birth_date(request.form.get("birth_date"))
+    if not birth_date:
+        return redirect(url_for("player_dashboard", notice="Data di nascita non valida: riprova con giorno, mese e anno veri."))
+    execute("update players set birth_date = ? where id = ?", (birth_date, player["id"]))
+    g.pop("current_player_value", None)
+    return redirect(url_for("player_dashboard", notice="Data di nascita salvata. Ora la scheda sa anche quanti anni dichiari."))
 
 
 @app.route("/player/mascot-name", methods=["POST"])
@@ -3478,6 +3585,7 @@ def update_player(player_id):
     power_value = float(request.form.get("power", old_player["power"] if "power" in old_player.keys() else 3))
     reliability_value = int(request.form.get("reliability", old_player["reliability"] if "reliability" in old_player.keys() else 80))
     permanent_team_name = request.form.get("permanent_team_name", old_player["permanent_team_name"] if "permanent_team_name" in old_player.keys() else "").strip()
+    birth_date = normalize_birth_date(request.form.get("birth_date")) or (old_player["birth_date"] if "birth_date" in old_player.keys() else "")
     supporter_player_name = request.form.get("supporter_player_name", old_player["supporter_player_name"] if "supporter_player_name" in old_player.keys() else "").strip()
     supporter_relation = request.form.get("supporter_relation", old_player["supporter_relation"] if "supporter_relation" in old_player.keys() else "").strip()
     try:
@@ -3488,7 +3596,7 @@ def update_player(player_id):
         """
         update players
         set name = ?, nickname = ?, phone = ?, role = ?, power = ?, reliability = ?,
-            mascot = ?, mascot_name = ?, preferred_foot = ?, permanent_team_name = ?, app_role = ?,
+            mascot = ?, mascot_name = ?, preferred_foot = ?, permanent_team_name = ?, birth_date = ?, app_role = ?,
             account_type = ?, account_status = ?, league_id = ?, supporter_player_name = ?, supporter_relation = ?,
             faith_score = ?, active = case when ? in ('removed', 'rejected') then 0 else 1 end
         where id = ?
@@ -3504,6 +3612,7 @@ def update_player(player_id):
             request.form.get("mascot_name", "").strip(),
             preferred_foot,
             permanent_team_name,
+            birth_date,
             app_role,
             account_type,
             account_status,
@@ -3628,9 +3737,9 @@ def propose_market_transfer():
     kind_label = "prima firma" if is_free_agent else ("prestito" if transfer_type == "loan" else "titolo definitivo")
     news_title = "SkySpogliatoio Svincolati" if is_free_agent else "SkySpogliatoio Mercato"
     news_body = (
-        f"Contratto proposto: lo svincolato {player['name']} verso {to_team}. Offerta ufficiale: {offer_label}. Ora serve la firma del calciatore."
+        f"Contratto proposto: lo svincolato {player_market_name(player)} verso {to_team}. Offerta ufficiale: {offer_label}. Ora serve la firma del calciatore."
         if is_free_agent
-        else f"Trattativa aperta: {player['name']} da {from_team} verso {to_team}, formula {kind_label}. Offerta ufficiale: {offer_label}. Ora serve la firma del calciatore."
+        else f"Trattativa aperta: {player_market_name(player)} da {from_team} verso {to_team}, formula {kind_label}. Offerta ufficiale: {offer_label}. Ora serve la firma del calciatore."
     )
     log_league_event(
         news_title,
@@ -3665,7 +3774,7 @@ def respond_transfer(transfer_id):
             "SkySpogliatoio: svincolato firmato" if is_free_agent_signature else "SkySpogliatoio: firma depositata",
             transfer_phrase(
                 FREE_AGENT_ACCEPT_PHRASES if is_free_agent_signature else TRANSFER_ACCEPT_PHRASES,
-                player["name"],
+                player_market_name(player),
                 transfer["to_team"],
                 transfer["from_team"],
                 transfer["transfer_type"],
@@ -4162,8 +4271,8 @@ def update_match_teams(match_id):
             where id = ?
             """,
             (
-                request.form.get("team_a_name", "Squadra A").strip() or "Squadra A",
-                request.form.get("team_b_name", "Squadra B").strip() or "Squadra B",
+                request.form.get("team_a_name", DEFAULT_TEAM_A_NAME).strip() or DEFAULT_TEAM_A_NAME,
+                request.form.get("team_b_name", DEFAULT_TEAM_B_NAME).strip() or DEFAULT_TEAM_B_NAME,
                 request.form.get("team_a_logo", "crest-1") if request.form.get("team_a_logo") in TEAM_LOGOS else "crest-1",
                 request.form.get("team_b_logo", "crest-2") if request.form.get("team_b_logo") in TEAM_LOGOS else "crest-2",
                 match_id,
@@ -4181,6 +4290,7 @@ def update_match_teams(match_id):
                     """,
                     (team, team, match_id, player_id),
                 )
+        assign_first_team_contracts(match_id)
     return redirect(url_for("match_detail", match_id=match_id))
 
 
