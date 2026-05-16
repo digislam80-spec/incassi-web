@@ -302,6 +302,8 @@ h2 { margin: 0; font-size: 21px; }
   box-shadow: 0 18px 34px rgba(0,0,0,.24);
 }
 .profile-avatar-orb img {
+  position: relative;
+  z-index: 1;
   width: 112%;
   height: 112%;
   object-fit: contain;
@@ -310,8 +312,9 @@ h2 { margin: 0; font-size: 21px; }
 }
 .profile-avatar-orb span {
   position: absolute;
-  left: 8px;
-  bottom: 8px;
+  left: -8px;
+  bottom: -7px;
+  z-index: 8;
   display: inline-grid;
   place-items: center;
   min-width: 42px;
@@ -322,7 +325,7 @@ h2 { margin: 0; font-size: 21px; }
   background: linear-gradient(135deg, #fff8c7, #f2c94c);
   font-size: 18px;
   font-weight: 1000;
-  box-shadow: 0 8px 14px rgba(0,0,0,.18);
+  box-shadow: 0 10px 18px rgba(0,0,0,.28);
 }
 .profile-avatar-orb.supporter-avatar {
   background:
@@ -964,6 +967,35 @@ h2 { margin: 0; font-size: 21px; }
   background:
     radial-gradient(circle at 100% 0%, rgba(242,201,76,.26), transparent 34%),
     linear-gradient(135deg, #fff9df, #ffffff);
+}
+.market-quick-guide {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+.market-quick-guide span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 9px 10px;
+  border: 1px solid rgba(15,107,79,.14);
+  border-radius: 10px;
+  background: #fbfcf9;
+  color: #17382a;
+  font-weight: 900;
+  line-height: 1.08;
+}
+.market-quick-guide b {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #172016;
+  background: var(--yellow);
 }
 .transfer-sign-panel {
   border-color: rgba(15,107,79,.35);
@@ -4818,8 +4850,9 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
     transform: translate(8%, 9%) scale(1.09) !important;
   }
   .profile-avatar-orb span {
-    left: 5px !important;
-    bottom: 5px !important;
+    left: -7px !important;
+    bottom: -6px !important;
+    z-index: 12 !important;
     min-width: 34px !important;
     min-height: 24px !important;
     padding: 3px 6px !important;
@@ -4968,9 +5001,9 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
     transform: translate(5%, 7%) scale(1.05) !important;
   }
   .profile-avatar-orb span {
-    left: -5px !important;
-    bottom: -4px !important;
-    z-index: 5 !important;
+    left: -8px !important;
+    bottom: -7px !important;
+    z-index: 14 !important;
     box-shadow: 0 8px 14px rgba(0,0,0,.26) !important;
   }
   .profile-copy .lede {
@@ -4978,6 +5011,9 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
     overflow: visible !important;
     -webkit-line-clamp: initial !important;
     white-space: normal !important;
+  }
+  .market-quick-guide {
+    grid-template-columns: 1fr !important;
   }
   .photo-tools {
     grid-template-columns: 1fr !important;

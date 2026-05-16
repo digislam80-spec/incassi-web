@@ -457,10 +457,15 @@
 
 <section class="panel" id="mercato" data-admin-section="mercato">
   <div class="panel-head">
-    <h2>SkySpogliatoio Mercato</h2>
+    <h2>Fantamercato</h2>
     <span class="pill">{{ transfer_requests|length }} in attesa</span>
   </div>
-  <p class="muted section-intro">Cabina rapida per Mister e Develop: scegli il calciatore, proponi squadra e offerta, poi il calciatore firma al rientro nell'app. LegaGram pubblica la breaking news.</p>
+  <p class="muted section-intro">Tre tocchi: scegli il calciatore, scegli dove mandarlo, mandi la proposta. Lui firma in app e LegaGram pubblica la breaking news di SkySpogliatoio.</p>
+  <div class="market-quick-guide">
+    <span><b>1</b> Apri trattativa</span>
+    <span><b>2</b> Il calciatore firma</span>
+    <span><b>3</b> News su LegaGram</span>
+  </div>
   <form class="form market-command-form" method="post" action="{{ url_for('propose_market_transfer') }}">
     <label>Calciatore
       <select name="player_id" required>
@@ -485,8 +490,12 @@
       </select>
     </label>
     <label>Offerta manuale <input name="custom_offer" placeholder="Es. una graffa e una Coca Zero"></label>
-    <button class="button primary" type="submit">Apri trattativa e pubblica breaking</button>
+    <button class="button primary" type="submit">Manda proposta mercato</button>
   </form>
+  <div class="panel-head compact-head">
+    <h3>Firme in attesa</h3>
+    <span class="pill">contratti aperti</span>
+  </div>
   <div class="compact-match-list">
     {% for item in transfer_requests %}
       <article class="mini-card market-row">

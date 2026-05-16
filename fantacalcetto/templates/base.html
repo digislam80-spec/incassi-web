@@ -99,7 +99,16 @@
     <span>App sponsored by <a href="https://digislam.shop" target="_blank" rel="noopener">Digislam Print Lab</a></span>
     <span>App creata da Riccardo Muollo. Tutti i diritti sono riservati.</span>
   </footer>
-  {% if current_player %}
+  {% set admin_surface = can_manage and (endpoint.startswith("admin") or endpoint in ["match_detail"]) %}
+  {% if admin_surface %}
+    <nav class="bottom-nav admin-bottom-nav">
+      <a href="{{ url_for('admin_dashboard') }}{% if is_develop %}#develop{% else %}#admin-partita{% endif %}"><span>{% if is_develop %}★{% else %}🧢{% endif %}</span><b>{% if is_develop %}Develop{% else %}Mister{% endif %}</b></a>
+      <a href="{% if match is defined and match %}{{ url_for('match_detail', match_id=match.id) }}{% else %}{{ url_for('admin_dashboard') }}#admin-partita{% endif %}"><span>🏟️</span><b>Partita</b></a>
+      <a href="{{ url_for('admin_dashboard') }}#mercato"><span>🔁</span><b>Mercato</b></a>
+      <a href="{{ url_for('admin_dashboard') }}#new-match"><span>📅</span><b>Nuova</b></a>
+      <a href="{{ url_for('admin_dashboard') }}#history"><span>📚</span><b>Storico</b></a>
+    </nav>
+  {% elif current_player %}
     {% set player_preview = request.args.get("preview", "") if can_manage else "" %}
     {% set player_nav_base = url_for('player_dashboard') ~ ("?preview=" ~ player_preview if player_preview else "") %}
     <nav class="bottom-nav">
@@ -117,9 +126,9 @@
     <nav class="bottom-nav">
       <a href="{{ url_for('admin_dashboard') }}"><span>🧢</span><b>Oggi</b></a>
       {% if match is defined and match %}<a href="{{ url_for('match_detail', match_id=match.id) }}"><span>🏟️</span><b>Partita</b></a>{% endif %}
+      <a href="{{ url_for('admin_dashboard') }}#mercato"><span>🔁</span><b>Mercato</b></a>
       <a href="{{ url_for('admin_dashboard') }}#new-match"><span>📅</span><b>Nuova</b></a>
       <a href="{{ url_for('admin_dashboard') }}#history"><span>📚</span><b>Storico</b></a>
-      <a href="{{ url_for('app_help') }}"><span>?</span><b>Aiuto</b></a>
     </nav>
   {% endif %}
   <script>
