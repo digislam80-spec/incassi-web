@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-title" content="Incassi">
     <title>Incassi</title>
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="stylesheet" href="/style.css?v=20260516-7">
+    <link rel="stylesheet" href="/style.css?v=20260516-8">
   </head>
   <body>
     <section class="login" id="loginView">
@@ -58,11 +58,12 @@
           <span>Oggi <b id="todayTotal">€ 0,00</b></span>
           <span id="monthTrend">Mese precedente: € 0,00</span>
         </div>
-        <nav class="hero-tabs" aria-label="Periodo statistiche">
-          <button class="active" data-screen-button="history" type="button">Mese</button>
-          <button data-screen-button="stats" type="button">Sett.</button>
-          <button data-screen-button="stats" type="button">Anno</button>
-          <button data-screen-button="stats" type="button">Date</button>
+        <nav class="hero-tabs" aria-label="Modalità riepilogo">
+          <button class="active" data-hero-mode="month" type="button">Mese</button>
+          <button data-hero-mode="week" type="button">Sett.</button>
+          <button data-hero-mode="year" type="button">Anno</button>
+          <button data-hero-mode="mix" type="button">Mix</button>
+          <button data-hero-mode="range" type="button">Date</button>
         </nav>
         <div class="hero-trend" id="heroTrend" aria-label="Andamento con importi"></div>
       </section>
@@ -311,6 +312,6 @@
       </section>
     </main>
 
-    <script src="/app.js?v=20260516-7"></script>
+    <script src="/app.js?v=20260516-8"></script>
   </body>
 </html>

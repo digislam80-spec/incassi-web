@@ -67,6 +67,7 @@ const formTitle = document.querySelector("#formTitle");
 const backButton = document.querySelector("#backButton");
 const previousMonthButton = document.querySelector("#previousMonthButton");
 const nextMonthButton = document.querySelector("#nextMonthButton");
+const heroModeButtons = document.querySelectorAll("[data-hero-mode]");
 const screenButtons = document.querySelectorAll("[data-screen-button]");
 const screens = document.querySelectorAll("[data-screen]");
 
@@ -74,6 +75,7 @@ let entries = [];
 let password = localStorage.getItem("incassiPassword") || "";
 let currentScreen = "history";
 let screenStack = ["history"];
+let heroMode = "month";
 
 const eur = new Intl.NumberFormat("it-IT", {
   style: "currency",
@@ -596,10 +598,6 @@ function renderOverview() {
   const diff = monthTotal - previousTotal;
   const totals = methodTotals(monthEntries);
   const bestEntry = [...monthEntries].sort((a, b) => Number(b.totale || 0) - Number(a.totale || 0))[0];
-  const topEntries = [...monthEntries]
-    .sort((a, b) => Number(b.totale || 0) - Number(a.totale || 0))
-    .slice(0, 3);
-  const topValue = Math.max(...topEntries.map((entry) => Number(entry.totale || 0)), 1);
 
   monthTotalEl.textContent = eur.format(monthTotal);
   heroMonthLabel.textContent = readableMonth(selectedMonth);
@@ -609,15 +607,7 @@ function renderOverview() {
   monthTrendEl.classList.toggle("down", diff < 0);
   monthAverageEl.textContent = `${eur.format(monthEntries.length ? monthTotal / monthEntries.length : 0)}/giorno`;
   bestDayEl.textContent = bestEntry ? `${readableDate(bestEntry.data).replace(/\s\d{4}$/, "")} · ${eur.format(bestEntry.totale || 0)}` : "Nessun dato";
-  heroTrendEl.innerHTML = topEntries.length
-    ? topEntries.map((entry, index) => `
-        <span class="${entry.data === today() ? "today" : ""}" style="--value:${Math.max(8, Math.round((Number(entry.totale || 0) / topValue) * 100))}%">
-          <em>${entry.data === today() ? "Oggi" : readableDate(entry.data).replace(/\s\d{4}$/, "")}</em>
-          <i></i>
-          <strong>${eur.format(entry.totale || 0).replace(",00", "")}</strong>
-        </span>
-      `).join("")
-    : '<span style="--value:0%"><em>Nessun dato</em><i></i><strong>€ 0</strong></span>';
+  renderHeroMode(selectedMonth, monthEntries, previousEntries, totals);
   monthBreakdownEl.innerHTML = fields
     .map((field, index) => `
       <article style="--accent:${chartColors[index]}">
@@ -627,6 +617,75 @@ function renderOverview() {
       </article>
     `)
     .join("");
+}
+
+function renderHeroMode(selectedMonth, monthEntries, previousEntries, monthTotals) {
+  heroModeButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.heroMode === heroMode);
+  });
+
+  if (heroMode === "week") {
+    const from = addDays(today(), -6);
+    const weekEntries = entries.filter((entry) => entry.data >= from && entry.data <= today());
+    renderHeroBars(
+      [...weekEntries].sort((a, b) => b.data.localeCompare(a.data)).slice(0, 3),
+      "Ultimi 7 giorni",
+    );
+    return;
+  }
+
+  if (heroMode === "year") {
+    const selectedYear = selectedMonth.slice(0, 4);
+    const monthRows = Array.from({ length: 12 }, (_, index) => {
+      const key = `${selectedYear}-${String(index + 1).padStart(2, "0")}`;
+      const value = sumEntries(entries.filter((entry) => entry.data?.startsWith(key)));
+      return { data: `${key}-01`, label: readableMonth(key).split(" ")[0], totale: value };
+    }).filter((entry) => entry.totale > 0);
+    renderHeroBars(monthRows.sort((a, b) => b.totale - a.totale).slice(0, 3), "Mesi migliori");
+    return;
+  }
+
+  if (heroMode === "mix") {
+    const rows = fields.map((field) => ({
+      data: field,
+      label: labels[field],
+      totale: monthTotals[field] || 0,
+      className: field,
+    }));
+    renderHeroBars(rows.sort((a, b) => b.totale - a.totale).slice(0, 3), "Mix metodi");
+    return;
+  }
+
+  if (heroMode === "range") {
+    const last30 = entries.filter((entry) => entry.data >= addDays(today(), -29) && entry.data <= today());
+    renderHeroBars(
+      [
+        { label: "30 giorni", totale: sumEntries(last30) },
+        { label: "Media", totale: last30.length ? sumEntries(last30) / last30.length : 0 },
+        { label: "Giorni", totale: last30.length, raw: true },
+      ],
+      "Intervallo rapido",
+    );
+    return;
+  }
+
+  renderHeroBars(
+    [...monthEntries].sort((a, b) => Number(b.totale || 0) - Number(a.totale || 0)).slice(0, 3),
+    "Giorni migliori",
+  );
+}
+
+function renderHeroBars(items, emptyLabel) {
+  const max = Math.max(...items.map((entry) => Number(entry.totale || 0)), 1);
+  heroTrendEl.innerHTML = items.length
+    ? items.map((entry) => `
+        <span class="${entry.data === today() ? "today" : ""}" style="--value:${Math.max(8, Math.round((Number(entry.totale || 0) / max) * 100))}%">
+          <em>${entry.label || (entry.data === today() ? "Oggi" : readableDate(entry.data).replace(/\s\d{4}$/, ""))}</em>
+          <i></i>
+          <strong>${entry.raw ? entry.totale : eur.format(entry.totale || 0).replace(",00", "")}</strong>
+        </span>
+      `).join("")
+    : `<span style="--value:0%"><em>${emptyLabel}</em><i></i><strong>€ 0</strong></span>`;
 }
 
 function renderHistory() {
@@ -867,6 +926,12 @@ closeFormButton.addEventListener("click", closeForm);
 backButton.addEventListener("click", goBack);
 screenButtons.forEach((button) => {
   button.addEventListener("click", () => showScreen(button.dataset.screenButton));
+});
+heroModeButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    heroMode = button.dataset.heroMode;
+    renderOverview();
+  });
 });
 document.querySelector("#resetButton").addEventListener("click", () => resetForm());
 document.querySelector("#refreshButton").addEventListener("click", loadEntries);
