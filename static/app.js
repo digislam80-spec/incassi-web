@@ -59,6 +59,7 @@ const quickYesterdayButton = document.querySelector("#quickYesterdayButton");
 const quickTodayButton = document.querySelector("#quickTodayButton");
 const dailyEditSections = document.querySelectorAll(".daily-edit-section");
 const historyAddButton = document.querySelector("#historyAddButton");
+const floatingNewEntry = document.querySelector("#historyAddButton");
 const closeFormButton = document.querySelector("#closeFormButton");
 const deleteCurrentButton = document.querySelector("#deleteCurrentButton");
 const yesterdayButton = document.querySelector("#yesterdayButton");
@@ -226,6 +227,9 @@ function showScreen(name, push = true, options = {}) {
   }
 
   backButton.hidden = screenStack.length <= 1;
+  if (floatingNewEntry) {
+    floatingNewEntry.hidden = name !== "history";
+  }
   window.scrollTo({ top: 0, behavior: options.instant ? "auto" : "smooth" });
 }
 
@@ -811,12 +815,17 @@ function renderStats() {
 
   fields.forEach((field, index) => {
     const row = document.createElement("div");
-    row.style.borderLeft = `4px solid ${chartColors[index]}`;
-    row.innerHTML = `<dt>${labels[field]}</dt><dd>${eur.format(totals[field])}</dd>`;
+    const percent = periodTotal ? Math.round((totals[field] / periodTotal) * 100) : 0;
+    row.style.setProperty("--method-color", chartColors[index]);
+    row.innerHTML = `
+      <dt>${labels[field]}</dt>
+      <dd>${eur.format(totals[field])}</dd>
+      <span>${percent}%</span>
+    `;
     methodStatsEl.appendChild(row);
 
     const legend = document.createElement("span");
-    legend.innerHTML = `<i style="background:${chartColors[index]}"></i>${labels[field]}`;
+    legend.innerHTML = `<i style="background:${chartColors[index]}"></i>${labels[field]} · ${eur.format(totals[field])}`;
     methodLegend.appendChild(legend);
   });
 

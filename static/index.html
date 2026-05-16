@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-title" content="Incassi">
     <title>Incassi</title>
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="stylesheet" href="/style.css?v=20260516-8">
+    <link rel="stylesheet" href="/style.css?v=20260516-9">
   </head>
   <body>
     <section class="login" id="loginView">
@@ -99,16 +99,22 @@
 
       <p class="error app-error" id="appError" role="alert"></p>
 
-      <section class="panel screen" id="statsScreen" data-screen="stats" aria-label="Statistiche" hidden>
+      <section class="panel stats-panel screen" id="statsScreen" data-screen="stats" aria-label="Statistiche" hidden>
         <div class="panel-head">
-          <h2>Statistiche</h2>
-          <select id="statsMode" aria-label="Periodo statistiche">
-            <option value="day">Giorno</option>
-            <option value="week">Settimana</option>
-            <option value="month">Mese</option>
-            <option value="year">Anno</option>
-            <option value="range">Intervallo</option>
-          </select>
+          <div>
+            <span>Analisi</span>
+            <h2>Grafici</h2>
+          </div>
+          <label class="stats-mode-control">
+            <span>Vista</span>
+            <select id="statsMode" aria-label="Periodo statistiche">
+              <option value="day">Giorno</option>
+              <option value="week">Settimana</option>
+              <option value="month">Mese</option>
+              <option value="year">Anno</option>
+              <option value="range">Intervallo</option>
+            </select>
+          </label>
         </div>
 
         <div class="filters">
@@ -312,6 +318,6 @@
       </section>
     </main>
 
-    <script src="/app.js?v=20260516-8"></script>
+    <script src="/app.js?v=20260516-9"></script>
   </body>
 </html>
