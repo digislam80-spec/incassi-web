@@ -64,6 +64,11 @@ DEFAULT_TEAM_B_NAME = "Dinamo Spritz"
 
 APP_UPDATES = [
     {
+        "title": "Squadre scelte a inizio evento",
+        "body": "Quando crei una partita scegli subito le due squadre da una lista goliardica o scrivi il nome tuo. Le formazioni rispettano quei nomi.",
+        "tag": "Squadre",
+    },
+    {
         "title": "Sicurezza account",
         "body": "Nel profilo trovi Esci account e cambio password. Se resti inattivo troppo a lungo, FantaCalcetto ti manda fuori e devi rientrare.",
         "tag": "Account",
@@ -2136,7 +2141,13 @@ def match_day(match):
 
 
 def team_names(match_id):
-    return TEAM_NAMES[match_id % len(TEAM_NAMES)]
+    match = get_match(match_id)
+    if match:
+        return (
+            (match["team_a_name"] or DEFAULT_TEAM_A_NAME).strip() or DEFAULT_TEAM_A_NAME,
+            (match["team_b_name"] or DEFAULT_TEAM_B_NAME).strip() or DEFAULT_TEAM_B_NAME,
+        )
+    return DEFAULT_TEAM_A_NAME, DEFAULT_TEAM_B_NAME
 
 
 def active_award_types():
@@ -2707,7 +2718,7 @@ def admin_dashboard():
         league_requests=league_requests,
         activity_logs=activity_logs,
         develop_stats=develop_stats,
-        market_team_ideas=MARKET_TEAM_IDEAS,
+        market_team_ideas=team_name_ideas(),
         market_offers=MARKET_OFFERS,
         leagues=leagues,
         develop_username=DEFAULT_DEVELOP_USERNAME,
@@ -3984,6 +3995,8 @@ def create_match():
     league_id = current_league_id()
     team_a_name = request.form.get("team_a_name", "").strip() or DEFAULT_TEAM_A_NAME
     team_b_name = request.form.get("team_b_name", "").strip() or DEFAULT_TEAM_B_NAME
+    if team_a_name.lower() == team_b_name.lower():
+        team_b_name = DEFAULT_TEAM_B_NAME if team_a_name != DEFAULT_TEAM_B_NAME else "Atletico Ma Non Troppo"
     match_id = execute(
         """
         insert into matches (league_id, title, match_date, location, player_limit, team_a_name, team_b_name)

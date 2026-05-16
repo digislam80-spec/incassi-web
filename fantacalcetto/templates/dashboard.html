@@ -235,13 +235,13 @@
     <h2>Nuova partita</h2>
     <span class="pill">Solo creazione</span>
   </div>
-  <p class="muted section-intro">Qui crei una nuova partita. Per modificare orario, confermare, annullare, squadre e pagelle apri la scheda della partita.</p>
+  <p class="muted section-intro">Qui crei una nuova partita e scegli subito le due squadre: seleziona un nome dalla lista o scrivine uno tuo. Se alla prossima partita cambi squadre, i tesserati non si spostano da soli: servirà Fantamercato.</p>
   <form class="form" method="post" action="{{ url_for('create_match') }}">
     <label>Titolo <input name="title" value="Calcetto del Venerdì" required></label>
     <label>Data e ora <input type="datetime-local" name="match_date" required></label>
     <label>Campo <input name="location" value="Centro Sportivo" required></label>
-    <label>Squadra casa <input name="team_a_name" value="Real Madrink" list="market-team-ideas" required></label>
-    <label>Squadra ospite <input name="team_b_name" value="Dinamo Spritz" list="market-team-ideas" required></label>
+    <label>Squadra casa <input name="team_a_name" value="Real Madrink" list="market-team-ideas" placeholder="Scegli o inventa" required></label>
+    <label>Squadra ospite <input name="team_b_name" value="Dinamo Spritz" list="market-team-ideas" placeholder="Scegli o inventa" required></label>
     <label>Posti <input type="number" name="player_limit" min="2" max="30" step="2" value="10"></label>
     <button class="button primary" type="submit">Crea partita</button>
   </form>
