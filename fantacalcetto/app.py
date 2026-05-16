@@ -2616,7 +2616,7 @@ def switch_develop_league():
     if league:
         session["develop_league_id"] = league["id"]
         g.pop("current_league_value", None)
-    return redirect(url_for("admin_dashboard"))
+    return redirect(url_for("admin_dashboard", view="mister", _anchor="admin-partita"))
 
 
 @app.route("/develop/leagues/<int:league_id>", methods=["POST"])

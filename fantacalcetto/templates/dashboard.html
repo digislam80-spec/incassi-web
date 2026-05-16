@@ -30,7 +30,8 @@
   {% if is_develop %}
     <a href="#develop"><span>★</span><b>Develop</b></a>
     <a href="#admin-partita"><span>🏟️</span><b>Partita</b></a>
-    <a href="#stats"><span>📊</span><b>Log</b></a>
+    <a href="#new-match"><span>📅</span><b>Crea</b></a>
+    <a href="#history"><span>📚</span><b>Storico</b></a>
     <a href="#approvals"><span>✅</span><b>Approva</b></a>
     <a href="#roster"><span>👥</span><b>Profili</b></a>
   {% else %}
@@ -122,7 +123,7 @@
   <div class="flow-panel-head">
     <p class="eyebrow">{% if is_develop %}Percorso Mister della lega{% else %}Percorso Mister{% endif %}</p>
     <h2>Organizza la partita senza perderti</h2>
-    <span>Un passo alla volta: evento, conferme, squadre, poi risultato e pagelle. Quello che è già stato fatto resta leggibile nello storico.</span>
+    <span>{% if is_develop %}Stai operando come Mister sostituto per {{ current_league.name if current_league else "questa lega" }}: puoi creare, modificare, annullare, eliminare, formare squadre e chiudere pagelle se il Mister si dimentica qualcosa.{% else %}Un passo alla volta: evento, conferme, squadre, poi risultato e pagelle. Quello che è già stato fatto resta leggibile nello storico.{% endif %}</span>
   </div>
   <article class="flow-step {% if not match %}active{% endif %}">
     <b>📅</b>
