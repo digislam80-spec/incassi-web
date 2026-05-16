@@ -1619,6 +1619,19 @@ def save_legagram_photo(uploaded):
         return "", None
 
 
+def remove_legagram_photo(event):
+    image_path = event["image_path"] if event and "image_path" in event.keys() else ""
+    if not image_path:
+        return
+    if image_path.startswith("generated/legagram/"):
+        full_path = os.path.abspath(os.path.join(STATIC_DIR, image_path))
+        if full_path.startswith(os.path.abspath(LEGAGRAM_UPLOAD_DIR)) and os.path.exists(full_path):
+            try:
+                os.remove(full_path)
+            except OSError:
+                app.logger.warning("Non riesco a eliminare foto LegaGram: %s", full_path)
+
+
 def normalize_publish_role(player, requested_role=""):
     requested_role = (requested_role or "").strip().lower()
     if requested_role == "supporter":
@@ -3278,6 +3291,24 @@ def add_player_chronicle():
     if image_path:
         notice += " Foto compressa: resta visibile per massimo 7 giorni."
     return redirect(url_for("player_dashboard", notice=notice, _anchor="legagram"))
+
+
+@app.route("/league-events/<int:event_id>/photo/delete", methods=["POST"])
+@require_player
+def delete_event_photo(event_id):
+    player = current_player()
+    event = query(
+        "select id, actor_player_id, image_path from league_events where id = ?",
+        (event_id,),
+        one=True,
+    )
+    if not event or not event["image_path"]:
+        return redirect(url_for("player_dashboard", notice="Foto già rimossa o post non trovato.", _anchor="legagram"))
+    if event["actor_player_id"] != player["id"] and not is_develop():
+        return redirect(url_for("player_dashboard", notice="Solo autore o Develop possono togliere questa foto.", _anchor="legagram"))
+    remove_legagram_photo(event)
+    execute("update league_events set image_path = '', image_expires_at = null where id = ?", (event_id,))
+    return redirect(url_for("player_dashboard", notice="Foto rimossa. Il post resta pubblicato senza immagine.", _anchor="legagram"))
 
 
 @app.route("/player/profile", methods=["GET", "POST"])

@@ -1940,6 +1940,16 @@ h2 { margin: 0; font-size: 21px; }
   font-size: 11px;
   font-weight: 900;
 }
+.photo-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+.photo-tools form {
+  margin: 0;
+}
 .supporter-card {
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr);
@@ -4913,5 +4923,45 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
   .profile-copy .lede {
     font-size: 11px !important;
     line-height: 1.18 !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .profile-identity-row {
+    grid-template-columns: 88px minmax(0, 1fr) !important;
+  }
+  .profile-identity-row .profile-card-stage {
+    width: 88px !important;
+    min-width: 88px !important;
+    height: 88px !important;
+    min-height: 88px !important;
+    overflow: visible !important;
+  }
+  .profile-avatar-orb {
+    width: 88px !important;
+    height: 88px !important;
+    min-width: 88px !important;
+    min-height: 88px !important;
+    overflow: visible !important;
+  }
+  .profile-avatar-orb img {
+    width: 106% !important;
+    height: 106% !important;
+    transform: translate(5%, 7%) scale(1.05) !important;
+  }
+  .profile-avatar-orb span {
+    left: -5px !important;
+    bottom: -4px !important;
+    z-index: 5 !important;
+    box-shadow: 0 8px 14px rgba(0,0,0,.26) !important;
+  }
+  .profile-copy .lede {
+    display: block !important;
+    overflow: visible !important;
+    -webkit-line-clamp: initial !important;
+    white-space: normal !important;
+  }
+  .photo-tools {
+    grid-template-columns: 1fr !important;
   }
 }

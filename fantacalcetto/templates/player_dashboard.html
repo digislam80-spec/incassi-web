@@ -572,7 +572,14 @@
           {% if item.body %}<p>{{ item.body }}</p>{% endif %}
           {% if item.image_path %}
             <img class="post-photo" src="{{ url_for('static', filename=item.image_path) }}" alt="Foto LegaGram">
-            <small class="photo-expiry-note">Foto temporanea: resta visibile massimo 7 giorni dalla pubblicazione.</small>
+            <div class="photo-tools">
+              <small class="photo-expiry-note">Foto temporanea: resta visibile massimo 7 giorni dalla pubblicazione.</small>
+              {% if item.actor_player_id == player.id or is_develop %}
+                <form method="post" action="{{ url_for('delete_event_photo', event_id=item.id) }}" onsubmit="return confirm('Eliminare solo la foto? Il post resterà pubblicato senza immagine.');">
+                  <button class="button ghost small danger" type="submit">Elimina foto</button>
+                </form>
+              {% endif %}
+            </div>
           {% endif %}
           <div class="reactions reaction-actions">
             <form method="post" action="{{ url_for('react_event', event_id=item.id) }}"><input type="hidden" name="reaction" value="cuore"><button type="submit">❤️ +1 Fede</button></form>
