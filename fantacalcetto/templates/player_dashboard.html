@@ -292,10 +292,11 @@
   </div>
   <p class="muted">Hai una proposta ufficiale sul tavolo. Accetti, cambi squadra e finisci nelle breaking news. Rifiuti, il mercato prende nota e l'affidabilità si offende.</p>
   {% for transfer in pending_transfers %}
+    {% set free_agent_signature = (transfer.from_team or "") == "Svincolati di lusso" %}
     <article class="mini-card transfer-offer-card">
       <strong>{{ transfer.from_team or "Svincolati di lusso" }} -> {{ transfer.to_team }}</strong>
-      <span>{{ "Prestito" if transfer.transfer_type == "loan" else "Titolo definitivo" }} · offerta: {{ transfer.offer_label }}</span>
-      <small>Se accetti cambi squadra stabile. Se rifiuti: -2 score e -5 affidabilità. Il mercato è crudele, ma almeno fa ridere.</small>
+      <span>{% if free_agent_signature %}Prima firma da svincolato{% else %}{{ "Prestito" if transfer.transfer_type == "loan" else "Titolo definitivo" }}{% endif %} · offerta: {{ transfer.offer_label }}</span>
+      <small>{% if free_agent_signature %}Se accetti entri ufficialmente in squadra e da lì potrai finire nel Fantamercato vero.{% else %}Se accetti cambi squadra stabile. Se rifiuti: -2 score e -5 affidabilità. Il mercato è crudele, ma almeno fa ridere.{% endif %}</small>
       <div class="admin-inline-buttons">
         <form method="post" action="{{ url_for('respond_transfer', transfer_id=transfer.id) }}">
           <input type="hidden" name="decision" value="accept">

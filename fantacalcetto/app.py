@@ -58,8 +58,15 @@ DEFAULT_LEAGUE_LOGO = "league-bombonera.svg"
 DEFAULT_DEVELOP_USERNAME = os.environ.get("FANTACALCETTO_DEVELOP_USERNAME", "riccardo")
 DEFAULT_DEVELOP_PASSWORD = os.environ.get("FANTACALCETTO_DEVELOP_PASSWORD", "Bombonera2026!")
 PUBLIC_DEVELOP_FALLBACK_PASSWORD = "Bombonera2026!"
+DEFAULT_TEAM_A_NAME = "Real Madrink"
+DEFAULT_TEAM_B_NAME = "Dinamo Spritz"
 
 APP_UPDATES = [
+    {
+        "title": "Svincolati prima del mercato",
+        "body": "I calciatori senza squadra partono da svincolati: prima firmano per una squadra, poi possono entrare nel Fantamercato vero.",
+        "tag": "Mercato",
+    },
     {
         "title": "Supporter separati dai calciatori",
         "body": "Nella cabina Develop i tifosi non vengono più mostrati come calciatori: niente piede, stelle, gol o assist, ma Fede, tifo, legame e ruoli gestionali separati.",
@@ -288,6 +295,13 @@ TRANSFER_ACCEPT_PHRASES = [
     "{player} saluta {old_team} e vola a {team}. Formula {kind}, pagamento in {offer}.",
     "Ufficiale: {player} passa a {team}. Il direttore sportivo parla di progetto, il gruppo parla di {offer}.",
     "{player} ha detto sì: da oggi è uomo {team}. Trattativa chiusa con {offer} e stretta di mano sudata.",
+]
+
+FREE_AGENT_ACCEPT_PHRASES = [
+    "Lo svincolato {player} ha firmato per {team}: operazione chiusa per {offer}. La maglia è pronta, la condizione fisica meno.",
+    "{player} esce dal parcheggio degli svincolati e firma con {team}. Pagamento dichiarato: {offer}.",
+    "Colpo a parametro goliardico: {player} passa a {team} per {offer}. Lo spogliatoio chiede subito la presentazione ufficiale.",
+    "{player} dice sì a {team}: contratto depositato, offerta da {offer} e foto con sciarpa immaginaria.",
 ]
 
 TRANSFER_DECLINE_PHRASES = [
@@ -2526,7 +2540,19 @@ def admin_dashboard():
         from players p
         left join leagues l on l.id = p.league_id
         where {approved_players_sql('p')} and p.account_type = 'player' and coalesce(p.league_id, ?) = ?
+          and coalesce(p.permanent_team_name, '') != ''
         order by p.permanent_team_name, p.power desc, p.score desc, p.name
+        """,
+        (league_id, league_id),
+    )
+    free_agent_players = query(
+        f"""
+        select p.*, l.name as league_name
+        from players p
+        left join leagues l on l.id = p.league_id
+        where {approved_players_sql('p')} and p.account_type = 'player' and coalesce(p.league_id, ?) = ?
+          and coalesce(p.permanent_team_name, '') = ''
+        order by p.power desc, p.score desc, p.name
         """,
         (league_id, league_id),
     )
@@ -2558,6 +2584,7 @@ def admin_dashboard():
         app_updates=APP_UPDATES,
         transfer_requests=transfer_requests,
         market_players=market_players,
+        free_agent_players=free_agent_players,
         league_requests=league_requests,
         activity_logs=activity_logs,
         develop_stats=develop_stats,
@@ -3578,7 +3605,11 @@ def propose_market_transfer():
     if not to_team:
         return redirect(url_for("admin_dashboard", _anchor="mercato"))
     offer_label = request.form.get("custom_offer", "").strip() or request.form.get("offer_label", "").strip() or random.choice(MARKET_OFFERS)
-    from_team = (player["permanent_team_name"] if "permanent_team_name" in player.keys() else "") or "Svincolati di lusso"
+    from_team = (player["permanent_team_name"] if "permanent_team_name" in player.keys() else "").strip()
+    is_free_agent = not from_team
+    from_team = from_team or "Svincolati di lusso"
+    if is_free_agent:
+        transfer_type = "permanent"
     execute(
         """
         insert into transfer_proposals (league_id, player_id, from_team, to_team, transfer_type, offer_label, status, created_by_player_id)
@@ -3594,15 +3625,21 @@ def propose_market_transfer():
             current_player()["id"] if current_player() else None,
         ),
     )
-    kind_label = "prestito" if transfer_type == "loan" else "titolo definitivo"
+    kind_label = "prima firma" if is_free_agent else ("prestito" if transfer_type == "loan" else "titolo definitivo")
+    news_title = "SkySpogliatoio Svincolati" if is_free_agent else "SkySpogliatoio Mercato"
+    news_body = (
+        f"Contratto proposto: lo svincolato {player['name']} verso {to_team}. Offerta ufficiale: {offer_label}. Ora serve la firma del calciatore."
+        if is_free_agent
+        else f"Trattativa aperta: {player['name']} da {from_team} verso {to_team}, formula {kind_label}. Offerta ufficiale: {offer_label}. Ora serve la firma del calciatore."
+    )
     log_league_event(
-        "SkySpogliatoio Mercato",
-        f"Trattativa aperta: {player['name']} da {from_team} verso {to_team}, formula {kind_label}. Offerta ufficiale: {offer_label}. Ora serve la firma del calciatore.",
+        news_title,
+        news_body,
         "mercato",
         player_id,
         league_id=league_id,
     )
-    return redirect(url_for("admin_dashboard", notice="Trattativa aperta: il calciatore trovera' la firma al prossimo accesso.", _anchor="mercato"))
+    return redirect(url_for("admin_dashboard", notice="Proposta inviata: il calciatore trovera' la firma al prossimo accesso.", _anchor="mercato"))
 
 
 @app.route("/player/transfers/<int:transfer_id>/respond", methods=["POST"])
@@ -3618,15 +3655,16 @@ def respond_transfer(transfer_id):
         return redirect(url_for("player_dashboard"))
     decision = request.form.get("decision")
     if decision == "accept":
+        is_free_agent_signature = (transfer["from_team"] or "").strip().lower() == "svincolati di lusso"
         execute(
             "update transfer_proposals set status = 'accepted', responded_at = current_timestamp where id = ?",
             (transfer_id,),
         )
         execute("update players set permanent_team_name = ? where id = ?", (transfer["to_team"], player["id"]))
         log_league_event(
-            "SkySpogliatoio: firma depositata",
+            "SkySpogliatoio: svincolato firmato" if is_free_agent_signature else "SkySpogliatoio: firma depositata",
             transfer_phrase(
-                TRANSFER_ACCEPT_PHRASES,
+                FREE_AGENT_ACCEPT_PHRASES if is_free_agent_signature else TRANSFER_ACCEPT_PHRASES,
                 player["name"],
                 transfer["to_team"],
                 transfer["from_team"],
@@ -3637,7 +3675,8 @@ def respond_transfer(transfer_id):
             player["id"],
             league_id=transfer["league_id"],
         )
-        return redirect(url_for("player_dashboard", notice="Trasferimento accettato. La nuova maglia ti aspetta, almeno metaforicamente."))
+        notice = "Firma accettata. Sei ufficialmente in squadra: presentazione social obbligatoria." if is_free_agent_signature else "Trasferimento accettato. La nuova maglia ti aspetta, almeno metaforicamente."
+        return redirect(url_for("player_dashboard", notice=notice))
     execute(
         "update transfer_proposals set status = 'declined', responded_at = current_timestamp where id = ?",
         (transfer_id,),
@@ -3772,10 +3811,12 @@ def remove_player(player_id):
 @require_admin
 def create_match():
     league_id = current_league_id()
+    team_a_name = request.form.get("team_a_name", "").strip() or DEFAULT_TEAM_A_NAME
+    team_b_name = request.form.get("team_b_name", "").strip() or DEFAULT_TEAM_B_NAME
     match_id = execute(
         """
-        insert into matches (league_id, title, match_date, location, player_limit)
-        values (?, ?, ?, ?, ?)
+        insert into matches (league_id, title, match_date, location, player_limit, team_a_name, team_b_name)
+        values (?, ?, ?, ?, ?, ?, ?)
         """,
         (
             league_id,
@@ -3783,6 +3824,8 @@ def create_match():
             request.form["match_date"],
             request.form["location"].strip(),
             int(request.form.get("player_limit", 10)),
+            team_a_name,
+            team_b_name,
         ),
     )
     selected = request.form.getlist("player_ids")
@@ -3801,7 +3844,7 @@ def create_match():
         )
     log_league_event(
         "Nuova partita creata",
-        f"{request.form['title'].strip()} è in calendario: convocazioni aperte, scuse già in preparazione.",
+        f"{request.form['title'].strip()} è in calendario: {team_a_name} contro {team_b_name}. Convocazioni aperte, scuse già in preparazione.",
         "match",
     )
     return redirect(url_for("match_detail", match_id=match_id))

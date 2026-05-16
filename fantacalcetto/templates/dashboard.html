@@ -238,6 +238,8 @@
     <label>Titolo <input name="title" value="Calcetto del Venerdì" required></label>
     <label>Data e ora <input type="datetime-local" name="match_date" required></label>
     <label>Campo <input name="location" value="Centro Sportivo" required></label>
+    <label>Squadra casa <input name="team_a_name" value="Real Madrink" list="market-team-ideas" required></label>
+    <label>Squadra ospite <input name="team_b_name" value="Dinamo Spritz" list="market-team-ideas" required></label>
     <label>Posti <input type="number" name="player_limit" min="2" max="30" step="2" value="10"></label>
     <button class="button primary" type="submit">Crea partita</button>
   </form>
@@ -460,11 +462,40 @@
     <h2>Fantamercato</h2>
     <span class="pill">{{ transfer_requests|length }} in attesa</span>
   </div>
-  <p class="muted section-intro">Tre tocchi: scegli il calciatore, scegli dove mandarlo, mandi la proposta. Lui firma in app e LegaGram pubblica la breaking news di SkySpogliatoio.</p>
+  <p class="muted section-intro">Prima firma gli svincolati a una squadra. Solo dopo diventano trattabili nel Fantamercato vero: prestiti, cessioni e breaking news di SkySpogliatoio.</p>
   <div class="market-quick-guide">
-    <span><b>1</b> Apri trattativa</span>
-    <span><b>2</b> Il calciatore firma</span>
-    <span><b>3</b> News su LegaGram</span>
+    <span><b>1</b> Firma svincolato</span>
+    <span><b>2</b> Entra in squadra</span>
+    <span><b>3</b> Parte il mercato</span>
+  </div>
+  <div class="panel-head compact-head">
+    <h3>Ingaggia svincolato</h3>
+    <span class="pill">{{ free_agent_players|length }} liberi</span>
+  </div>
+  <form class="form market-command-form" method="post" action="{{ url_for('propose_market_transfer') }}">
+    <label>Calciatore svincolato
+      <select name="player_id" required>
+        <option value="">Scegli chi deve firmare</option>
+        {% for p in free_agent_players %}
+          <option value="{{ p.id }}">{{ p.name }}{% if p.nickname %} · {{ p.nickname }}{% endif %} · OVR {{ p|overall_rating }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Squadra <input name="to_team" list="market-team-ideas" placeholder="Es. Real Madrink" required></label>
+    <input type="hidden" name="transfer_type" value="permanent">
+    <label>Offerta rapida
+      <select name="offer_label">
+        {% for offer in market_offers %}
+          <option value="{{ offer }}">{{ offer }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Offerta manuale <input name="custom_offer" placeholder="Es. un pacchetto di patatine"></label>
+    <button class="button primary" type="submit" {% if not free_agent_players %}disabled{% endif %}>Manda contratto allo svincolato</button>
+  </form>
+  <div class="panel-head compact-head">
+    <h3>Fantamercato tra squadre</h3>
+    <span class="pill">{{ market_players|length }} tesserati</span>
   </div>
   <form class="form market-command-form" method="post" action="{{ url_for('propose_market_transfer') }}">
     <label>Calciatore
@@ -490,7 +521,7 @@
       </select>
     </label>
     <label>Offerta manuale <input name="custom_offer" placeholder="Es. una graffa e una Coca Zero"></label>
-    <button class="button primary" type="submit">Manda proposta mercato</button>
+    <button class="button primary" type="submit" {% if not market_players %}disabled{% endif %}>Manda proposta mercato</button>
   </form>
   <div class="panel-head compact-head">
     <h3>Firme in attesa</h3>
