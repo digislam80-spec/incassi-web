@@ -41,6 +41,7 @@
     <div class="tv-news-ticker">
       <strong>Sky Calcetto 24 · Diretta</strong>
       <div>
+        <span class="ticker-source">Sky Calcetto 24 aggiorna la Bombonera in tempo reale.</span>
         <span>{% if featured.response in ["confirmed", "present"] %}{{ player.nickname or player.name }} risulta presente: firma depositata in segreteria.{% elif featured.response == "waitlist" %}Lista d'attesa attiva: pettorina calda e speranza in panchina.{% else %}Convocazione aperta: serve risposta prima che partano gli audio lunghi.{% endif %}</span>
         <span>{% if featured.status in ["teams", "teams_auto"] %}Formazioni ufficiali pronte, la regia prepara il campo tattico.{% else %}Probabili formazioni in costruzione: il mister sta facendo calcoli da Champions.{% endif %}</span>
         <span>{{ featured_players|length }} convocati monitorati, quota {{ featured.player_limit }} nel mirino.</span>
@@ -117,27 +118,6 @@
 </section>
 
 <section class="hero profile-hero" id="profilo" data-app-section="profilo">
-  <div>
-    <p class="eyebrow">{% if effective_supporter %}Profilo supporter{% else %}Profilo calciatore{% endif %}</p>
-    <h1>
-      {% if is_develop %}<span class="role-badge develop" title="Develop">DEV</span>{% elif can_manage %}<span class="role-badge mister" title="Mister">M</span>{% endif %}
-      {{ player.name }}
-    </h1>
-    <p class="lede">
-      {% if effective_supporter %}
-        {{ player.nickname or "Tifoso di tribuna" }} · supporter{% if player.supporter_player_name %} di {{ player.supporter_player_name }}{% endif %}{% if player.supporter_relation %} · {{ player.supporter_relation }}{% endif %}
-      {% else %}
-        {{ player.nickname or "Soprannome ancora da spogliatoio" }} · {{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.permanent_team_name or "Svincolato di lusso" }} · {{ player.account_status|account_status_label }}
-      {% endif %}
-    </p>
-    <div class="hero-actions">
-      <a class="button primary" href="{{ url_for('player_update_profile') }}">Modifica profilo</a>
-      <button class="button profile-help-button" type="button" onclick="document.getElementById('player-help').showModal()">Cosa posso fare qui?</button>
-      {% if effective_manager %}
-        <a class="button ghost" href="{{ url_for('admin_dashboard') }}">{% if is_develop %}Cabina Develop{% else %}Cabina Mister{% endif %}</a>
-      {% endif %}
-    </div>
-  </div>
   <div class="profile-card-stage" aria-label="{% if player.account_type == 'supporter' %}Card supporter{% else %}Card calciatore{% endif %}">
     {% if effective_supporter %}
       <div class="supporter-profile-card">
@@ -179,6 +159,27 @@
           </div>
         </div>
       </div>
+    {% endif %}
+  </div>
+  <div class="profile-copy">
+    <p class="eyebrow">{% if effective_supporter %}Profilo supporter{% else %}Profilo calciatore{% endif %}</p>
+    <h1>
+      {% if is_develop %}<span class="role-badge develop" title="Develop">DEV</span>{% elif can_manage %}<span class="role-badge mister" title="Mister">M</span>{% endif %}
+      {{ player.name }}
+    </h1>
+    <p class="lede">
+      {% if effective_supporter %}
+        {{ player.nickname or "Tifoso di tribuna" }} · supporter{% if player.supporter_player_name %} di {{ player.supporter_player_name }}{% endif %}{% if player.supporter_relation %} · {{ player.supporter_relation }}{% endif %}
+      {% else %}
+        {{ player.nickname or "Soprannome ancora da spogliatoio" }} · {{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.permanent_team_name or "Svincolato di lusso" }} · {{ player.account_status|account_status_label }}
+      {% endif %}
+    </p>
+  </div>
+  <div class="hero-actions profile-actions">
+    <a class="button primary" href="{{ url_for('player_update_profile') }}">Modifica profilo</a>
+    <button class="button profile-help-button" type="button" onclick="document.getElementById('player-help').showModal()">Cosa posso fare qui?</button>
+    {% if effective_manager %}
+      <a class="button ghost" href="{{ url_for('admin_dashboard') }}">{% if is_develop %}Cabina Develop{% else %}Cabina Mister{% endif %}</a>
     {% endif %}
   </div>
 </section>
@@ -534,7 +535,7 @@
               </div>
               <div>
                 <strong>{% if item.event_type == "mercato" %}SkySpogliatoio{% elif item.event_type == "develop" %}Digislam Dev Room{% elif item.event_type == "cronaca" %}{{ item.actor_name or item.title }}{% else %}FantaCalcetto News{% endif %}<span class="verified-dot">✓</span><span class="source-badge {% if item.event_type == 'mercato' %}sky{% elif item.event_type == 'develop' %}dev{% elif item.event_type == 'cronaca' %}player{% else %}news{% endif %}">{% if item.event_type == "mercato" %}SKY{% elif item.event_type == "develop" %}DEVELOPER{% elif item.event_type == "cronaca" %}{% if is_develop %}DEV{% elif can_manage %}MISTER{% elif effective_supporter %}TIFOSO{% else %}CALCIATORE{% endif %}{% else %}NEWS{% endif %}</span></strong>
-                <small>{{ item.created_at }} · {{ current_league.name if current_league else "Lega Bombonera" }}</small>
+                <small>{{ item.created_at|datetime_it(True) }}</small>
               </div>
             </div>
             <small>{% if item.event_type == "mercato" %}🔁 mercato{% elif item.event_type == "develop" %}🛠️ update app{% elif item.event_type == "cronaca" %}⚽ storia{% else %}📣 ufficiale{% endif %}</small>
