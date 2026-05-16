@@ -45,12 +45,14 @@
 
 {% if current_player and can_manage %}
 <nav class="role-view-switch" aria-label="Cambia vista">
-  <a href="{{ url_for('player_dashboard') }}"><span>⚽</span><b>Calciatore</b></a>
+  {% if current_player.account_type == "player" or is_develop %}
+    <a href="{{ url_for('player_dashboard') }}{% if is_develop %}?preview=player{% endif %}#profilo"><span>⚽</span><b>Calciatore</b></a>
+  {% endif %}
   <a class="{% if admin_view == 'mister' or not is_develop %}active{% endif %}" href="{{ url_for('admin_dashboard') }}?view=mister#admin-partita"><span>🧢</span><b>Mister</b></a>
   {% if is_develop %}
     <a class="{% if admin_view != 'mister' %}active{% endif %}" href="{{ url_for('admin_dashboard') }}#develop"><span>★</span><b>Develop</b></a>
-    <a href="{{ url_for('player_dashboard') }}?preview=supporter#legagram"><span>🎟️</span><b>Supporter test</b></a>
   {% endif %}
+  <a href="{{ url_for('player_dashboard') }}?preview=supporter#legagram"><span>🎟️</span><b>Supporter</b></a>
 </nav>
 {% endif %}
 
@@ -351,13 +353,24 @@
       <h3>Da gestire</h3>
       <div class="compact-match-list">
         {% for m in future_matches %}
-          <a class="mini-card match-list-card" href="{{ url_for('match_detail', match_id=m.id) }}">
-            <div>
-              <strong>{{ m.title }}</strong>
-              <span>{{ m.match_date|datetime_it }} · {{ m.location }}</span>
+          <article class="mini-card match-list-card admin-match-card">
+            <a href="{{ url_for('match_detail', match_id=m.id) }}">
+              <div>
+                <strong>{{ m.title }}</strong>
+                <span>{{ m.match_date|datetime_it }} · {{ m.location }}</span>
+              </div>
+              <small>{{ m|match_phase_label }} · {{ m.status|status_label }}</small>
+            </a>
+            <div class="inline-actions compact-actions">
+              <a class="button small" href="{{ url_for('match_detail', match_id=m.id) }}">Gestisci</a>
+              <form method="post" action="{{ url_for('cancel_match', match_id=m.id) }}" onsubmit="return confirm('Annullare la partita? Resterà nello storico.');">
+                <button class="button ghost small danger" type="submit">Annulla</button>
+              </form>
+              <form method="post" action="{{ url_for('delete_match', match_id=m.id) }}" onsubmit="return confirm('Eliminare definitivamente questa partita creata per errore?');">
+                <button class="button ghost small danger" type="submit">Elimina</button>
+              </form>
             </div>
-            <small>{{ m|match_phase_label }} · {{ m.status|status_label }}</small>
-          </a>
+          </article>
         {% else %}
           <div class="mini-card">
             <strong>Nessuna futura</strong>

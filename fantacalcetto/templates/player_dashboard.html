@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 {% set featured = matches[0] if matches else none %}
-{% set preview_role = request.args.get('preview') if is_develop else '' %}
+{% set preview_role = request.args.get('preview') if can_manage else '' %}
 {% set effective_supporter = player.account_type == "supporter" or preview_role == "supporter" %}
 {% set effective_manager = can_manage and preview_role not in ["supporter", "player"] %}
 {% set publish_role = "supporter" if effective_supporter else "player" %}
@@ -195,18 +195,20 @@
   <a href="#legagram"><span>💬</span><b>LegaGram</b></a>
 </nav>
 
-{% if player.account_type != "supporter" and can_manage %}
+{% if can_manage %}
 <nav class="role-view-switch" aria-label="Cambia vista">
-  <a class="{% if preview_role in ['', 'player'] %}active{% endif %}" href="{{ url_for('player_dashboard') }}{% if is_develop %}?preview=player{% endif %}"><span>⚽</span><b>Calciatore</b></a>
-  <a href="{{ url_for('admin_dashboard') }}#admin-partita"><span>🧢</span><b>Mister</b></a>
+  {% if player.account_type == "player" or is_develop %}
+    <a class="{% if preview_role in ['', 'player'] and not effective_supporter %}active{% endif %}" href="{{ url_for('player_dashboard') }}{% if is_develop %}?preview=player{% endif %}#profilo"><span>⚽</span><b>Calciatore</b></a>
+  {% endif %}
+  <a href="{{ url_for('admin_dashboard') }}?view=mister#admin-partita"><span>🧢</span><b>Mister</b></a>
   {% if is_develop %}
     <a href="{{ url_for('admin_dashboard') }}#develop"><span>★</span><b>Develop</b></a>
-    <a class="{% if preview_role == 'supporter' %}active{% endif %}" href="{{ url_for('player_dashboard') }}?preview=supporter#legagram"><span>🎟️</span><b>Supporter test</b></a>
   {% endif %}
+  <a class="{% if effective_supporter %}active{% endif %}" href="{{ url_for('player_dashboard') }}?preview=supporter#legagram"><span>🎟️</span><b>Supporter</b></a>
 </nav>
 {% endif %}
 
-{% if request.args.get("preview") == "supporter" and is_develop %}
+{% if request.args.get("preview") == "supporter" and can_manage %}
   <div class="notice soft" data-app-section="profilo">Preview supporter: stai controllando come deve respirare la zona tifosi. Non cambia il tuo ruolo reale.</div>
 {% endif %}
 

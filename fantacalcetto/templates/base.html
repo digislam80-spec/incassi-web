@@ -19,7 +19,9 @@
     </a>
     <nav>
       {% if current_player %}
-        <a href="{{ url_for('player_dashboard') }}">Partita</a>
+        {% set player_preview = request.args.get("preview", "") if can_manage else "" %}
+        {% set player_nav_base = url_for('player_dashboard') ~ ("?preview=" ~ player_preview if player_preview else "") %}
+        <a href="{{ player_nav_base }}#partita">Partita</a>
         <a href="{{ url_for('league_overview') }}">Stats</a>
         <a href="{{ url_for('app_help') }}">Aiuto</a>
         {% if can_manage %}
@@ -98,15 +100,17 @@
     <span>App creata da Riccardo Muollo. Tutti i diritti sono riservati.</span>
   </footer>
   {% if current_player %}
+    {% set player_preview = request.args.get("preview", "") if can_manage else "" %}
+    {% set player_nav_base = url_for('player_dashboard') ~ ("?preview=" ~ player_preview if player_preview else "") %}
     <nav class="bottom-nav">
-      <a href="{{ url_for('player_dashboard') }}#profilo"><span>👤</span><b>Profilo</b></a>
-      <a href="{{ url_for('player_dashboard') }}#partita"><span>🏟️</span><b>Partita</b></a>
+      <a href="{{ player_nav_base }}#profilo"><span>👤</span><b>Profilo</b></a>
+      <a href="{{ player_nav_base }}#partita"><span>🏟️</span><b>Partita</b></a>
       {% if current_player.account_type == "supporter" or request.args.get("preview") == "supporter" %}
-        <a href="{{ url_for('player_dashboard') }}#biglietti"><span>🎟️</span><b>Biglietti</b></a>
+        <a href="{{ player_nav_base }}#biglietti"><span>🎟️</span><b>Biglietti</b></a>
       {% else %}
-        <a href="{{ url_for('player_dashboard') }}#storico"><span>📚</span><b>Storico</b></a>
+        <a href="{{ player_nav_base }}#storico"><span>📚</span><b>Storico</b></a>
       {% endif %}
-      <a href="{{ url_for('player_dashboard') }}#legagram"><span>💬</span><b>LegaGram</b></a>
+      <a href="{{ player_nav_base }}#legagram"><span>💬</span><b>LegaGram</b></a>
       <a href="{{ url_for('app_help') }}"><span>?</span><b>Aiuto</b></a>
     </nav>
   {% elif is_admin %}

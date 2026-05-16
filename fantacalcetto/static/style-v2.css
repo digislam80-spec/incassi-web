@@ -2121,9 +2121,29 @@ h2 { margin: 0; font-size: 21px; }
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
 }
+.match-list-card > a {
+  color: inherit;
+  text-decoration: none;
+}
 .match-list-card strong {
   display: block;
   margin-bottom: 4px;
+}
+.admin-match-card {
+  gap: 10px;
+}
+.compact-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.compact-actions form {
+  margin: 0;
+}
+.button.small {
+  min-height: 38px;
+  padding: 9px 10px;
+  font-size: 12px;
 }
 .muted-card {
   background: #f8f8f4;

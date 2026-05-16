@@ -3727,17 +3727,18 @@ def reopen_match(match_id):
 @require_admin
 def cancel_match(match_id):
     match = get_match(match_id)
+    if not match:
+        return redirect(url_for("admin_dashboard", view="mister", _anchor="history"))
     execute("update matches set status = 'cancelled' where id = ?", (match_id,))
     execute("update match_players set team = null where match_id = ?", (match_id,))
-    if match:
-        log_league_event(
-            "Partita annullata",
-            f"{match['title']} è stata annullata. Resta nello storico: la scusa ufficiale entra agli atti.",
-            "match",
-            visibility="all",
-            league_id=match["league_id"],
-        )
-    return redirect(url_for("match_detail", match_id=match_id))
+    log_league_event(
+        "Partita annullata",
+        f"{match['title']} è stata annullata. Resta nello storico: la scusa ufficiale entra agli atti.",
+        "match",
+        visibility="all",
+        league_id=match["league_id"],
+    )
+    return redirect(url_for("match_detail", match_id=match_id, notice="Partita annullata: resta nello storico."))
 
 
 @app.route("/matches/<int:match_id>/delete", methods=["POST"])
@@ -3745,12 +3746,12 @@ def cancel_match(match_id):
 def delete_match(match_id):
     match = get_match(match_id)
     if not match:
-        return redirect(url_for("admin_dashboard"))
+        return redirect(url_for("admin_dashboard", view="mister", _anchor="history"))
     execute("delete from match_awards where match_id = ?", (match_id,))
     execute("delete from match_comments where match_id = ?", (match_id,))
     execute("delete from match_players where match_id = ?", (match_id,))
     execute("delete from matches where id = ?", (match_id,))
-    return redirect(url_for("admin_dashboard"))
+    return redirect(url_for("admin_dashboard", view="mister", _anchor="history"))
 
 
 @app.route("/matches/<int:match_id>/external", methods=["POST"])

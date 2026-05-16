@@ -26,6 +26,23 @@
   <div><strong>{{ summary_counts.invited }}</strong><small>in attesa</small></div>
 </section>
 
+<section class="panel quick-danger-panel">
+  <div class="panel-head">
+    <h2>Azioni rapide Mister</h2>
+    <span class="pill">{% if is_develop %}Develop può sostituire il Mister{% else %}Controllo partita{% endif %}</span>
+  </div>
+  <p class="muted section-intro">Annulla lascia traccia nello storico e avvisa la lega. Elimina cancella un evento creato per errore: sparisce come se non fosse mai esistito.</p>
+  <div class="inline-actions admin-actions">
+    <a class="button ghost" href="{{ url_for('admin_dashboard') }}?view=mister#history">Torna alla cabina Mister</a>
+    <form method="post" action="{{ url_for('cancel_match', match_id=match.id) }}" onsubmit="return confirm('Annullare la partita? I calciatori la vedranno come annullata.');">
+      <button class="button danger" type="submit">Annulla partita</button>
+    </form>
+    <form method="post" action="{{ url_for('delete_match', match_id=match.id) }}" onsubmit="return confirm('Eliminare definitivamente questa partita? Sparirà come se non fosse mai esistita.');">
+      <button class="button ghost danger" type="submit">Elimina errore</button>
+    </form>
+  </div>
+</section>
+
 <section class="panel">
   <div class="panel-head">
     <h2>Commenti Partita</h2>
