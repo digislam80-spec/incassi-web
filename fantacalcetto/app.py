@@ -1551,25 +1551,6 @@ def recent_league_events(limit=10, include_admin=False, feed_scope="common"):
     )
 
 
-def personal_league_events(player_id, limit=12):
-    league_id = current_league_id()
-    return query(
-        """
-        select le.*, p.name as actor_name, p.mascot as actor_mascot,
-               p.app_role as actor_app_role, p.account_type as actor_account_type
-        from league_events le
-        left join players p on p.id = le.actor_player_id
-        where coalesce(le.league_id, ?) = ?
-          and le.actor_player_id = ?
-          and coalesce(le.feed_scope, 'common') = 'personal'
-          and le.visibility in ('all', 'players')
-        order by le.created_at desc, le.id desc
-        limit ?
-        """,
-        (league_id, league_id, player_id, limit),
-    )
-
-
 def comments_for_events(events):
     event_ids = [event["id"] for event in events]
     if not event_ids:
@@ -3050,8 +3031,6 @@ def player_dashboard():
             my_waitlist_positions[my_match["id"]] = waitlist_positions(my_match["id"]).get(player["id"])
     seed_develop_feed()
     news_items = recent_league_events(14)
-    personal_posts = personal_league_events(player["id"], 12)
-    all_legagram_items = news_items + personal_posts
     featured_players = invited_players(my_matches[0]["id"]) if my_matches else []
     current_mvp_player_id = latest_mvp_player_id(league_id, my_matches[0]["id"]) if my_matches else None
     pending_transfers = pending_transfer_for_player(player["id"])
@@ -3067,8 +3046,7 @@ def player_dashboard():
         foot_labels=FOOT_LABELS,
         notice=request.args.get("notice", ""),
         news_items=news_items,
-        personal_posts=personal_posts,
-        news_comments=comments_for_events(all_legagram_items),
+        news_comments=comments_for_events(news_items),
         match_comments=comments_for_matches(my_matches + past_matches),
         app_updates=APP_UPDATES[:3],
         pending_transfers=pending_transfers,
@@ -3278,15 +3256,13 @@ def add_player_chronicle():
     player = current_player()
     title = request.form.get("title", "").strip()
     body = request.form.get("body", "").strip()
-    feed_scope = request.form.get("feed_scope", "common").strip().lower()
-    if feed_scope not in ("common", "personal"):
-        feed_scope = "common"
+    feed_scope = "common"
     display_role = normalize_publish_role(player, request.form.get("as_role", ""))
     image_path, image_expires_at = save_legagram_photo(request.files.get("photo"))
     if not body and not image_path:
         return redirect(url_for("player_dashboard", notice="Scrivi qualcosa o carica una foto: pure una prova VAR sgranata va bene.", _anchor="legagram"))
     if not title:
-        title = f"Bacheca di {player['name']}" if feed_scope == "personal" else f"Cronaca di {player['name']}"
+        title = f"Cronaca di {player['name']}"
     log_league_event(
         title[:90],
         body[:700],
@@ -3298,7 +3274,7 @@ def add_player_chronicle():
         image_path=image_path,
         image_expires_at=image_expires_at,
     )
-    notice = "Post pubblicato nella tua bacheca personale." if feed_scope == "personal" else "Post pubblicato nel feed comune."
+    notice = "Post pubblicato nel feed comune."
     if image_path:
         notice += " Foto compressa: resta visibile per massimo 7 giorni."
     return redirect(url_for("player_dashboard", notice=notice, _anchor="legagram"))

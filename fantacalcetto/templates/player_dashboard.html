@@ -495,76 +495,8 @@
       <span><b>{{ featured_players|length if featured else 0 }}</b><small>in hype</small></span>
     </div>
   </div>
-  <div class="legagram-tabs">
-    <a href="#bacheca-personale">Bacheca personale</a>
-    <a href="#feed-comune">Feed comune</a>
-  </div>
-
-  <div class="panel-head" id="bacheca-personale">
-    <h2>La tua bacheca</h2>
-    <span class="pill">stile profilo</span>
-  </div>
-  <form class="feed-composer photo-composer" method="post" action="{{ url_for('add_player_chronicle') }}" enctype="multipart/form-data">
-    <img src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
-    <div class="composer-box">
-      <input name="body" maxlength="700" placeholder="Pubblica nella tua bacheca personale...">
-      <label class="photo-upload-pill">Foto <input type="file" name="photo" accept="image/*"></label>
-      <input type="hidden" name="title" value="Bacheca personale">
-      <input type="hidden" name="feed_scope" value="personal">
-      <input type="hidden" name="as_role" value="{{ publish_role }}">
-      <button class="button primary" type="submit">Pubblica</button>
-    </div>
-    <small class="photo-disclaimer">Le foto vengono ridotte automaticamente e restano visibili massimo 7 giorni. Il post resta, la foto poi sparisce per non occupare spazio.</small>
-  </form>
-
-  <div class="post-list personal-post-list">
-    {% for item in personal_posts %}
-      <article class="post-card personal-post-card">
-        <div>
-          <header>
-            <div class="post-source-line">
-              <div class="post-avatar-inline">
-                <img src="{{ url_for('static', filename='mascots/' ~ (item.actor_mascot or player.mascot or 'jolly') ~ '.png') }}" alt="">
-              </div>
-              <div>
-                <strong>{{ item.actor_name or player.name }}<span class="source-badge player">BACHECA</span></strong>
-                <small>{{ item.created_at|datetime_it(True) }}</small>
-              </div>
-            </div>
-            <small>👤 personale</small>
-          </header>
-          {% if item.body %}<p>{{ item.body }}</p>{% endif %}
-          {% if item.image_path %}
-            <img class="post-photo" src="{{ url_for('static', filename=item.image_path) }}" alt="Foto LegaGram">
-            <small class="photo-expiry-note">Foto temporanea: resta visibile massimo 7 giorni dalla pubblicazione.</small>
-          {% endif %}
-          <div class="reactions reaction-actions">
-            <form method="post" action="{{ url_for('react_event', event_id=item.id) }}"><input type="hidden" name="reaction" value="cuore"><button type="submit">❤️ +1 Fede</button></form>
-            <form method="post" action="{{ url_for('react_event', event_id=item.id) }}"><input type="hidden" name="reaction" value="risata"><button type="submit">😂 +1</button></form>
-            <form method="post" action="{{ url_for('react_event', event_id=item.id) }}"><input type="hidden" name="reaction" value="fuoco"><button type="submit">🔥 +1</button></form>
-          </div>
-          <div class="comment-list">
-            {% for comment in news_comments.get(item.id, []) %}
-              <small><b>{{ comment.player_name or "Spogliatoio" }}</b>{% if comment.display_role %}<span class="comment-role">{% if comment.display_role == "develop" %}DEV{% elif comment.display_role == "mister" %}MISTER{% elif comment.display_role == "supporter" %}TIFOSO{% else %}CALCIATORE{% endif %}</span>{% endif %}: {{ comment.body }}</small>
-            {% endfor %}
-          </div>
-          <form class="comment-form" method="post" action="{{ url_for('add_event_comment', event_id=item.id) }}">
-            <input name="body" maxlength="400" placeholder="Commenta la bacheca">
-            <input type="hidden" name="as_role" value="{{ publish_role }}">
-            <button class="button ghost" type="submit">Invia +2</button>
-          </form>
-        </div>
-      </article>
-    {% else %}
-      <div class="mini-card personal-empty-card">
-        <strong>Ancora niente bacheca</strong>
-        <span>Pubblica una foto o una frase memorabile: tra sette giorni la foto saluta, il post resta agli atti.</span>
-      </div>
-    {% endfor %}
-  </div>
-
-  <div class="panel-head feed-common-head" id="feed-comune">
-    <h2>Feed comune</h2>
+  <div class="panel-head feed-common-head">
+    <h2>Feed spogliatoio</h2>
     <span class="pill">spogliatoio live</span>
   </div>
   <form class="feed-composer photo-composer" method="post" action="{{ url_for('add_player_chronicle') }}" enctype="multipart/form-data">
@@ -573,7 +505,6 @@
       <input name="body" maxlength="700" placeholder="Scrivi una storia visibile a tutta la lega...">
       <label class="photo-upload-pill">Foto <input type="file" name="photo" accept="image/*"></label>
       <input type="hidden" name="title" value="Cronaca LegaGram">
-      <input type="hidden" name="feed_scope" value="common">
       <input type="hidden" name="as_role" value="{{ publish_role }}">
       <button class="button primary" type="submit">Pubblica</button>
     </div>
