@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="mobile-focus-card tone-{{ phase.tone }}">
-  <span class="status-kicker">Cabina Mister · {{ phase.label }}</span>
+  <span class="status-kicker">{% if is_develop %}Cabina Develop{% else %}Cabina Mister{% endif %} · {{ current_league.name if current_league else "Lega Bombonera" }} · {{ phase.label }}</span>
   {% if match %}
     <h1>{{ match.title }}</h1>
     <p>{{ match.match_date|datetime_it }} · {{ match.location }}</p>
@@ -23,6 +23,39 @@
   {% endif %}
 </section>
 
+{% if is_develop %}
+<section class="panel develop-panel" id="develop">
+  <div class="panel-head">
+    <h2>Develop · Leghe</h2>
+    <span class="pill">Controllo totale</span>
+  </div>
+  <p class="muted section-intro">Tutti i dati attuali sono assegnati alla Lega Bombonera. Da qui potrai creare altre leghe e dare il ruolo di Mister ai profili giusti.</p>
+  <div class="league-logo-row">
+    <img class="league-logo-preview" src="{{ url_for('static', filename=current_league.logo or 'league-bombonera.svg') }}" alt="{{ current_league.name if current_league else 'Lega Bombonera' }}">
+    <div>
+      <strong>{{ current_league.name if current_league else "Lega Bombonera" }}</strong>
+      <small>Logo lega attivo · Develop: {{ develop_username }}</small>
+    </div>
+  </div>
+  <form class="form" method="post" action="{{ url_for('create_league') }}">
+    <label>Nome nuova lega <input name="name" placeholder="Es. Lega Vesuvio League"></label>
+    <label>Logo <input name="logo" value="league-bombonera.svg"></label>
+    <label>Colore principale <input name="primary_color" value="#0f6b4f"></label>
+    <label>Colore secondario <input name="secondary_color" value="#f2c94c"></label>
+    <button class="button primary" type="submit">Crea lega</button>
+  </form>
+  <div class="cards">
+    {% for lega in leagues %}
+      <article class="mini-card">
+        <strong>{{ lega.name }}</strong>
+        <span>{{ lega.slug }} · {{ "attiva" if lega.active else "pausata" }}</span>
+        <small>Logo: {{ lega.logo or "nessun logo" }}</small>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 <section class="admin-hub-grid">
   <a class="hub-tile" href="{% if match %}{{ url_for('match_detail', match_id=match.id) }}{% else %}#new-match{% endif %}">
     <strong>Partita da gestire</strong>
@@ -32,7 +65,7 @@
   <a class="hub-tile" href="#approvals"><strong>Approvazioni</strong><span>{{ pending_players|length }} iscrizioni · {{ reset_requests|length }} password.</span></a>
   <a class="hub-tile" href="#history"><strong>Archivio</strong><span>Future e giocate, senza mischiare tutto.</span></a>
   <a class="hub-tile" href="#roster"><strong>Rosa</strong><span>{{ players|length }} approvati e modificabili.</span></a>
-  <a class="hub-tile" href="#settings"><strong>Impostazioni</strong><span>Backup, import, link e strumenti meno frequenti.</span></a>
+  <a class="hub-tile" href="#settings"><strong>News e strumenti</strong><span>Cronache, link e cose leggere. Backup solo Develop.</span></a>
 </section>
 
 <section class="panel" id="new-match">
@@ -57,16 +90,19 @@
   </div>
   <div class="admin-split">
     <div>
-      <h3>Calciatori da approvare</h3>
+      <h3>Promozioni a calciatore</h3>
       <div class="compact-match-list">
         {% for p in pending_players %}
           <article class="mini-card pending-card">
             <strong>{{ p.name }}</strong>
             <span>{{ p.nickname or "senza soprannome" }} · {{ p.phone }}</span>
+            {% if p.supporter_player_name or p.supporter_relation %}
+              <span>Supporter di {{ p.supporter_player_name or "qualcuno da scoprire" }} · {{ p.supporter_relation or "parentela non dichiarata" }}</span>
+            {% endif %}
             <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
             <div class="admin-inline-buttons">
               <form method="post" action="{{ url_for('approve_player', player_id=p.id) }}">
-                <button class="button primary" type="submit">Approva</button>
+                <button class="button primary" type="submit">Promuovi calciatore</button>
               </form>
               <form method="post" action="{{ url_for('reject_player', player_id=p.id) }}">
                 <button class="button ghost" type="submit">Respingi</button>
@@ -76,7 +112,7 @@
         {% else %}
           <div class="mini-card">
             <strong>Nessuno in attesa</strong>
-            <span>Quando qualcuno si registra, appare qui bello evidente.</span>
+            <span>Chi si registra come supporter entra già; qui appaiono solo quelli che chiedono di diventare calciatori.</span>
           </div>
         {% endfor %}
       </div>
@@ -271,6 +307,15 @@
               </select>
             </label>
             <label>Nome mascotte <input name="mascot_name" value="{{ p.mascot_name or '' }}" placeholder="Nome mascotte personalizzato"></label>
+            {% if is_develop %}
+              <label>Ruolo gestionale
+                <select name="app_role">
+                  <option value="member" {% if (p.app_role or "member") == "member" %}selected{% endif %}>Calciatore / supporter</option>
+                  <option value="mister" {% if p.app_role == "mister" %}selected{% endif %}>Mister di questa lega ⭐</option>
+                  <option value="develop" {% if p.app_role == "develop" %}selected{% endif %}>Develop</option>
+                </select>
+              </label>
+            {% endif %}
             <button class="button primary" type="submit">Salva scheda</button>
           </form>
           <form class="inline-actions" method="post" action="{{ url_for('remove_player', player_id=p.id) }}" onsubmit="return confirm('Rimuovere {{ p.name }} dalla rosa arruolabili? Lo storico resta salvato.');">
@@ -306,28 +351,11 @@
 
 <details class="panel admin-accordion" id="settings">
   <summary>
-    <strong>Impostazioni, backup e news</strong>
-    <span>Strumenti utili, ma non devono sporcare la gestione partita.</span>
+    <strong>News e strumenti leggeri</strong>
+    <span>Il Mister gestisce la lega. Backup, import e reset restano al Develop.</span>
   </summary>
   <div class="accordion-body">
-    <section class="data-panel">
-      <div class="panel-head">
-        <h2>Dati Reali</h2>
-        <span class="pill">Backup e import</span>
-      </div>
-      <div class="data-actions">
-        <a class="button primary" href="{{ url_for('admin_backup') }}">Scarica backup dati</a>
-        <form class="data-import-form" method="post" action="{{ url_for('admin_import') }}" enctype="multipart/form-data">
-          <label>Importa backup JSON <input type="file" name="backup_file" accept="application/json" required></label>
-          <button class="button" type="submit">Importa dati</button>
-        </form>
-        <form class="data-reset-form" method="post" action="{{ url_for('admin_reset_data') }}" onsubmit="return confirm('Sicuro? Verranno eliminati giocatori, partite, convocazioni, squadre, pagelle e premi assegnati. Prima scarica il backup.');">
-          <label>Scrivi RESET per svuotare demo <input name="confirm_text" placeholder="RESET" autocomplete="off"></label>
-          <button class="button danger" type="submit">Svuota tutto</button>
-        </form>
-      </div>
-      <p class="muted">Link unico spogliatoio: <strong>{{ request.host_url.rstrip('/') }}{{ url_for('player_login') }}</strong></p>
-    </section>
+    <p class="muted">Link unico spogliatoio: <strong>{{ request.host_url.rstrip('/') }}{{ url_for('player_login') }}</strong></p>
 
     <section class="grid two">
       <div class="news-panel">

@@ -14,13 +14,16 @@
       <span class="brand-mark image-mark"><img src="{{ url_for('static', filename='favicon.png') }}" alt="FantaCalcetto"></span>
       <span>
         <strong>FantaCalcetto</strong>
-        <small>La lega del Venerdì</small>
+        <small>{% if current_player or can_manage %}{{ current_league.name if current_league else "Lega Bombonera" }}{% else %}Accesso riservato{% endif %}</small>
       </span>
     </a>
     <nav>
       {% if current_player %}
         <a href="{{ url_for('player_dashboard') }}">Partita</a>
         <a href="{{ url_for('league_overview') }}">Stats</a>
+        {% if can_manage %}
+          <a href="{{ url_for('admin_dashboard') }}">{% if is_develop %}Develop{% else %}Mister{% endif %}</a>
+        {% endif %}
       {% elif is_admin %}
         <a href="{{ url_for('admin_dashboard') }}">Oggi</a>
         <a href="{{ url_for('league_overview') }}">Analisi lega</a>
@@ -54,7 +57,7 @@
       <a href="{{ url_for('player_dashboard') }}">Partita</a>
       <a href="{{ url_for('player_update_profile') }}">Profilo</a>
       <a href="{{ url_for('league_overview') }}">Stats</a>
-      <a href="{{ url_for('player_guide') }}">Guida</a>
+      <a href="{{ url_for('admin_dashboard') if can_manage else url_for('player_guide') }}">{% if can_manage %}Mister{% else %}Guida{% endif %}</a>
     </nav>
   {% elif is_admin %}
     <nav class="bottom-nav">

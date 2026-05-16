@@ -2,8 +2,13 @@
 {% block content %}
 <section class="public-card">
   <p class="eyebrow">Richiesta inviata</p>
-  <h1>Sei in sala VAR.</h1>
-  <p class="lede">L'admin deve approvarti. Quando sei approvato potrai entrare con username e password, vedere convocazioni, confermare, disdire e controllare statistiche.</p>
+  {% if requested_role == "player" %}
+    <h1>Sei in tribuna, con richiesta al Mister.</h1>
+    <p class="lede">Il tuo account è attivo come supporter. Puoi entrare, commentare e seguire la LegaGram; Mister o Develop decideranno se promuoverti a calciatore arruolabile.</p>
+  {% else %}
+    <h1>Benvenuto in tribuna.</h1>
+    <p class="lede">Account supporter attivo: puoi entrare, seguire partite, voti, pagelle e fare casino goliardico su LegaGram senza finire nelle convocazioni.</p>
+  {% endif %}
   <a class="button primary big" href="{{ url_for('player_login') }}">Vai al login calciatore</a>
 </section>
 {% endblock %}

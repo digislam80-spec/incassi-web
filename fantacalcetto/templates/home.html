@@ -5,17 +5,10 @@
     <img class="brand-illustration compact" src="{{ url_for('static', filename='favicon.png') }}" alt="FantaCalcetto Digislam">
     <p class="eyebrow">FantaCalcetto</p>
     <h1>Entra nello spogliatoio.</h1>
-    <p class="lede">Un solo ingresso: poi scegli se giocare, registrarti o gestire la lega.</p>
-    {% if match %}
-      <div class="match-status-card tone-{{ phase.tone }}">
-        <span>{{ phase.label }}</span>
-        <strong>{{ match.title }}</strong>
-        <small>{{ match.match_date|datetime_it }} · {{ match.location }}</small>
-      </div>
-    {% endif %}
+    <p class="lede">Un solo ingresso: entri come supporter, chiedi di diventare calciatore o gestisci la tua lega se sei Mister.</p>
     <div class="entry-actions">
-      <a class="button primary big" href="{{ url_for('player_login') }}">Sono un calciatore</a>
-      <a class="button big" href="{{ url_for('register_player') }}">Mi registro</a>
+      <a class="button primary big" href="{{ url_for('player_login') }}">Login lega</a>
+      <a class="button big" href="{{ url_for('register_player') }}">Registrati</a>
       <a class="button ghost big" href="{{ url_for('admin_login') }}">Area Mister</a>
     </div>
   </div>

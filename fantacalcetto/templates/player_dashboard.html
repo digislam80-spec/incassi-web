@@ -8,7 +8,7 @@
     <p>{{ featured.match_date|datetime_it }} · {{ featured.location }}</p>
     <small>{{ phase.hint }}</small>
     <div class="action-stack">
-      {% if player.account_status == "approved" and featured.status not in ["cancelled", "closed"] %}
+      {% if player.account_status == "approved" and player.account_type == "player" and featured.status not in ["cancelled", "closed"] %}
         {% if featured.response in ["confirmed", "present"] %}
           <button class="button primary confirmed-button big" type="button" disabled>Confermato</button>
           <form method="post" action="{{ url_for('player_cancel', match_id=featured.id) }}">
@@ -32,40 +32,61 @@
 
 <section class="hero profile-hero">
   <div>
-    <p class="eyebrow">Profilo calciatore</p>
+        <p class="eyebrow">{% if player.account_type == "supporter" %}Profilo supporter{% else %}Profilo calciatore{% endif %}</p>
     <h1>{{ player.name }}</h1>
-    <p class="lede">{{ player.nickname or "Soprannome ancora da spogliatoio" }} · {{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.account_status|account_status_label }}</p>
+    <p class="lede">
+      {% if player.account_type == "supporter" %}
+        {{ player.nickname or "Tifoso di tribuna" }} · supporter{% if player.supporter_player_name %} di {{ player.supporter_player_name }}{% endif %}{% if player.supporter_relation %} · {{ player.supporter_relation }}{% endif %}
+      {% else %}
+        {{ player.nickname or "Soprannome ancora da spogliatoio" }} · {{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.account_status|account_status_label }}
+      {% endif %}
+    </p>
     <div class="hero-actions">
       <a class="button primary" href="{{ url_for('player_update_profile') }}">Modifica profilo</a>
       <button class="button profile-help-button" type="button" onclick="document.getElementById('player-help').showModal()">Cosa posso fare qui?</button>
     </div>
   </div>
-  <div class="profile-card-stage" aria-label="Card calciatore">
-    <div class="overall-badge fifa-card fifa-shield-card">
-      <div class="fifa-card-top">
-        <div class="fifa-rating">
-          <strong>{{ player|overall_rating }}</strong>
-          <span>{{ player.role[:3]|upper }}</span>
-          <i></i>
-          <b>⚽</b>
-        </div>
-        <img class="fifa-card-mascot" src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
-      </div>
-      <div class="fifa-nameplate">
-        <b>{{ player.nickname or player.name }}</b>
-        <small>{{ player.power|stars }}</small>
-      </div>
-      <div class="fifa-stats">
+  <div class="profile-card-stage" aria-label="{% if player.account_type == 'supporter' %}Card supporter{% else %}Card calciatore{% endif %}">
+    {% if player.account_type == "supporter" %}
+      <div class="supporter-profile-card">
+        <img src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
+        <span>Profilo tifoso</span>
+        <strong>{{ player.nickname or "Divano Nord" }}</strong>
+        <small>{% if player.supporter_player_name %}Tifa {{ player.supporter_player_name }}{% else %}Tifoso di lega{% endif %}</small>
         <div>
-          <span><b>{{ player.reliability }}</b> AFF</span>
-          <span><b>{{ player.score }}</b> SCO</span>
-        </div>
-        <div>
-          <span><b>{{ player.matches }}</b> PRE</span>
-          <span><b>{% if player.preferred_foot == "left" %}SX{% elif player.preferred_foot == "both" %}AM{% else %}DX{% endif %}</b> PIE</span>
+          <b>{{ player.supporter_relation or "supporter" }}</b>
+          <b>LegaGram</b>
+          <b>Biglietti</b>
         </div>
       </div>
-    </div>
+    {% else %}
+      {% set player_ovr = player|overall_rating %}
+      <div class="overall-badge fifa-card fifa-premium-card {% if player_ovr >= 85 %}tier-elite{% elif player_ovr >= 70 %}tier-gold{% elif player_ovr >= 55 %}tier-silver{% else %}tier-bronze{% endif %}">
+        <div class="fifa-card-top">
+          <div class="fifa-rating">
+            <strong>{{ player_ovr }}</strong>
+            <span>{{ player.role[:3]|upper }}</span>
+            <i></i>
+            <b>⚽</b>
+          </div>
+          <img class="fifa-card-mascot" src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
+        </div>
+        <div class="fifa-nameplate">
+          <b>{{ player.nickname or player.name }}</b>
+          <small>{{ player.power|stars }}</small>
+        </div>
+        <div class="fifa-stats">
+          <div>
+            <span><b>{{ player.reliability }}</b> AFF</span>
+            <span><b>{{ player.score }}</b> SCO</span>
+          </div>
+          <div>
+            <span><b>{{ player.matches }}</b> PRE</span>
+            <span><b>{% if player.preferred_foot == "left" %}SX{% elif player.preferred_foot == "both" %}AM{% else %}DX{% endif %}</b> PIE</span>
+          </div>
+        </div>
+      </div>
+    {% endif %}
   </div>
 </section>
 
@@ -102,7 +123,9 @@
 {% endif %}
 
 {% if player.account_status != "approved" %}
-  <div class="notice soft">Account non ancora approvato: puoi guardare il profilo, ma non sei ancora arruolabile.</div>
+  <div class="notice soft">Sei già dentro come supporter: puoi guardare e commentare. Mister o Develop devono ancora promuoverti a calciatore arruolabile.</div>
+{% elif player.account_type == "supporter" %}
+  <div class="notice soft">Modalità supporter: puoi seguire partite, pagelle e LegaGram. Non entri nelle convocazioni finché non vieni promosso a calciatore.</div>
 {% endif %}
 
 <section class="panel">

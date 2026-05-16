@@ -177,6 +177,77 @@ h2 { margin: 0; font-size: 21px; }
   width: min(100%, 348px);
   min-height: 340px;
 }
+.supporter-profile-card {
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  width: min(100%, 330px);
+  min-height: 330px;
+  padding: 24px 18px;
+  border: 1px solid rgba(255,255,255,.26);
+  border-radius: 28px;
+  color: white;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(242,201,76,.34), transparent 34%),
+    linear-gradient(145deg, rgba(8,36,58,.96), rgba(36,91,155,.92));
+  box-shadow: 0 22px 44px rgba(0,0,0,.22);
+}
+.supporter-profile-card img {
+  width: 128px;
+  height: 128px;
+  object-fit: contain;
+  padding: 8px;
+  border-radius: 26px;
+  background: linear-gradient(145deg, #fff1a8, #f2c94c);
+  filter: drop-shadow(0 12px 10px rgba(0,0,0,.24));
+}
+.supporter-profile-card span {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: #1d270d;
+  background: var(--lime);
+  font-size: 12px;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+.supporter-profile-card strong {
+  overflow-wrap: anywhere;
+  text-align: center;
+  font-size: 34px;
+  line-height: .95;
+}
+.supporter-profile-card small { color: rgba(255,255,255,.78); font-weight: 900; text-align: center; }
+.supporter-profile-card div { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+.supporter-profile-card b {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.14);
+  font-size: 12px;
+}
+.develop-panel {
+  border-color: rgba(242, 201, 76, .55);
+  background:
+    linear-gradient(135deg, rgba(255,248,216,.95), rgba(255,255,255,.98));
+}
+.league-logo-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin: 14px 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fffef7;
+}
+.league-logo-preview {
+  width: 74px;
+  height: 74px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 10px rgba(25,33,31,.16));
+}
+.league-logo-row strong { display: block; font-size: 22px; }
+.league-logo-row small { display: block; margin-top: 4px; color: var(--muted); font-weight: 850; }
 .fun-strip {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
@@ -630,6 +701,44 @@ h2 { margin: 0; font-size: 21px; }
 
 .form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .register-form, .login-form { margin-top: 20px; }
+.role-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.role-choice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  min-height: 112px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfcf7;
+  cursor: pointer;
+}
+.role-choice input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--green); }
+.role-choice b { display: block; color: var(--ink); font-size: 18px; line-height: 1.1; }
+.role-choice small { display: block; margin-top: 6px; color: var(--muted); font-weight: 850; line-height: 1.3; }
+.role-choice:has(input:checked) {
+  border-color: #e5bd42;
+  background: #fff8d8;
+  box-shadow: inset 0 0 0 1px #e5bd42;
+}
+.supporter-style-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid #e5bd42;
+  border-radius: var(--radius);
+  background: #fff8d8;
+  color: #60480b;
+  font-weight: 850;
+  line-height: 1.3;
+}
+.supporter-style-card strong { color: var(--ink); font-size: 18px; }
+.supporter-style-card span { display: block; }
 label { display: grid; gap: 6px; color: var(--muted); font-weight: 800; font-size: 13px; }
 input, select, textarea {
   width: 100%;
@@ -917,6 +1026,80 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
 .fifa-stats span b {
   font-size: 19px;
   letter-spacing: 0;
+}
+.fifa-premium-card {
+  --card-a: #d8ae33;
+  --card-b: #8a6417;
+  --card-c: #fff1a2;
+  width: min(100%, 330px);
+  min-height: 392px;
+  padding: 22px 22px 24px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.40);
+  border-radius: 24px;
+  color: #211706;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.74), transparent 24%),
+    linear-gradient(150deg, var(--card-c), var(--card-a) 46%, var(--card-b));
+  box-shadow: 0 24px 44px rgba(0,0,0,.30), inset 0 0 0 2px rgba(255,255,255,.22);
+  filter: none;
+}
+.fifa-premium-card.tier-bronze { --card-a:#c98850; --card-b:#6c3d1f; --card-c:#ffd7ad; }
+.fifa-premium-card.tier-silver { --card-a:#c9d3dc; --card-b:#66717b; --card-c:#f4f8fb; }
+.fifa-premium-card.tier-gold { --card-a:#d8ae33; --card-b:#8a6417; --card-c:#fff1a2; }
+.fifa-premium-card.tier-elite { --card-a:#43d1a0; --card-b:#0d3b63; --card-c:#e6fff6; color:#061f18; }
+.fifa-premium-card::before { display: none; }
+.fifa-premium-card::after {
+  content: "";
+  position: absolute;
+  inset: 78px 18px 88px;
+  border-radius: 48%;
+  background: radial-gradient(circle, rgba(255,255,255,.26), transparent 62%);
+  filter: blur(2px);
+  pointer-events: none;
+  z-index: 0;
+}
+.fifa-premium-card .fifa-card-top {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 8px;
+  z-index: 2;
+}
+.fifa-premium-card .fifa-rating strong { font-size: 64px; }
+.fifa-premium-card .fifa-card-mascot {
+  position: relative;
+  display: block;
+  width: 218px;
+  height: 218px;
+  justify-self: end;
+  margin-top: -32px;
+  margin-bottom: -10px;
+  transform: scale(1.08) translate(4px, -6px);
+  z-index: 1;
+  filter:
+    drop-shadow(0 22px 16px rgba(55,35,8,.30))
+    drop-shadow(0 2px 0 rgba(255,255,255,.18));
+}
+.fifa-premium-card .fifa-nameplate {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 0;
+  z-index: 2;
+}
+.fifa-premium-card .fifa-stats {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  margin-top: 14px;
+  z-index: 2;
 }
 .overall-mini {
   display: inline-grid;
@@ -1659,7 +1842,7 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
   .page { width: min(100% - 20px, 1180px); margin-top: 14px; }
   .hero, .match-header { min-height: 0; padding: 20px; }
   .site-footer { padding-bottom: 92px; }
-  .form, .roster-row, .stat-row, .quick-pagella-row, .scoreline, .stat-cards, .admin-actions, .admin-player-stats, .league-card, .league-metrics, .match-quickbar, .notification-grid, .award-row, .data-actions, .password-request-row, .password-reset-form, .team-name-grid, .team-editor-row, .comment-form, .help-grid, .admin-hub-grid, .admin-split, .admin-inline-buttons, .sticky-form-actions { grid-template-columns: 1fr; }
+  .form, .roster-row, .stat-row, .quick-pagella-row, .scoreline, .stat-cards, .admin-actions, .admin-player-stats, .league-card, .league-metrics, .match-quickbar, .notification-grid, .award-row, .data-actions, .password-request-row, .password-reset-form, .team-name-grid, .team-editor-row, .comment-form, .help-grid, .admin-hub-grid, .admin-split, .admin-inline-buttons, .sticky-form-actions, .role-choice-grid { grid-template-columns: 1fr; }
   .admin-hub-grid { gap: 8px; }
   .hub-tile { min-height: 82px; }
   .admin-accordion > summary { padding: 16px; }

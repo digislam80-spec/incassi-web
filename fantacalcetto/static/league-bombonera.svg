@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Logo Lega Bombonera</title>
+  <desc id="desc">Stemma calcistico goliardico verde e oro per FantaCalcetto.</desc>
+  <defs>
+    <linearGradient id="gold" x1="70" x2="430" y1="40" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff3a3"/>
+      <stop offset=".5" stop-color="#e3b738"/>
+      <stop offset="1" stop-color="#8b6415"/>
+    </linearGradient>
+    <linearGradient id="green" x1="86" x2="432" y1="74" y2="454" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1c8b63"/>
+      <stop offset="1" stop-color="#092f27"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="18" stdDeviation="14" flood-color="#061b15" flood-opacity=".35"/>
+    </filter>
+  </defs>
+  <path filter="url(#shadow)" d="M256 26 438 88v132c0 121-74 218-182 266C148 438 74 341 74 220V88L256 26Z" fill="url(#gold)"/>
+  <path d="M256 58 409 110v112c0 98-58 178-153 221-95-43-153-123-153-221V110L256 58Z" fill="url(#green)"/>
+  <path d="M126 126 256 82l130 44v26H126v-26Z" fill="#f2c94c"/>
+  <path d="M126 360c31 42 74 73 130 99 56-26 99-57 130-99H126Z" fill="#f2c94c"/>
+  <circle cx="256" cy="246" r="73" fill="#f7f8f4"/>
+  <path d="m256 188 39 28-15 46h-48l-15-46 39-28Z" fill="#17211d"/>
+  <path d="m210 226-34-11a73 73 0 0 1 47-39l21 28-34 22Zm92-22 21-28a73 73 0 0 1 47 39l-34 11-34-22Zm42 69 35 9a73 73 0 0 1-39 48l-24-26 28-31Zm-148 0 28 31-24 26a73 73 0 0 1-39-48l35-9Zm34 61h52l14 34a74 74 0 0 1-80 0l14-34Z" fill="#17211d"/>
+  <text x="256" y="148" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="39" font-weight="900" fill="#10281f" letter-spacing="1">LEGA</text>
+  <text x="256" y="382" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="900" fill="#10281f" letter-spacing="1">BOMBONERA</text>
+  <path d="M152 168h208" stroke="#fff4b6" stroke-width="8" stroke-linecap="round" opacity=".9"/>
+  <path d="M173 402h166" stroke="#fff4b6" stroke-width="7" stroke-linecap="round" opacity=".85"/>
+</svg>

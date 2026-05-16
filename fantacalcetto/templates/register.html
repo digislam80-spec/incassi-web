@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="public-card">
-  <p class="eyebrow">Registrazione calciatore</p>
-  <h1>Entra nella lista arruolabili.</h1>
-  <p class="lede">Scegli account, numero WhatsApp e mascotte. L'admin ti approva e poi diventi convocabile. Powered by Digislam Print Lab.</p>
+  <p class="eyebrow">Registrazione Lega Bombonera</p>
+  <h1>Entra nello spogliatoio.</h1>
+  <p class="lede">Puoi entrare subito come supporter/tifoso. Se vuoi giocare, chiedi la promozione a calciatore: Mister o Develop ti renderanno arruolabile per questa lega.</p>
   <div class="rules-box">
     <h2>Patto goliardico della Lega del Venerdì</h2>
     <p>Prima di indossare la maglia immaginaria, giura solennemente di rispettare il pallone, il gruppo e le disdette fatte in tempo umano.</p>
@@ -17,10 +17,37 @@
     <div class="notice soft">{{ error }}</div>
   {% endif %}
   <form class="form register-form" method="post">
+    <div class="role-choice-grid">
+      <label class="role-choice">
+        <input type="radio" name="requested_role" value="supporter" checked>
+        <span><b>🎺 Supporter / Tifoso</b><small>Entri subito, commenti su LegaGram, vedi voti e pagelle. Niente convocazioni.</small></span>
+      </label>
+      <label class="role-choice">
+        <input type="radio" name="requested_role" value="player">
+        <span><b>⚽ Chiedo di diventare calciatore</b><small>Entri subito come supporter, poi Mister o Develop ti promuovono ad arruolabile.</small></span>
+      </label>
+    </div>
     <label>Nome <input name="name" required></label>
     <label>Cognome <input name="surname"></label>
-    <label>Soprannome <input name="nickname" placeholder="Es. Trivela"></label>
+    <label>Soprannome / nome social <input name="nickname" list="fan-name-ideas" placeholder="Es. Lady VAR, Divano Nord, Trivela"></label>
+    <datalist id="fan-name-ideas">
+      <option value="Lady VAR"></option>
+      <option value="Divano Nord"></option>
+      <option value="Sciarpa Suprema"></option>
+      <option value="Zia Pressing"></option>
+      <option value="Compare di Curva"></option>
+      <option value="Ultras del Parcheggio"></option>
+      <option value="Tribuna Autoritaria"></option>
+      <option value="Curva Famiglia"></option>
+    </datalist>
     <label>WhatsApp <input name="phone" placeholder="333..." required></label>
+    <label>Calciatore che tifi / segui <input name="supporter_player_name" placeholder="Es. Riccardo Muollo"></label>
+    <label>Parentela o amicizia <input name="supporter_relation" placeholder="Es. moglie, fratello, compare, tifoso storico"></label>
+    <div class="supporter-style-card">
+      <strong>Idee supporter</strong>
+      <span>Nomi rapidi: Lady VAR, Divano Nord, Sciarpa Suprema, Zia Pressing, Compare di Curva.</span>
+      <span>Mascotte consigliate: A' Sciarpa tattica, O' Varista d'o gruppo, O' Pressing appiccicato, O' Mister d'a lavagna.</span>
+    </div>
     <label>Username <input name="username" autocomplete="username" required></label>
     <label>Password <input name="password" type="password" autocomplete="new-password" required></label>
     <label>Mascotte
@@ -47,7 +74,7 @@
       <input type="checkbox" name="accepted_rules" value="yes" required>
       <span>Accetto il regolamento: confermo quando gioco, disdico dall'account se non posso, e se faccio il fenomeno mi assumo la penalità con dignità.</span>
     </label>
-    <button class="button primary" type="submit">Manda richiesta al mister</button>
+    <button class="button primary" type="submit">Entra in Lega Bombonera</button>
   </form>
 </section>
 {% endblock %}
