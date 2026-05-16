@@ -45,6 +45,16 @@ DATA_TABLES = [
 
 APP_UPDATES = [
     {
+        "title": "App più chiara da telefono",
+        "body": "Partite, admin e profilo iniziano a separare meglio azioni rapide, stato partita e storico.",
+        "tag": "Mobile",
+    },
+    {
+        "title": "Date in italiano",
+        "body": "Le date iniziano a parlare come il gruppo: Venerdì 22 maggio alle 21:15, non codici da gestionale.",
+        "tag": "Esperienza",
+    },
+    {
         "title": "Card scudo pubblicata",
         "body": "La card profilo usa uno scudo dorato più pulito: overall centrato, mascotte leggibile e statistiche rapide ordinate.",
         "tag": "Grafica",
@@ -123,6 +133,24 @@ FOOT_LABELS = {
     "both": "Entrambi",
 }
 
+WEEKDAYS_IT = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"]
+WEEKDAYS_SHORT_IT = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"]
+MONTHS_IT = [
+    "",
+    "gennaio",
+    "febbraio",
+    "marzo",
+    "aprile",
+    "maggio",
+    "giugno",
+    "luglio",
+    "agosto",
+    "settembre",
+    "ottobre",
+    "novembre",
+    "dicembre",
+]
+
 MASCOTS = {
     "fantasista": {"code": "F10", "label": "O' Poet ca palla", "class": "gold"},
     "saracinesca": {"code": "GK", "label": "A' Serranda e Scampia", "class": "blue"},
@@ -176,6 +204,8 @@ def sql_for_backend(sql):
         return sql
     translated = sql.replace("?", "%s")
     translated = translated.replace("m.match_date >= datetime('now', '-1 day')", "m.match_date::timestamp >= now() - interval '1 day'")
+    translated = translated.replace("match_date >= datetime('now', '-4 hours')", "match_date::timestamp >= now() - interval '4 hours'")
+    translated = translated.replace("match_date < datetime('now', '-4 hours')", "match_date::timestamp < now() - interval '4 hours'")
     translated = translated.replace("max(0, score - %s)", "greatest(0, score - %s)")
     translated = translated.replace("max(0, score + %s)", "greatest(0, score + %s)")
     translated = translated.replace("max(0, reliability - %s)", "greatest(0, reliability - %s)")
@@ -918,6 +948,56 @@ def status_label(status):
     return labels.get(status, status)
 
 
+def parse_match_datetime(value):
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", ""))
+    except ValueError:
+        return None
+
+
+def format_datetime_it(value, compact=False):
+    dt = parse_match_datetime(value)
+    if not dt:
+        return value or ""
+    if compact:
+        return f"{WEEKDAYS_SHORT_IT[dt.weekday()]} {dt.day:02d}/{dt.month:02d} · {dt.strftime('%H:%M')}"
+    return f"{WEEKDAYS_IT[dt.weekday()]} {dt.day} {MONTHS_IT[dt.month]} · {dt.strftime('%H:%M')}"
+
+
+def format_day_it(value):
+    dt = parse_match_datetime(value)
+    if not dt:
+        return value or ""
+    return f"{dt.day} {MONTHS_IT[dt.month]} {dt.year}"
+
+
+def match_phase(match):
+    if not match:
+        return {"key": "none", "label": "Nessuna partita", "tone": "muted", "hint": "Crea una nuova partita per iniziare."}
+    status = match["status"]
+    match_dt = parse_match_datetime(match["match_date"])
+    now = datetime.now()
+    if status == "cancelled":
+        return {"key": "cancelled", "label": "Annullata", "tone": "danger", "hint": "La partita è annullata."}
+    if status == "closed":
+        return {"key": "past", "label": "Conclusa", "tone": "done", "hint": "Risultato, pagelle e storico sono salvati."}
+    if match_dt and match_dt < now - timedelta(hours=4):
+        return {"key": "to_report", "label": "Da refertare", "tone": "warning", "hint": "Partita giocata: mancano risultato, voti o pagelle."}
+    if status in ("teams", "teams_auto"):
+        return {"key": "teams", "label": "Squadre pronte", "tone": "good", "hint": "Controlla squadre e ultimi dettagli."}
+    if status == "confirmed":
+        return {"key": "confirmed", "label": "Partita confermata", "tone": "good", "hint": "La gara è ufficiale."}
+    if match_dt and match_dt.date() == now.date():
+        return {"key": "today", "label": "Si gioca oggi", "tone": "warning", "hint": "Conferma quota, squadre e comunicazioni."}
+    return {"key": "future", "label": "Convocazioni aperte", "tone": "info", "hint": "I calciatori possono confermare o disdire."}
+
+
+def match_phase_label(match):
+    return match_phase(match)["label"]
+
+
 def response_label(response):
     labels = {
         "invited": "In attesa di risposta",
@@ -983,6 +1063,9 @@ def overall_rating(player):
 app.jinja_env.filters["player_title"] = player_title
 app.jinja_env.filters["foot_label"] = foot_label
 app.jinja_env.filters["status_label"] = status_label
+app.jinja_env.filters["datetime_it"] = format_datetime_it
+app.jinja_env.filters["date_it"] = format_day_it
+app.jinja_env.filters["match_phase_label"] = match_phase_label
 app.jinja_env.filters["response_label"] = response_label
 app.jinja_env.filters["account_status_label"] = account_status_label
 app.jinja_env.filters["mascot_label"] = mascot_label
@@ -994,6 +1077,19 @@ app.jinja_env.filters["overall_rating"] = overall_rating
 
 def latest_match():
     return query("select * from matches order by match_date desc, id desc limit 1", one=True)
+
+
+def featured_match():
+    upcoming = query(
+        """
+        select * from matches
+        where status not in ('closed', 'cancelled') and match_date >= datetime('now', '-4 hours')
+        order by match_date asc, id asc
+        limit 1
+        """,
+        one=True,
+    )
+    return upcoming or latest_match()
 
 
 def get_match(match_id):
@@ -1324,7 +1420,8 @@ def dashboard():
         return redirect(url_for("player_dashboard"))
     if is_admin():
         return redirect(url_for("admin_dashboard"))
-    return redirect(url_for("player_login", next=request.path))
+    match = featured_match()
+    return render_template("home.html", match=match, phase=match_phase(match), motto=goliardic_motto(match))
 
 
 @app.route("/rules")
@@ -1371,9 +1468,9 @@ def healthz():
 @app.route("/admin")
 @require_admin
 def admin_dashboard():
-    match = latest_match()
+    match = featured_match()
     maybe_auto_generate(match)
-    match = latest_match()
+    match = featured_match()
     players = query(f"select * from players where {approved_players_sql()} order by power desc, score desc, name")
     pending_players = query("select * from players where account_status = 'pending' order by created_at desc")
     rejected_players = query("select * from players where account_status in ('rejected', 'removed') order by created_at desc limit 20")
@@ -1387,6 +1484,8 @@ def admin_dashboard():
         """
     )
     matches = query("select * from matches order by match_date desc, id desc limit 8")
+    future_matches = query("select * from matches where match_date >= datetime('now', '-4 hours') and status not in ('closed', 'cancelled') order by match_date asc, id asc limit 6")
+    past_matches = query("select * from matches where match_date < datetime('now', '-4 hours') or status in ('closed', 'cancelled') order by match_date desc, id desc limit 6")
     match_players = invited_players(match["id"]) if match else []
     news_items = recent_league_events(12, include_admin=True)
     news_comments = comments_for_events(news_items)
@@ -1395,7 +1494,12 @@ def admin_dashboard():
         match=match,
         players=players,
         matches=matches,
+        future_matches=future_matches,
+        past_matches=past_matches,
         match_players=match_players,
+        phase=match_phase(match),
+        summary_counts=match_summary_counts(match_players),
+        confirmed_count=confirmed_count(match["id"]) if match else 0,
         pending_players=pending_players,
         rejected_players=rejected_players,
         reset_requests=reset_requests,
@@ -1621,10 +1725,10 @@ def player_logout():
 @require_player
 def player_dashboard():
     player = current_player()
-    match = latest_match()
+    match = featured_match()
     if match:
         maybe_auto_generate(match)
-        match = latest_match()
+        match = featured_match()
     my_matches = query(
         """
         select m.*, mp.response, mp.team, mp.goals as match_goals, mp.assists as match_assists,
@@ -1647,6 +1751,7 @@ def player_dashboard():
         player=player,
         matches=my_matches,
         match=match,
+        phase=match_phase(match),
         waitlist_positions=my_waitlist_positions,
         foot_labels=FOOT_LABELS,
         notice=request.args.get("notice", ""),
@@ -2087,6 +2192,7 @@ def match_detail(match_id):
         match_comments=comments_for_matches([match]).get(match_id, []),
         auto_generated=auto_generated,
         match_day=match_day(match),
+        phase=match_phase(match),
         motto=goliardic_motto(match),
         confirmed_count=confirmed_count(match_id),
         mascots=MASCOTS,

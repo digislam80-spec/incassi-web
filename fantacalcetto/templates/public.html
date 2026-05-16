@@ -10,7 +10,7 @@
   <div class="match-strip">
     <span>Prossima partita</span>
     <strong>{{ match.title }}</strong>
-    <small>{{ match.match_date.replace("T", " ") }} · {{ match.location }}</small>
+    <small>{{ match.match_date|datetime_it }} · {{ match.location }}</small>
     <small>{{ confirmed_count }}/{{ match.player_limit }} confermati · {{ match.status|status_label }}</small>
   </div>
   {% endif %}
@@ -90,7 +90,7 @@
     {% for m in matches %}
       <div class="mini-card">
         <strong>{{ m.title }}</strong>
-        <span>{{ m.match_date.replace("T", " ") }}</span>
+        <span>{{ m.match_date|datetime_it }}</span>
         <small>{{ m.location }} · {{ m.status|status_label }}</small>
       </div>
     {% endfor %}

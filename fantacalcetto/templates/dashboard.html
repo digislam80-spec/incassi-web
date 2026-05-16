@@ -1,17 +1,40 @@
 {% extends "base.html" %}
 {% block content %}
+<section class="mobile-focus-card tone-{{ phase.tone }}">
+  <span class="status-kicker">Cabina Mister · {{ phase.label }}</span>
+  {% if match %}
+    <h1>{{ match.title }}</h1>
+    <p>{{ match.match_date|datetime_it }} · {{ match.location }}</p>
+    <small>{{ phase.hint }}</small>
+    <div class="match-quickbar compact">
+      <div><strong>{{ summary_counts.confirmed }}</strong><small>confermati</small></div>
+      <div><strong>{{ summary_counts.waitlist }}</strong><small>attesa</small></div>
+      <div><strong>{{ match.player_limit }}</strong><small>quota</small></div>
+    </div>
+    <div class="action-stack">
+      <a class="button primary big" href="{{ url_for('match_detail', match_id=match.id) }}">Gestisci partita</a>
+      <a class="button big" href="#new-match">Nuova partita</a>
+      <a class="button ghost big" href="#roster">Rosa</a>
+    </div>
+  {% else %}
+    <h1>Nessuna partita</h1>
+    <p>Crea la prossima gara e manda tutti nello spogliatoio digitale.</p>
+    <a class="button primary big" href="#new-match">Crea partita</a>
+  {% endif %}
+</section>
+
 <section class="hero">
   <div>
-    <p class="eyebrow">Versione MVP</p>
-    <h1>Convoca, bilancia, gioca, aggiorna la leggenda.</h1>
-    <p class="lede">{{ motto }} Il mister conferma la partita quando raggiunge quota; nel giorno gara il mister automatico prepara le squadre solo sulla partita confermata. Powered by Digislam Print Lab.</p>
+    <p class="eyebrow">Admin</p>
+    <h1>Oggi fai solo quello che serve.</h1>
+    <p class="lede">{{ motto }} Le funzioni restano tutte, ma la priorità è la partita da gestire adesso.</p>
   </div>
   {% if match %}
   <div class="match-strip">
     <span>Prossima partita</span>
     <strong>{{ match.title }}</strong>
-    <small>{{ match.match_date.replace("T", " ") }} · {{ match.location }}</small>
-    <small>{{ match.status|status_label }}</small>
+    <small>{{ match.match_date|datetime_it }} · {{ match.location }}</small>
+    <small>{{ phase.label }}</small>
     <a class="button primary" href="{{ url_for('match_detail', match_id=match.id) }}">Apri cabina di regia</a>
   </div>
   {% endif %}
@@ -27,6 +50,16 @@
     <h2>Mister Automatico attivo</h2>
     <p>Link unico spogliatoio: <strong>{{ request.host_url.rstrip('/') }}{{ url_for('player_login') }}</strong>. Chi non ha account si registra, chi è approvato entra e conferma. A parità di posti vale l'ordine di conferma. Sponsor ufficiale: <a href="https://digislam.shop" target="_blank" rel="noopener">Digislam Print Lab</a>.</p>
   </div>
+</section>
+
+<section class="admin-hub-grid">
+  <a class="hub-tile" href="{% if match %}{{ url_for('match_detail', match_id=match.id) }}{% else %}#new-match{% endif %}">
+    <strong>Partita da gestire</strong>
+    <span>{% if match %}{{ phase.label }} · {{ match.match_date|datetime_it(True) }}{% else %}Crea la prima partita{% endif %}</span>
+  </a>
+  <a class="hub-tile" href="#new-match"><strong>Nuova partita</strong><span>Creazione guidata, separata dalle modifiche.</span></a>
+  <a class="hub-tile" href="#roster"><strong>Rosa</strong><span>Approva, modifica, rimuovi calciatori.</span></a>
+  <a class="hub-tile" href="#history"><strong>Archivio</strong><span>Future, da completare e concluse.</span></a>
 </section>
 
 <section class="grid two">
@@ -156,7 +189,7 @@
 {% endif %}
 
 <section class="grid two">
-  <div class="panel">
+  <div class="panel" id="new-match">
     <div class="panel-head">
       <h2>Crea Partita</h2>
       <span class="pill">Admin</span>
@@ -210,7 +243,7 @@
   </div>
 </section>
 
-<section class="panel">
+<section class="panel" id="roster">
   <div class="panel-head">
     <h2>Approvati e Arruolabili</h2>
     <span class="pill">{{ players|length }} approvati</span>
@@ -286,7 +319,7 @@
 </section>
 
 {% if rejected_players %}
-<section class="panel">
+<section class="panel" id="history">
   <div class="panel-head">
     <h2>Non Attivi</h2>
     <span class="pill">{{ rejected_players|length }}</span>
@@ -310,7 +343,7 @@
     {% for m in matches %}
       <a class="mini-card" href="{{ url_for('match_detail', match_id=m.id) }}">
         <strong>{{ m.title }}</strong>
-        <span>{{ m.match_date.replace("T", " ") }}</span>
+        <span>{{ m.match_date|datetime_it }}</span>
         <small>{{ m.location }} · {{ m.status|status_label }}</small>
       </a>
     {% endfor %}

@@ -76,6 +76,31 @@ td em, .roster-row em {
 }
 nav { display: flex; gap: 12px; font-weight: 700; color: var(--muted); }
 nav a, .fun-strip a, .site-footer a { color: var(--green); }
+.bottom-nav {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  z-index: 20;
+  display: none;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 16px 34px rgba(25,33,31,.18);
+  backdrop-filter: blur(14px);
+}
+.bottom-nav a {
+  display: grid;
+  place-items: center;
+  min-height: 42px;
+  border-radius: 10px;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 950;
+}
 .nav-form { margin: 0; }
 .nav-form button {
   border: 0;
@@ -398,6 +423,88 @@ h2 { margin: 0; font-size: 21px; }
 }
 .match-quickbar strong { display: block; font-size: 28px; }
 .match-quickbar small { color: var(--muted); font-weight: 900; }
+.match-quickbar.compact { grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 14px 0 0; }
+
+.app-entry {
+  display: grid;
+  min-height: calc(100vh - 210px);
+  place-items: center;
+}
+.entry-card {
+  width: min(520px, 100%);
+  padding: clamp(22px, 5vw, 38px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.entry-card h1 { color: var(--ink); font-size: clamp(38px, 8vw, 62px); }
+.entry-card .lede { color: var(--muted); }
+.entry-actions,
+.action-stack {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+.action-stack form { margin: 0; }
+.action-stack .button { width: 100%; }
+.match-status-card,
+.mobile-focus-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcf9;
+}
+.match-status-card {
+  display: grid;
+  gap: 4px;
+  margin: 18px 0;
+  padding: 14px;
+}
+.match-status-card span,
+.status-kicker {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.match-status-card strong { font-size: 18px; }
+.mobile-focus-card {
+  display: grid;
+  gap: 8px;
+  padding: clamp(18px, 5vw, 26px);
+  box-shadow: 0 12px 34px rgba(25,33,31,.08);
+}
+.mobile-focus-card h1 {
+  color: var(--ink);
+  font-size: clamp(32px, 8vw, 50px);
+}
+.mobile-focus-card p { margin: 0; color: var(--muted); font-weight: 900; }
+.mobile-focus-card small { color: var(--muted); font-weight: 800; }
+.tone-good, .tone-done { border-color: rgba(20,131,95,.32); background: #f0faf4; }
+.tone-warning { border-color: rgba(215,177,59,.45); background: #fff8df; }
+.tone-danger { border-color: rgba(215,81,66,.35); background: #fff0ed; }
+.tone-info { border-color: rgba(37,95,153,.24); background: #f1f7fc; }
+.admin-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+.hub-tile {
+  display: grid;
+  gap: 6px;
+  min-height: 112px;
+  align-content: center;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 8px 22px rgba(25,33,31,.06);
+}
+.hub-tile strong { font-size: 18px; }
+.hub-tile span { color: var(--muted); font-weight: 800; line-height: 1.25; }
 
 .grid { display: grid; gap: 18px; margin-top: 18px; }
 .grid.two, .teams { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1448,8 +1555,16 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
 
 @media (max-width: 820px) {
   .hero, .match-header, .fun-strip, .grid.two, .teams { grid-template-columns: 1fr; }
-  .topbar { align-items: flex-start; gap: 12px; flex-direction: column; }
-  .form, .roster-row, .stat-row, .quick-pagella-row, .scoreline, .stat-cards, .admin-actions, .admin-player-stats, .league-card, .league-metrics, .match-quickbar, .notification-grid, .award-row, .data-actions, .password-request-row, .password-reset-form, .team-name-grid, .team-editor-row, .comment-form, .help-grid { grid-template-columns: 1fr; }
+  body { padding-bottom: 82px; }
+  .topbar { align-items: center; gap: 8px; flex-direction: row; }
+  .topbar nav { display: none; }
+  .bottom-nav { display: grid; }
+  .page { width: min(100% - 20px, 1180px); margin-top: 14px; }
+  .hero, .match-header { min-height: 0; padding: 20px; }
+  .site-footer { padding-bottom: 92px; }
+  .form, .roster-row, .stat-row, .quick-pagella-row, .scoreline, .stat-cards, .admin-actions, .admin-player-stats, .league-card, .league-metrics, .match-quickbar, .notification-grid, .award-row, .data-actions, .password-request-row, .password-reset-form, .team-name-grid, .team-editor-row, .comment-form, .help-grid, .admin-hub-grid { grid-template-columns: 1fr; }
+  .admin-hub-grid { gap: 8px; }
+  .hub-tile { min-height: 82px; }
   .admin-player-list { max-height: none; padding-right: 0; }
   .admin-player-card summary {
     grid-template-columns: minmax(0, 1fr) auto auto 28px;

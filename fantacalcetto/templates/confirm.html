@@ -7,7 +7,7 @@
   {% if player.nickname %}
     <p class="player-aka">Alias da spogliatoio: <strong>{{ player.nickname }}</strong></p>
   {% endif %}
-  <p class="lede">{{ match.title }} · {{ match.match_date.replace("T", " ") }} · {{ match.location }}</p>
+  <p class="lede">{{ match.title }} · {{ match.match_date|datetime_it }} · {{ match.location }}</p>
   <div class="status-box">
     Stato attuale: <strong>{{ relation.response|response_label }}</strong>
   </div>

@@ -2,13 +2,13 @@
 {% block content %}
 <section class="match-header">
   <div>
-    <p class="eyebrow">Cabina di regia</p>
+    <p class="eyebrow">Cabina di regia · {{ phase.label }}</p>
     <h1>{{ match.title }}</h1>
-    <p class="lede">{{ match.match_date.replace("T", " ") }} · {{ match.location }} · posti {{ match.player_limit }}. {{ motto }}</p>
+    <p class="lede">{{ match.match_date|datetime_it }} · {{ match.location }} · posti {{ match.player_limit }}. {{ phase.hint }}</p>
   </div>
   <div class="match-side">
     <img class="brand-illustration" src="{{ url_for('static', filename='favicon.png') }}" alt="FantaCalcetto Digislam">
-    <p>{{ match.status|status_label }}</p>
+    <p>{{ phase.label }}</p>
   </div>
   <form method="post" action="{{ url_for('generate_teams', match_id=match.id) }}">
     <button class="button primary big" type="submit">Genera squadre</button>
@@ -123,7 +123,7 @@
   <textarea id="group-message" readonly rows="10">Convocazione ufficiale FantaCalcetto
 
 {{ match.title }}
-{{ match.match_date.replace("T", " ") }} - {{ match.location }}
+{{ match.match_date|datetime_it }} - {{ match.location }}
 
 Per giocare entra nel tuo account e premi Confermo:
 {{ request.host_url.rstrip('/') }}{{ url_for('player_login') }}
@@ -141,7 +141,7 @@ https://digislam.shop</textarea>
   <div class="notification-grid">
     <label>Partita confermata
       <textarea id="confirm-message" readonly rows="7">Partita confermata: {{ match.title }}
-{{ match.match_date.replace("T", " ") }} - {{ match.location }}
+{{ match.match_date|datetime_it }} - {{ match.location }}
 
 Quota raggiunta: {{ summary_counts.confirmed }}/{{ match.player_limit }}.
 Controllate sempre la scheda evento su FantaCalcetto.</textarea>

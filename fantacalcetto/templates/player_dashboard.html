@@ -1,5 +1,35 @@
 {% extends "base.html" %}
 {% block content %}
+{% set featured = matches[0] if matches else none %}
+<section class="mobile-focus-card tone-{{ phase.tone }}">
+  <span class="status-kicker">{{ phase.label }}</span>
+  {% if featured %}
+    <h1>{{ featured.title }}</h1>
+    <p>{{ featured.match_date|datetime_it }} · {{ featured.location }}</p>
+    <small>{{ phase.hint }}</small>
+    <div class="action-stack">
+      {% if player.account_status == "approved" and featured.status not in ["cancelled", "closed"] %}
+        {% if featured.response in ["confirmed", "present"] %}
+          <button class="button primary confirmed-button big" type="button" disabled>Confermato</button>
+          <form method="post" action="{{ url_for('player_cancel', match_id=featured.id) }}">
+            <button class="button ghost big" type="submit">Disdico</button>
+          </form>
+        {% elif featured.response == "waitlist" %}
+          <button class="button waitlist-button big" type="button" disabled>In lista d'attesa</button>
+        {% else %}
+          <form method="post" action="{{ url_for('player_confirm', match_id=featured.id) }}">
+            <button class="button primary big" type="submit">Confermo che gioco</button>
+          </form>
+        {% endif %}
+      {% endif %}
+      <a class="button big" href="{{ url_for('player_match_calendar', match_id=featured.id) }}">Aggiungi al calendario</a>
+    </div>
+  {% else %}
+    <h1>Nessuna partita</h1>
+    <p>Appena il mister crea un evento, lo trovi qui.</p>
+  {% endif %}
+</section>
+
 <section class="hero profile-hero">
   <div>
     <p class="eyebrow">Profilo calciatore</p>
@@ -65,7 +95,7 @@
   </div>
 </dialog>
 
-<div class="notice soft">Disclaimer da spogliatoio: ogni calciatore è tenuto a controllare la propria scheda evento. Orario, campo, conferma ufficiale o annullamento valgono sempre qui dentro.</div>
+<div class="notice soft">Controlla sempre questa scheda: orario, campo, conferma ufficiale o annullamento valgono qui dentro.</div>
 
 {% if notice %}
   <div class="notice">{{ notice }}</div>
@@ -188,7 +218,7 @@
     {% for m in matches %}
       <div class="mini-card">
         <a class="event-title" href="{{ url_for('player_match_calendar', match_id=m.id) }}"><strong>{{ m.title }}</strong></a>
-        <span>{{ m.match_date.replace("T", " ") }} · {{ m.location }}</span>
+        <span>{{ m.match_date|datetime_it }} · {{ m.location }}</span>
         <small>{{ m.status|status_label }}</small>
         <small>Stato: {{ (m.response or "non invitato")|response_label }}{% if m.response == "waitlist" and waitlist_positions.get(m.id) %} · posizione {{ waitlist_positions.get(m.id) }}{% elif m.responded_at %} · ordine conferma registrato{% endif %}{% if m.penalty_points %} · penalità {{ m.penalty_points }}{% endif %}</small>
         {% if m.response == "waitlist" %}
