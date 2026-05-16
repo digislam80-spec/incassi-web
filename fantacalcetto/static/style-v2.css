@@ -750,6 +750,29 @@ h2 { margin: 0; font-size: 21px; }
   display: flex;
   flex-direction: column;
 }
+.player-home-flow[data-active-section] > [data-app-section] {
+  display: none !important;
+}
+.player-home-flow[data-active-section="profilo"] > [data-app-section~="profilo"],
+.player-home-flow[data-active-section="partita"] > [data-app-section~="partita"],
+.player-home-flow[data-active-section="storico"] > [data-app-section~="storico"],
+.player-home-flow[data-active-section="legagram"] > [data-app-section~="legagram"],
+.player-home-flow[data-active-section="biglietti"] > [data-app-section~="biglietti"] {
+  display: revert !important;
+}
+.admin-dashboard-flow[data-active-admin-section] > [data-admin-section] {
+  display: none !important;
+}
+.admin-dashboard-flow[data-active-admin-section="develop"] > [data-admin-section~="develop"],
+.admin-dashboard-flow[data-active-admin-section="admin-partita"] > [data-admin-section~="admin-partita"],
+.admin-dashboard-flow[data-active-admin-section="new-match"] > [data-admin-section~="new-match"],
+.admin-dashboard-flow[data-active-admin-section="approvals"] > [data-admin-section~="approvals"],
+.admin-dashboard-flow[data-active-admin-section="history"] > [data-admin-section~="history"],
+.admin-dashboard-flow[data-active-admin-section="roster"] > [data-admin-section~="roster"],
+.admin-dashboard-flow[data-active-admin-section="mercato"] > [data-admin-section~="mercato"],
+.admin-dashboard-flow[data-active-admin-section="settings"] > [data-admin-section~="settings"] {
+  display: revert !important;
+}
 .player-home-flow > .profile-hero { order: 1; }
 .player-home-flow > .player-section-nav { order: 2; }
 .player-home-flow > .notice,
@@ -787,6 +810,12 @@ h2 { margin: 0; font-size: 21px; }
   color: var(--green);
   background: linear-gradient(180deg, #fbfdf7, #eef8ef);
   font-weight: 1000;
+}
+.player-section-nav a.active,
+.bottom-nav a.active {
+  color: #241b08;
+  background: linear-gradient(135deg, #fff3a6, #f2c94c);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.45);
 }
 .player-section-nav a:active,
 .admin-section-nav a:active,
@@ -975,6 +1004,23 @@ h2 { margin: 0; font-size: 21px; }
   overflow: hidden;
   animation: softPulse 4.8s ease-in-out infinite;
 }
+.tv-match {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(216,242,95,.16), transparent 42%),
+    linear-gradient(135deg, rgba(3,18,36,.98), rgba(8,63,89,.94) 44%, rgba(8,31,24,.98)),
+    repeating-linear-gradient(90deg, #1e7a4d 0 28px, #207f51 28px 56px);
+}
+.tv-match::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 12px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--lime), var(--yellow), transparent);
+  opacity: .80;
+}
 @keyframes softPulse {
   0%, 100% { box-shadow: var(--shadow); }
   50% { box-shadow: 0 0 34px rgba(216,242,95,.24), var(--shadow); }
@@ -1162,6 +1208,43 @@ h2 { margin: 0; font-size: 21px; }
   gap: 10px;
   margin-top: 18px;
 }
+.broadcast-strip {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+.broadcast-strip article {
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,.20);
+  border-radius: 14px;
+  color: white;
+  background: rgba(255,255,255,.12);
+  backdrop-filter: blur(8px);
+}
+.broadcast-strip small {
+  display: block;
+  color: var(--lime);
+  font-size: 11px;
+  font-weight: 1000;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.broadcast-strip strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 18px;
+  line-height: 1.12;
+}
+.broadcast-strip span {
+  display: block;
+  margin-top: 5px;
+  color: rgba(255,255,255,.76);
+  font-size: 13px;
+  font-weight: 850;
+}
 .locker-live {
   padding: 14px;
   border: 1px solid rgba(255,255,255,.18);
@@ -1199,6 +1282,86 @@ h2 { margin: 0; font-size: 21px; }
   border-radius: 12px;
   background: white;
   box-shadow: 0 12px 34px rgba(12,27,22,.08);
+}
+.legagram-view {
+  padding-top: 0;
+  overflow: hidden;
+}
+.legagram-cover {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  margin: calc(clamp(18px, 4vw, 26px) * -1) calc(clamp(18px, 4vw, 26px) * -1) 18px;
+  padding: 108px clamp(16px, 4vw, 26px) 18px;
+  color: white;
+  background:
+    linear-gradient(180deg, rgba(4,22,17,0) 0%, rgba(4,22,17,.92) 74%),
+    url("/static/generated/hero-cartoon.jpg") center/cover;
+}
+.legagram-cover-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(3,18,36,.75), rgba(18,102,74,.36)),
+    radial-gradient(circle at 92% 16%, rgba(242,201,76,.28), transparent 34%);
+}
+.legagram-profile-mini,
+.legagram-stats {
+  position: relative;
+  z-index: 1;
+}
+.legagram-profile-mini {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+.legagram-profile-mini img {
+  width: 78px;
+  height: 78px;
+  object-fit: contain;
+  border: 3px solid rgba(255,255,255,.86);
+  border-radius: 22px;
+  background: linear-gradient(135deg, #fff3a6, #f2c94c);
+  filter: drop-shadow(0 14px 12px rgba(0,0,0,.28));
+}
+.legagram-profile-mini small {
+  color: var(--lime);
+  font-size: 11px;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+.legagram-profile-mini strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: clamp(28px, 7vw, 44px);
+  line-height: .96;
+}
+.legagram-profile-mini span {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255,255,255,.78);
+  font-weight: 850;
+}
+.legagram-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.legagram-stats span {
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,.20);
+  border-radius: 12px;
+  background: rgba(255,255,255,.12);
+}
+.legagram-stats b {
+  display: block;
+  font-size: 22px;
+}
+.legagram-stats small {
+  color: rgba(255,255,255,.72);
+  font-weight: 900;
+  text-transform: uppercase;
 }
 .market-breaking {
   display: grid;
@@ -1287,6 +1450,18 @@ h2 { margin: 0; font-size: 21px; }
   align-items: start;
 }
 .post-card header strong { display: block; line-height: 1.1; }
+.verified-dot {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  border-radius: 50%;
+  color: white;
+  background: #1d9bf0;
+  font-size: 12px;
+  line-height: 1;
+}
 .post-card header small { color: var(--muted); font-weight: 850; }
 .post-card p { margin: 8px 0 0; font-weight: 850; line-height: 1.35; }
 .reactions {

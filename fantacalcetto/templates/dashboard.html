@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="mobile-focus-card tone-{{ phase.tone }}" id="admin-partita">
+<div class="admin-dashboard-flow" data-active-admin-section="{% if is_develop %}develop{% else %}admin-partita{% endif %}">
+<section class="mobile-focus-card tone-{{ phase.tone }}" id="admin-partita" data-admin-section="admin-partita">
   <span class="status-kicker">{% if is_develop %}Cabina Develop{% else %}Cabina Mister{% endif %} · {{ current_league.name if current_league else "Lega Bombonera" }} · {{ phase.label }}</span>
   {% if match %}
     <h1>{{ match.title }}</h1>
@@ -51,7 +52,7 @@
 {% endif %}
 
 {% if is_develop %}
-<section class="develop-flow-panel">
+<section class="develop-flow-panel" data-admin-section="develop">
   <div class="flow-panel-head">
     <p class="eyebrow">Percorso Develop</p>
     <h2>Gestisci piattaforma, leghe e ruoli</h2>
@@ -84,7 +85,7 @@
 </section>
 {% endif %}
 
-<section class="mister-flow-panel">
+<section class="mister-flow-panel" data-admin-section="admin-partita">
   <div class="flow-panel-head">
     <p class="eyebrow">{% if is_develop %}Percorso Mister della lega{% else %}Percorso Mister{% endif %}</p>
     <h2>Organizza la partita senza perderti</h2>
@@ -117,7 +118,7 @@
 </section>
 
 {% if is_develop %}
-<section class="panel develop-panel" id="develop">
+<section class="panel develop-panel" id="develop" data-admin-section="develop">
   <div class="panel-head">
     <h2>Develop · Leghe</h2>
     <span class="pill">Controllo totale</span>
@@ -176,7 +177,7 @@
 </section>
 {% endif %}
 
-<section class="admin-hub-grid">
+<section class="admin-hub-grid" data-admin-section="admin-partita">
   <a class="hub-tile" href="{% if match %}{{ url_for('match_detail', match_id=match.id) }}{% else %}#new-match{% endif %}">
     <strong>Partita da gestire</strong>
     <span>{% if match %}{{ phase.label }} · {{ match.match_date|datetime_it(True) }}{% else %}Crea la prima partita{% endif %}</span>
@@ -191,7 +192,7 @@
   <a class="hub-tile" href="#settings"><strong>News e strumenti</strong><span>Cronache, link e cose leggere. Backup solo Develop.</span></a>
 </section>
 
-<section class="panel" id="new-match">
+<section class="panel" id="new-match" data-admin-section="new-match">
   <div class="panel-head">
     <h2>Nuova partita</h2>
     <span class="pill">Solo creazione</span>
@@ -207,7 +208,7 @@
 </section>
 
 {% if is_develop %}
-<section class="panel" id="approvals">
+<section class="panel" id="approvals" data-admin-section="approvals">
   <div class="panel-head">
     <h2>Approvazioni e accessi</h2>
     <span class="pill">{{ pending_players|length }} iscrizioni</span>
@@ -288,7 +289,7 @@
 </section>
 {% endif %}
 
-<section class="panel" id="history">
+<section class="panel" id="history" data-admin-section="history">
   <div class="panel-head">
     <h2>Partite e storico</h2>
     <span class="pill">{{ future_matches|length }} future · {{ past_matches|length }} storiche</span>
@@ -382,7 +383,7 @@
 </details>
 {% endif %}
 
-<section class="panel" id="mercato">
+<section class="panel" id="mercato" data-admin-section="mercato">
   <div class="panel-head">
     <h2>SkySpogliatoio Mercato</h2>
     <span class="pill">{{ transfer_requests|length }} in attesa</span>
@@ -409,7 +410,7 @@
   </datalist>
 </section>
 
-<section class="panel" id="roster">
+<section class="panel" id="roster" data-admin-section="roster">
   <div class="panel-head">
     <h2>{% if is_develop %}Profili e ruoli piattaforma{% else %}Approvati e Arruolabili{% endif %}</h2>
     <span class="pill">{{ players|length }} {% if is_develop %}profili{% else %}approvati{% endif %}</span>
@@ -542,7 +543,7 @@
 </section>
 
 {% if rejected_players %}
-<section class="panel">
+<section class="panel" data-admin-section="roster">
   <div class="panel-head">
     <h2>Non Attivi</h2>
     <span class="pill">{{ rejected_players|length }}</span>
@@ -558,7 +559,7 @@
 </section>
 {% endif %}
 
-<details class="panel admin-accordion" id="settings">
+<details class="panel admin-accordion" id="settings" data-admin-section="settings" open>
   <summary>
     <strong>News e strumenti leggeri</strong>
     <span>{% if is_develop %}Il Develop controlla piattaforma, leghe, backup e ruoli.{% else %}Il Mister gestisce la partita. Backup, import e reset restano al Develop.{% endif %}</span>
@@ -608,4 +609,23 @@
     </section>
   </div>
 </details>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const flow = document.querySelector(".admin-dashboard-flow");
+    const validSections = new Set(["develop", "admin-partita", "new-match", "approvals", "history", "roster", "mercato", "settings"]);
+    const setAdminSection = () => {
+      const fallback = flow?.dataset.activeAdminSection || "admin-partita";
+      const requested = (window.location.hash || "#" + fallback).replace("#", "");
+      const section = validSections.has(requested) ? requested : fallback;
+      if (flow) flow.dataset.activeAdminSection = section;
+      document.querySelectorAll(".admin-section-nav a, .bottom-nav a").forEach((link) => {
+        const href = link.getAttribute("href") || "";
+        link.classList.toggle("active", href.endsWith("#" + section) || (section === "admin-partita" && href.endsWith("/admin")));
+      });
+    };
+    window.addEventListener("hashchange", setAdminSection);
+    setAdminSection();
+  });
+</script>
 {% endblock %}

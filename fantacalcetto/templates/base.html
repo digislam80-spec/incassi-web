@@ -56,7 +56,11 @@
     <nav class="bottom-nav">
       <a href="{{ url_for('player_dashboard') }}#profilo"><span>👤</span><b>Profilo</b></a>
       <a href="{{ url_for('player_dashboard') }}#partita"><span>🏟️</span><b>Partita</b></a>
-      <a href="{{ url_for('player_dashboard') }}#storico"><span>📚</span><b>Storico</b></a>
+      {% if current_player.account_type == "supporter" %}
+        <a href="{{ url_for('player_dashboard') }}#biglietti"><span>🎟️</span><b>Biglietti</b></a>
+      {% else %}
+        <a href="{{ url_for('player_dashboard') }}#storico"><span>📚</span><b>Storico</b></a>
+      {% endif %}
       <a href="{{ url_for('player_dashboard') }}#legagram"><span>💬</span><b>LegaGram</b></a>
     </nav>
   {% elif is_admin %}

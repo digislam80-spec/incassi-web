@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 {% set featured = matches[0] if matches else none %}
-<div class="player-home-flow">
-<section class="next-match mockup-next-match tone-{{ phase.tone }}" id="partita">
+<div class="player-home-flow" data-active-section="{% if request.args.get('preview') == 'supporter' %}legagram{% else %}profilo{% endif %}">
+<section class="next-match mockup-next-match tv-match tone-{{ phase.tone }}" id="partita" data-app-section="partita">
   {% if featured %}
     <div class="match-head">
       <div>
@@ -45,6 +45,19 @@
         <small>Hype partita</small>
         <div class="meter-track"><div class="meter-fill"></div></div>
         <strong>Clima da Champions, tecnica da venerdì sera.</strong>
+      </article>
+    </div>
+
+    <div class="broadcast-strip">
+      <article>
+        <small>Studio FantaCalcetto</small>
+        <strong>{% if featured.status in ["teams", "teams_auto"] %}Formazioni ufficiali in onda{% else %}Probabili formazioni in costruzione{% endif %}</strong>
+        <span>La regia segnala tensione alta, fiato corto e scuse sul traffico già in fase di riscaldamento.</span>
+      </article>
+      <article>
+        <small>Dato pre-gara</small>
+        <strong>{{ featured_players|length }} uomini nel tunnel</strong>
+        <span>{% if featured_players|length >= featured.player_limit %}Quota piena: panchina d'attesa in modalità Champions.{% else %}Mancano ancora conferme: la chat WhatsApp verrà interrogata.{% endif %}</span>
       </article>
     </div>
 
@@ -98,7 +111,7 @@
 </dialog>
 {% endif %}
 
-<section class="pre-match-strip">
+<section class="pre-match-strip" data-app-section="partita">
   <article class="pre-card">
     <small>Spogliatoio live</small>
     <strong>{% if featured %}{{ featured_players|length }} convocati in movimento{% else %}In attesa evento{% endif %}</strong>
@@ -116,7 +129,7 @@
   </article>
 </section>
 
-<section class="hero profile-hero" id="profilo">
+<section class="hero profile-hero" id="profilo" data-app-section="profilo">
   <div>
         <p class="eyebrow">{% if player.account_type == "supporter" %}Profilo supporter{% else %}Profilo calciatore{% endif %}</p>
     <h1>
@@ -185,7 +198,11 @@
 <nav class="player-section-nav" aria-label="Menu calciatore">
   <a href="#profilo"><span>👤</span><b>Profilo</b></a>
   <a href="#partita"><span>🏟️</span><b>Partita</b></a>
-  <a href="#storico"><span>📚</span><b>Storico</b></a>
+  {% if player.account_type == "supporter" or request.args.get("preview") == "supporter" %}
+    <a href="#biglietti"><span>🎟️</span><b>Biglietti</b></a>
+  {% else %}
+    <a href="#storico"><span>📚</span><b>Storico</b></a>
+  {% endif %}
   <a href="#legagram"><span>💬</span><b>LegaGram</b></a>
 </nav>
 
@@ -201,10 +218,10 @@
 {% endif %}
 
 {% if request.args.get("preview") == "supporter" and is_develop %}
-  <div class="notice soft">Preview supporter: stai controllando come deve respirare la zona tifosi. Non cambia il tuo ruolo reale.</div>
+  <div class="notice soft" data-app-section="profilo">Preview supporter: stai controllando come deve respirare la zona tifosi. Non cambia il tuo ruolo reale.</div>
 {% endif %}
 
-<dialog class="app-modal" id="player-help">
+<dialog class="app-modal" id="player-help" data-app-section="profilo">
   <form method="dialog">
     <button class="modal-close" aria-label="Chiudi">×</button>
   </form>
@@ -230,20 +247,20 @@
   </div>
 </dialog>
 
-<div class="notice soft">Controlla sempre questa scheda: orario, campo, conferma ufficiale o annullamento valgono qui dentro.</div>
+<div class="notice soft" data-app-section="partita">Controlla sempre questa scheda: orario, campo, conferma ufficiale o annullamento valgono qui dentro.</div>
 
 {% if notice %}
-  <div class="notice">{{ notice }}</div>
+  <div class="notice" data-app-section="profilo">{{ notice }}</div>
 {% endif %}
 
 {% if player.account_status != "approved" %}
-  <div class="notice soft">Sei già dentro come supporter: puoi guardare e commentare. Il Develop deve ancora promuoverti a calciatore arruolabile.</div>
+  <div class="notice soft" data-app-section="profilo">Sei già dentro come supporter: puoi guardare e commentare. Il Develop deve ancora promuoverti a calciatore arruolabile.</div>
 {% elif player.account_type == "supporter" %}
-  <div class="notice soft">Modalità supporter: puoi seguire partite, pagelle e LegaGram. Non entri nelle convocazioni finché non vieni promosso a calciatore.</div>
+  <div class="notice soft" data-app-section="profilo">Modalità supporter: puoi seguire partite, pagelle e LegaGram. Non entri nelle convocazioni finché non vieni promosso a calciatore.</div>
 {% endif %}
 
 {% if pending_transfers %}
-<section class="panel transfer-sign-panel">
+<section class="panel transfer-sign-panel" data-app-section="profilo">
   <div class="panel-head">
     <h2>Firma mercato richiesta</h2>
     <span class="pill">SkySpogliatoio</span>
@@ -268,10 +285,10 @@
 </section>
 {% endif %}
 
-<section class="market-panel">
+<section class="market-panel" data-app-section="legagram">
   <div class="panel-head">
-    <h2>FantaCalcetto Mercato</h2>
-    <span class="pill">SkySpogliatoio 24</span>
+    <h2>Fonti ufficiali LegaGram</h2>
+    <span class="pill">spunte blu</span>
   </div>
   <div class="market-breaking">
     <small>Breaking spogliatoio</small>
@@ -296,7 +313,7 @@
 </section>
 
 {% if featured %}
-<section class="formation-panel" id="formazioni">
+<section class="formation-panel" id="formazioni" data-app-section="partita">
   <div class="panel-head">
     <h2>{% if featured.status in ["teams", "teams_auto"] %}Formazioni ufficiali{% else %}Formazioni probabili{% endif %}</h2>
     <span class="pill">Campo tattico</span>
@@ -354,7 +371,7 @@
 </section>
 {% endif %}
 
-<section class="panel" id="profilo-stats">
+<section class="panel" id="profilo-stats" data-app-section="profilo">
   <div class="panel-head">
     <h2>Statistiche</h2>
     <a class="button ghost" href="{{ url_for('player_update_profile') }}">Modifica profilo</a>
@@ -367,7 +384,7 @@
   </div>
 </section>
 
-<section class="panel" id="storico">
+<section class="panel" id="storico" data-app-section="storico">
   <div class="panel-head">
     <h2>Le mie partite</h2>
     <span class="pill">Prossime</span>
@@ -406,7 +423,7 @@
   </div>
 </section>
 
-<section class="panel">
+<section class="panel" data-app-section="storico">
   <div class="panel-head">
     <h2>Storico partite</h2>
     <span class="pill">Già fatte</span>
@@ -434,7 +451,7 @@
   </div>
 </section>
 
-<section class="panel">
+<section class="panel" data-app-section="profilo">
   <div class="panel-head">
     <h2>Regole crescita</h2>
     <span class="pill">{{ player.power|player_title }}</span>
@@ -442,10 +459,26 @@
   <p class="muted">Confermare vale +1 score e +2 affidabilità. In partita: vittoria +3, pareggio +1, gol +2, assist +1. Se fai almeno 5 punti in una partita prendi +0.5 stella. Disdire costa score e affidabilità: sotto 24h perdi anche 0.5 stella, sotto 3h perdi 1 stella.</p>
 </section>
 
-<section class="social-feed" id="legagram">
+<section class="social-feed legagram-view" id="legagram" data-app-section="legagram">
+  <div class="legagram-cover">
+    <div class="legagram-cover-bg"></div>
+    <div class="legagram-profile-mini">
+      <img src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
+      <div>
+        <small>LegaGram</small>
+        <strong>{{ current_league.name if current_league else "Lega Bombonera" }}</strong>
+        <span>{{ player.nickname or player.name }} · feed ufficiale spogliatoio</span>
+      </div>
+    </div>
+    <div class="legagram-stats">
+      <span><b>{{ news_items|length }}</b><small>post</small></span>
+      <span><b>{{ featured_players|length if featured else 0 }}</b><small>in hype</small></span>
+      <span><b>3</b><small>fonti</small></span>
+    </div>
+  </div>
   <div class="panel-head">
-    <h2>LegaGram Bombonera</h2>
-    <span class="pill">Bacheca social</span>
+    <h2>Feed spogliatoio</h2>
+    <span class="pill">social live</span>
   </div>
   <form class="feed-composer" method="post" action="{{ url_for('add_player_chronicle') }}">
     <img src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
@@ -475,10 +508,10 @@
         <div>
           <header>
             <div>
-              <strong>{{ item.actor_name or item.title }}</strong>
-              <small>{{ item.created_at }} · Lega Bombonera</small>
+              <strong>{% if item.event_type == "mercato" %}SkySpogliatoio{% elif item.event_type == "cronaca" %}{{ item.actor_name or item.title }}{% else %}FantaCalcetto News{% endif %}<span class="verified-dot">✓</span></strong>
+              <small>{{ item.created_at }} · {{ current_league.name if current_league else "Lega Bombonera" }}</small>
             </div>
-            <small>{% if item.event_type == "mercato" %}🔁 transfer{% elif item.event_type == "cronaca" %}⚽ storia{% else %}📣 news{% endif %}</small>
+            <small>{% if item.event_type == "mercato" %}🔁 mercato{% elif item.event_type == "cronaca" %}⚽ storia{% else %}📣 ufficiale{% endif %}</small>
           </header>
           <p>{{ item.body }}</p>
           <div class="reactions"><span>❤️</span><span>😂</span><span>🔥</span><span>Commenta</span></div>
@@ -499,8 +532,8 @@
   </div>
 </section>
 
-{% if player.account_type == "supporter" and featured %}
-<section class="ticket-panel">
+{% if (player.account_type == "supporter" or request.args.get("preview") == "supporter") and featured %}
+<section class="ticket-panel" id="biglietti" data-app-section="biglietti">
   <div class="panel-head">
     <h2>Biglietto da tifoso</h2>
     <span class="pill">Tribuna virtuale</span>
@@ -516,7 +549,7 @@
         <span>Settore: {{ player.supporter_relation or "Divano Nord" }}</span>
       </div>
       <div class="match-actions ticket-actions">
-        <a class="button primary" href="{{ url_for('player_match_calendar', match_id=featured.id) }}">Parteciperò</a>
+        <a class="button primary" href="{{ url_for('player_match_calendar', match_id=featured.id) }}">Stacca biglietto</a>
         <a class="button" href="{{ url_for('player_match_calendar', match_id=featured.id) }}">Salva biglietto</a>
       </div>
     </div>
@@ -538,6 +571,22 @@
         if (target && target.showModal) target.showModal();
       });
     });
+    const flow = document.querySelector(".player-home-flow");
+    const validSections = new Set(["profilo", "partita", "storico", "legagram", "biglietti"]);
+    const setSection = () => {
+      const requested = (window.location.hash || "#profilo").replace("#", "");
+      const section = validSections.has(requested) ? requested : "profilo";
+      if (flow) flow.dataset.activeSection = section;
+      document.querySelectorAll(".player-section-nav a, .bottom-nav a").forEach((link) => {
+        const href = link.getAttribute("href") || "";
+        link.classList.toggle("active", href.endsWith("#" + section));
+      });
+      if (section === "partita" && window.location.hash !== "#partita") {
+        history.replaceState(null, "", "#partita");
+      }
+    };
+    window.addEventListener("hashchange", setSection);
+    setSection();
   });
 </script>
 {% endblock %}
