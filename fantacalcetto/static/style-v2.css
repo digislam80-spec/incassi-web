@@ -1599,6 +1599,11 @@ h2 { margin: 0; font-size: 21px; }
   box-shadow: 0 10px 16px rgba(0,0,0,.18);
 }
 .agency-mark.sky { background: linear-gradient(135deg, #172554, #d51f36); }
+.agency-mark.dev {
+  background: linear-gradient(135deg, #241b08, #f2c94c);
+  color: #fff7d1;
+  animation: verifiedGlow 2.2s ease-in-out infinite;
+}
 .agency-mark.news { background: linear-gradient(135deg, #1d9bf0, #0b3d2d); }
 .source-badge {
   display: inline-flex;
@@ -1614,6 +1619,10 @@ h2 { margin: 0; font-size: 21px; }
   vertical-align: middle;
 }
 .source-badge.sky { background: #172554; }
+.source-badge.dev {
+  color: #241b08;
+  background: linear-gradient(135deg, #fff3a6, #f2c94c);
+}
 .source-badge.news { background: #1d9bf0; }
 .source-badge.player { background: #166b4f; }
 .composer-box {
@@ -1671,6 +1680,11 @@ h2 { margin: 0; font-size: 21px; }
   background: #1d9bf0;
   font-size: 12px;
   line-height: 1;
+  animation: verifiedGlow 2.4s ease-in-out infinite;
+}
+@keyframes verifiedGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(29,155,240,.25); }
+  50% { box-shadow: 0 0 0 6px rgba(29,155,240,0); }
 }
 .post-card header small { color: var(--muted); font-weight: 850; }
 .post-card p { margin: 8px 0 0; font-weight: 850; line-height: 1.35; }
@@ -1690,6 +1704,25 @@ h2 { margin: 0; font-size: 21px; }
   color: var(--green);
   font-size: 12px;
   font-weight: 1000;
+}
+.reaction-actions form { margin: 0; }
+.reaction-actions button {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  border: 0;
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: white;
+  color: var(--green);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 1000;
+  cursor: pointer;
+}
+.reaction-actions button:hover {
+  background: #fff8d7;
+  color: #241b08;
 }
 .formation-layout {
   display: grid;

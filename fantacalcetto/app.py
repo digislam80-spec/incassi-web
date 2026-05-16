@@ -54,6 +54,16 @@ PUBLIC_DEVELOP_FALLBACK_PASSWORD = "Bombonera2026!"
 
 APP_UPDATES = [
     {
+        "title": "Fede da curva",
+        "body": "Commenti e reazioni su LegaGram aumentano il punteggio Fede. Per i supporter è orgoglio da tribuna, per i calciatori pesa anche un po' sull'overall.",
+        "tag": "LegaGram",
+    },
+    {
+        "title": "Digislam Dev Room",
+        "body": "Nasce la fonte ufficiale con spunta blu che racconta cosa cambia nell'app, senza verbali noiosi da condominio sportivo.",
+        "tag": "Develop",
+    },
+    {
         "title": "Ticker SkyCalcetto24",
         "body": "La partita ora parla come una diretta TV: news scorrevoli, countdown più chiaro e stato personale senza blocchi confusi.",
         "tag": "Partita",
@@ -506,6 +516,7 @@ def init_db():
                 mascot_name text default '',
                 power numeric(2,1) not null default 3 check(power between 1 and 5),
                 score integer not null default 0,
+                faith_score integer not null default 0,
                 goals integer not null default 0,
                 assists integer not null default 0,
                 wins integer not null default 0,
@@ -679,6 +690,7 @@ def init_db():
             "alter table players add column if not exists supporter_player_name text default ''",
             "alter table players add column if not exists supporter_relation text default ''",
             "alter table players add column if not exists permanent_team_name text default ''",
+            "alter table players add column if not exists faith_score integer not null default 0",
             "alter table matches add column if not exists league_id integer",
             "alter table matches add column if not exists result_processed integer not null default 0",
             "alter table matches add column if not exists team_a_logo text not null default 'crest-1'",
@@ -703,6 +715,7 @@ def init_db():
         )
         ensure_default_league_and_roles()
         seed_award_types()
+        seed_develop_feed()
         seed_initial_data()
         return
 
@@ -739,6 +752,7 @@ def init_db():
             mascot_name text default '',
             power numeric not null default 3 check(power between 1 and 5),
             score integer not null default 0,
+            faith_score integer not null default 0,
             goals integer not null default 0,
             assists integer not null default 0,
             wins integer not null default 0,
@@ -873,6 +887,7 @@ def init_db():
         "supporter_player_name": "alter table players add column supporter_player_name text default ''",
         "supporter_relation": "alter table players add column supporter_relation text default ''",
         "permanent_team_name": "alter table players add column permanent_team_name text default ''",
+        "faith_score": "alter table players add column faith_score integer not null default 0",
         "preferred_foot": "alter table players add column preferred_foot text not null default 'right'",
         "is_guest": "alter table players add column is_guest integer not null default 0",
     }
@@ -921,6 +936,7 @@ def init_db():
     connection.commit()
     ensure_default_league_and_roles()
     seed_award_types()
+    seed_develop_feed()
 
     mascot_state = query(
         "select sum(case when mascot != 'jolly' then 1 else 0 end) as customized from players",
@@ -1097,6 +1113,49 @@ def current_league():
 def current_league_id():
     league = current_league()
     return league["id"] if league else None
+
+
+def seed_develop_feed():
+    league = query("select id from leagues where slug = ? order by id limit 1", (DEFAULT_LEAGUE_SLUG,), one=True)
+    if not league:
+        return
+    league_id = league["id"]
+    posts = [
+        (
+            "Digislam Dev Room apre la sala VAR",
+            "Da oggi le novità dell'app arrivano anche su LegaGram: fonte ufficiale, spunta blu e zero riunioni inutili.",
+        ),
+        (
+            "Fede da curva attivata",
+            "Commenti e reazioni fanno crescere il punteggio Fede. Il supporter sale di reputazione, il calciatore ci guadagna pure un pizzico di overall.",
+        ),
+        (
+            "SkyCalcetto24 in diretta",
+            "La pagina partita ha il ticker in stile TV: countdown, news pre-gara e frasi da grande notte anche se poi si gioca alle dieci.",
+        ),
+        (
+            "Storico ripulito",
+            "Le partite passate ora aprono una scheda analisi: risultato, pagelle e premi. I commenti restano qui su LegaGram, dove possono fare danni con dignità.",
+        ),
+        (
+            "Mister con lavagna tattica",
+            "Le squadre si possono spostare graficamente: tocchi il calciatore e lo mandi dove serve. Se protesta, ci pensa SkySpogliatoio.",
+        ),
+    ]
+    actor = query(
+        "select id from players where app_role = 'develop' and coalesce(league_id, ?) = ? order by id limit 1",
+        (league_id, league_id),
+        one=True,
+    )
+    actor_id = actor["id"] if actor else None
+    for title, body in posts:
+        exists = query(
+            "select id from league_events where coalesce(league_id, ?) = ? and event_type = 'develop' and title = ? limit 1",
+            (league_id, league_id, title),
+            one=True,
+        )
+        if not exists:
+            log_league_event(title, body, "develop", actor_id, "all", league_id)
 
 
 def league_filter_sql(alias=None):
@@ -1482,11 +1541,13 @@ def overall_rating(player):
     goals = int(player["goals"] or 0)
     assists = int(player["assists"] or 0)
     wins = int(player["wins"] or 0)
+    faith = int(player["faith_score"] or 0) if "faith_score" in player.keys() else 0
     base = 35 + (power - 1) * 10
     form = min(18, score * 0.45)
     trust = (reliability - 50) * 0.18
     production = min(12, goals * 1.2 + assists * 0.8 + wins * 1.5 + matches * 0.3)
-    return max(1, min(100, round(base + form + trust + production)))
+    curva = min(6, faith * 0.10)
+    return max(1, min(100, round(base + form + trust + production + curva)))
 
 
 app.jinja_env.filters["player_title"] = player_title
@@ -2439,7 +2500,8 @@ def player_dashboard():
     for my_match in my_matches:
         if my_match["response"] == "waitlist":
             my_waitlist_positions[my_match["id"]] = waitlist_positions(my_match["id"]).get(player["id"])
-    news_items = recent_league_events(8)
+    seed_develop_feed()
+    news_items = recent_league_events(14)
     featured_players = invited_players(my_matches[0]["id"]) if my_matches else []
     pending_transfers = pending_transfer_for_player(player["id"])
     return render_template(
@@ -2608,7 +2670,32 @@ def add_event_comment(event_id):
             """,
             (event_id, player["id"], body[:400]),
         )
-    return redirect(url_for("player_dashboard", notice="Commento alla news pubblicato."))
+        execute(
+            "update players set faith_score = faith_score + 2, score = score + 1 where id = ?",
+            (player["id"],),
+        )
+    return redirect(url_for("player_dashboard", notice="Commento alla news pubblicato. +2 Fede, la curva prende nota."))
+
+
+@app.route("/league-events/<int:event_id>/react", methods=["POST"])
+@require_player
+def react_event(event_id):
+    player = current_player()
+    reaction = request.form.get("reaction", "cuore").strip()[:24]
+    event = query("select id from league_events where id = ?", (event_id,), one=True)
+    if event:
+        execute(
+            """
+            insert into league_event_comments (event_id, player_id, body)
+            values (?, ?, ?)
+            """,
+            (event_id, player["id"], f"ha reagito: {reaction}"),
+        )
+        execute(
+            "update players set faith_score = faith_score + 1 where id = ?",
+            (player["id"],),
+        )
+    return redirect(url_for("player_dashboard", notice="Reaction registrata. +1 Fede, la curva applaude."))
 
 
 @app.route("/player/chronicles", methods=["POST"])

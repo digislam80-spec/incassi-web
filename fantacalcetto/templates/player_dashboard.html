@@ -147,6 +147,7 @@
         <small>{% if player.supporter_player_name %}Tifa {{ player.supporter_player_name }}{% else %}Tifoso di lega{% endif %}</small>
         <div>
           <b>{{ player.supporter_relation or "supporter" }}</b>
+          <b>Fede {{ player.faith_score or 0 }}</b>
           <b>LegaGram</b>
           <b>Biglietti</b>
         </div>
@@ -174,7 +175,7 @@
           </div>
           <div>
             <span><b>{{ player.matches }}</b> PRE</span>
-            <span><b>{% if player.preferred_foot == "left" %}SX{% elif player.preferred_foot == "both" %}AM{% else %}DX{% endif %}</b> PIE</span>
+            <span><b>{{ player.faith_score or 0 }}</b> FED</span>
           </div>
         </div>
       </div>
@@ -448,8 +449,8 @@
     </div>
     <div class="legagram-stats">
       <span><b>{{ news_items|length }}</b><small>post</small></span>
+      <span><b>{{ player.faith_score or 0 }}</b><small>fede</small></span>
       <span><b>{{ featured_players|length if featured else 0 }}</b><small>in hype</small></span>
-      <span><b>3</b><small>fonti</small></span>
     </div>
   </div>
   <div class="panel-head">
@@ -483,6 +484,8 @@
             <img src="{{ url_for('static', filename='mascots/' ~ (player.mascot or 'jolly') ~ '.png') }}" alt="">
           {% elif item.event_type == "mercato" %}
             <span class="agency-mark sky">S24</span>
+          {% elif item.event_type == "develop" %}
+            <span class="agency-mark dev">DEV</span>
           {% else %}
             <span class="agency-mark news">FCN</span>
           {% endif %}
@@ -490,21 +493,25 @@
         <div>
           <header>
             <div>
-              <strong>{% if item.event_type == "mercato" %}SkySpogliatoio{% elif item.event_type == "cronaca" %}{{ item.actor_name or item.title }}{% else %}FantaCalcetto News{% endif %}<span class="verified-dot">✓</span><span class="source-badge {% if item.event_type == 'mercato' %}sky{% elif item.event_type == 'cronaca' %}player{% else %}news{% endif %}">{% if item.event_type == "mercato" %}SKY{% elif item.event_type == "cronaca" %}{% if is_develop %}DEV{% elif can_manage %}MISTER{% elif effective_supporter %}TIFOSO{% else %}CALCIATORE{% endif %}{% else %}NEWS{% endif %}</span></strong>
+              <strong>{% if item.event_type == "mercato" %}SkySpogliatoio{% elif item.event_type == "develop" %}Digislam Dev Room{% elif item.event_type == "cronaca" %}{{ item.actor_name or item.title }}{% else %}FantaCalcetto News{% endif %}<span class="verified-dot">✓</span><span class="source-badge {% if item.event_type == 'mercato' %}sky{% elif item.event_type == 'develop' %}dev{% elif item.event_type == 'cronaca' %}player{% else %}news{% endif %}">{% if item.event_type == "mercato" %}SKY{% elif item.event_type == "develop" %}DEVELOPER{% elif item.event_type == "cronaca" %}{% if is_develop %}DEV{% elif can_manage %}MISTER{% elif effective_supporter %}TIFOSO{% else %}CALCIATORE{% endif %}{% else %}NEWS{% endif %}</span></strong>
               <small>{{ item.created_at }} · {{ current_league.name if current_league else "Lega Bombonera" }}</small>
             </div>
-            <small>{% if item.event_type == "mercato" %}🔁 mercato{% elif item.event_type == "cronaca" %}⚽ storia{% else %}📣 ufficiale{% endif %}</small>
+            <small>{% if item.event_type == "mercato" %}🔁 mercato{% elif item.event_type == "develop" %}🛠️ update app{% elif item.event_type == "cronaca" %}⚽ storia{% else %}📣 ufficiale{% endif %}</small>
           </header>
           <p>{{ item.body }}</p>
-          <div class="reactions"><span>❤️</span><span>😂</span><span>🔥</span><span>Commenta</span></div>
+          <div class="reactions reaction-actions">
+            <form method="post" action="{{ url_for('react_event', event_id=item.id) }}"><input type="hidden" name="reaction" value="cuore"><button type="submit">❤️ +1 Fede</button></form>
+            <form method="post" action="{{ url_for('react_event', event_id=item.id) }}"><input type="hidden" name="reaction" value="risata"><button type="submit">😂 +1</button></form>
+            <form method="post" action="{{ url_for('react_event', event_id=item.id) }}"><input type="hidden" name="reaction" value="fuoco"><button type="submit">🔥 +1</button></form>
+          </div>
           <div class="comment-list">
             {% for comment in news_comments.get(item.id, []) %}
               <small><b>{{ comment.player_name or "Spogliatoio" }}</b>: {{ comment.body }}</small>
             {% endfor %}
           </div>
           <form class="comment-form" method="post" action="{{ url_for('add_event_comment', event_id=item.id) }}">
-            <input name="body" maxlength="400" placeholder="Commenta senza fare fallo da rosso">
-            <button class="button ghost" type="submit">Invia</button>
+            <input name="body" maxlength="400" placeholder="Commenta e prendi +2 Fede">
+            <button class="button ghost" type="submit">Invia +2</button>
           </form>
         </div>
       </article>
