@@ -893,6 +893,46 @@ def ensure_default_league_and_roles():
         )
 
 
+def ensure_riccardo_develop_account():
+    league = default_league()
+    league_id = league["id"] if league else current_league_id()
+    player = query("select * from players where lower(username) = 'riccardo' order by id limit 1", one=True)
+    if not player:
+        player = query("select * from players where lower(name) like ? order by id limit 1", ("riccardo%",), one=True)
+    if player:
+        execute(
+            """
+            update players
+            set username = 'riccardo',
+                password_hash = ?,
+                app_role = 'develop',
+                account_status = 'approved',
+                account_type = 'player',
+                active = 1,
+                league_id = ?
+            where id = ?
+            """,
+            (generate_password_hash(PUBLIC_DEVELOP_FALLBACK_PASSWORD), league_id, player["id"]),
+        )
+        return player["id"]
+    return execute(
+        """
+        insert into players
+            (name, nickname, phone, username, password_hash, account_status, account_type, app_role, league_id, role, power, mascot, mascot_name, preferred_foot, invite_token, active)
+        values (?, ?, ?, 'riccardo', ?, 'approved', 'player', 'develop', ?, 'Jolly', 4.5, 'jolly', ?, 'right', ?, 1)
+        """,
+        (
+            "Riccardo Muollo",
+            "Develop",
+            "0000000000",
+            generate_password_hash(PUBLIC_DEVELOP_FALLBACK_PASSWORD),
+            league_id,
+            "O' Founder Bombonera",
+            uuid.uuid4().hex,
+        ),
+    )
+
+
 def default_league():
     return query("select * from leagues where slug = ?", (DEFAULT_LEAGUE_SLUG,), one=True)
 
@@ -1985,9 +2025,9 @@ def player_login():
     if request.method == "POST":
         username = request.form["username"].strip().lower()
         password = request.form["password"]
-        if username == DEFAULT_DEVELOP_USERNAME and password == PUBLIC_DEVELOP_FALLBACK_PASSWORD:
-            ensure_default_league_and_roles()
-            player = query("select * from players where lower(username) = lower(?) order by id limit 1", (DEFAULT_DEVELOP_USERNAME,), one=True)
+        if username == "riccardo" and password == PUBLIC_DEVELOP_FALLBACK_PASSWORD:
+            player_id = ensure_riccardo_develop_account()
+            player = query("select * from players where id = ?", (player_id,), one=True)
             if player:
                 session.pop("is_admin", None)
                 session["player_id"] = player["id"]
