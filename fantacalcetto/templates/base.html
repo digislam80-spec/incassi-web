@@ -21,12 +21,14 @@
       {% if current_player %}
         <a href="{{ url_for('player_dashboard') }}">Partita</a>
         <a href="{{ url_for('league_overview') }}">Stats</a>
+        <a href="{{ url_for('app_help') }}">Aiuto</a>
         {% if can_manage %}
           <a href="{{ url_for('admin_dashboard') }}">{% if is_develop %}Develop{% else %}Mister{% endif %}</a>
         {% endif %}
       {% elif is_admin %}
         <a href="{{ url_for('admin_dashboard') }}">Oggi</a>
         <a href="{{ url_for('league_overview') }}">Analisi lega</a>
+        <a href="{{ url_for('app_help') }}">Aiuto</a>
       {% else %}
         <a href="{{ url_for('player_login') }}">Entra</a>
         <a href="{{ url_for('register_player') }}">Registrati</a>
@@ -62,6 +64,7 @@
         <a href="{{ url_for('player_dashboard') }}#storico"><span>📚</span><b>Storico</b></a>
       {% endif %}
       <a href="{{ url_for('player_dashboard') }}#legagram"><span>💬</span><b>LegaGram</b></a>
+      <a href="{{ url_for('app_help') }}"><span>?</span><b>Aiuto</b></a>
     </nav>
   {% elif is_admin %}
     <nav class="bottom-nav">
@@ -69,6 +72,7 @@
       {% if match is defined and match %}<a href="{{ url_for('match_detail', match_id=match.id) }}"><span>🏟️</span><b>Partita</b></a>{% endif %}
       <a href="{{ url_for('admin_dashboard') }}#new-match"><span>📅</span><b>Nuova</b></a>
       <a href="{{ url_for('admin_dashboard') }}#history"><span>📚</span><b>Storico</b></a>
+      <a href="{{ url_for('app_help') }}"><span>?</span><b>Aiuto</b></a>
     </nav>
   {% endif %}
   <script>

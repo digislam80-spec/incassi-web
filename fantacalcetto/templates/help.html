@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="public-card guide-card">
+  <p class="eyebrow">Aiuto FantaCalcetto</p>
+  <h1>{% if role == "develop" %}Manuale Develop{% elif role == "mister" %}Manuale Mister{% elif role == "player" %}Manuale Calciatore{% else %}Manuale Supporter{% endif %}</h1>
+  <p class="lede">
+    {% if role == "develop" %}
+      Qui trovi la cabina completa: leghe, ruoli, approvazioni, log, backup e controllo di quello che vedono Mister, calciatori e supporter.
+    {% elif role == "mister" %}
+      Qui trovi il percorso rapido per creare la partita, mandare il messaggio, aspettare quota, formare squadre e chiudere con pagelle.
+    {% elif role == "player" %}
+      Qui trovi cosa puoi fare come calciatore: profilo, convocazioni, disdette, storico, LegaGram e crescita overall.
+    {% else %}
+      Qui trovi cosa puoi fare come supporter: seguire le leghe, commentare, aumentare la Fede e chiedere una lega tua al Develop.
+    {% endif %}
+  </p>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Domande frequenti</h2>
+    <span class="pill">{{ role }}</span>
+  </div>
+  <div class="faq-layout">
+    {% if role == "develop" %}
+      <article class="faq-card"><strong>Cosa può fare il Develop?</strong><p>Può creare e modificare leghe, approvare calciatori, approvare richieste di nuove leghe, nominare Mister, spostare o degradare utenti, vedere log/statistiche e usare backup/import. È l'unico ruolo con controllo globale.</p></article>
+      <article class="faq-card"><strong>Come funziona una nuova lega richiesta da un supporter?</strong><p>Dal login o dal profilo il supporter invia nome lega e nota. Il Develop la trova in Approvazioni, può creare la lega e nominare il richiedente Mister. L'utente può restare supporter altrove e Mister solo lì.</p></article>
+      <article class="faq-card"><strong>Cosa cambia tra annullare ed eliminare una partita?</strong><p>Annullare lascia traccia nello storico e genera comunicazione su LegaGram. Eliminare cancella la partita e i suoi collegamenti: se era un errore, sparisce come se non fosse mai esistita.</p></article>
+      <article class="faq-card"><strong>Dove vedo cosa fanno gli utenti?</strong><p>Nella sezione Statistiche e log trovi accessi, richieste, modifiche, conferme, commenti e attività registrate. I numeri riepilogano leghe, calciatori, supporter, partite e movimenti.</p></article>
+      <article class="faq-card"><strong>Come controllo cosa vede un Mister?</strong><p>Usa lo switch ruolo e apri la vista Mister. La pagina parte direttamente dal percorso partita, senza mischiare la cabina Develop.</p></article>
+    {% elif role == "mister" %}
+      <article class="faq-card"><strong>Come creo una partita?</strong><p>Vai su Nuova partita, scegli titolo, data, ora, campo e quota. Dopo la creazione apri la scheda partita: lì gestisci messaggio, conferme, squadre e pagelle.</p></article>
+      <article class="faq-card"><strong>Quando formo le squadre?</strong><p>Quando raggiungi quota puoi generare le squadre. Puoi poi modificarle manualmente: da telefono tocchi un calciatore e poi la squadra, da computer puoi trascinarlo.</p></article>
+      <article class="faq-card"><strong>Se creo una partita per errore?</strong><p>Usa Elimina errore: cancella tutto e non resta traccia. Se invece la partita era vera ma non si gioca più, usa Annulla partita: resta nello storico come annullata.</p></article>
+      <article class="faq-card"><strong>Come chiudo la partita?</strong><p>Dopo la gara apri la scheda partita, inserisci risultato, voti, gol, assist e premi. Lo storico dei calciatori mostrerà analisi e pagelle senza commenti sparsi.</p></article>
+    {% elif role == "player" %}
+      <article class="faq-card"><strong>Come confermo la presenza?</strong><p>Quando c'è una partita aperta ti compare la convocazione. Confermi dal modal o dalla scheda partita. Se la quota è piena entri in lista d'attesa.</p></article>
+      <article class="faq-card"><strong>Posso disdire?</strong><p>Sì, dalla partita in programma. Prima disdici, meno perdi. A ridosso della gara perdi score, affidabilità e anche stelle: il gruppo perdona, l'algoritmo meno.</p></article>
+      <article class="faq-card"><strong>Come cresce l'overall?</strong><p>Contano stelle base, score, affidabilità, presenze, vittorie, gol, assist e anche un po' la Fede da LegaGram. Commentare e reagire aiuta la parte social.</p></article>
+      <article class="faq-card"><strong>Dove vedo le partite passate?</strong><p>Nello Storico. Clicchi la partita e trovi risultato, formazioni, pagelle e premi. I commenti stanno su LegaGram, così lo storico resta pulito.</p></article>
+      <article class="faq-card"><strong>Posso chiedere una lega mia?</strong><p>Sì, dal profilo puoi chiedere al Develop di aprire una nuova lega. Se approvata diventi Mister di quella lega e puoi continuare a giocare o supportare le altre.</p></article>
+    {% else %}
+      <article class="faq-card"><strong>Cosa può fare un supporter?</strong><p>Può seguire le leghe a cui appartiene, leggere partita e pagelle, commentare su LegaGram, reagire alle news e aumentare il punteggio Fede.</p></article>
+      <article class="faq-card"><strong>Cos'è la Fede?</strong><p>È il punteggio da curva: reaction e commenti lo fanno crescere. Serve a rendere i tifosi parte del gioco e dà un tocco social anche ai calciatori.</p></article>
+      <article class="faq-card"><strong>Posso diventare calciatore?</strong><p>Sì, lo chiedi in registrazione oppure al Develop. Quando vieni promosso, entri tra gli arruolabili della lega scelta.</p></article>
+      <article class="faq-card"><strong>Posso creare una lega?</strong><p>Sì. Dal login o dal profilo invii la richiesta con il nome della lega. Se il Develop approva, diventi Mister della nuova lega.</p></article>
+      <article class="faq-card"><strong>Perché alcune partite non appaiono?</strong><p>Se una partita viene eliminata perché creata per errore sparisce del tutto. Se viene annullata resta nello storico come evento annullato.</p></article>
+    {% endif %}
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Regolamento rapido</h2>
+    <span class="pill">spogliatoio</span>
+  </div>
+  <div class="faq-layout">
+    {% for rule in rules %}
+      <article class="faq-card"><p>{{ rule }}</p></article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

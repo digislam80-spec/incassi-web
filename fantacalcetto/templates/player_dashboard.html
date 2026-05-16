@@ -451,6 +451,22 @@
   <p class="muted">Confermare vale +1 score e +2 affidabilità. In partita: vittoria +3, pareggio +1, gol +2, assist +1. Se fai almeno 5 punti in una partita prendi +0.5 stella. Disdire costa score e affidabilità: sotto 24h perdi anche 0.5 stella, sotto 3h perdi 1 stella.</p>
 </section>
 
+<section class="panel" data-app-section="profilo">
+  <div class="panel-head">
+    <h2>Vuoi una lega tua?</h2>
+    <span class="pill">Richiesta Develop</span>
+  </div>
+  <p class="muted">Anche se sei già supporter puoi chiedere al Develop di aprire una nuova lega. Se approvata, resti supporter dove vuoi e diventi Mister solo della nuova lega.</p>
+  <form class="form" method="post" action="{{ url_for('request_new_league') }}">
+    <input type="hidden" name="username" value="{{ player.username or '' }}">
+    <input type="hidden" name="display_name" value="{{ player.name }}">
+    <input type="hidden" name="phone" value="{{ player.phone }}">
+    <label>Nome nuova lega <input name="league_name" placeholder="Es. Lega del Martedì" required></label>
+    <label>Nota al Develop <input name="note" placeholder="Scrivi perché questa competizione merita di esistere"></label>
+    <button class="button primary" type="submit">Chiedi nuova lega</button>
+  </form>
+</section>
+
 <section class="social-feed legagram-view" id="legagram" data-app-section="legagram">
   <div class="legagram-cover">
     <div class="legagram-cover-bg"></div>

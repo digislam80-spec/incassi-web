@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="admin-dashboard-flow" data-active-admin-section="{% if is_develop %}develop{% else %}admin-partita{% endif %}">
+{% set admin_view = request.args.get('view', '') %}
+<div class="admin-dashboard-flow" data-active-admin-section="{% if admin_view == 'mister' %}admin-partita{% elif is_develop %}develop{% else %}admin-partita{% endif %}">
 {% if is_develop %}
 <section class="mobile-focus-card tone-{{ phase.tone }}" data-admin-section="develop">
   <span class="status-kicker">Cabina Develop · {{ current_league.name if current_league else "Lega Bombonera" }} · {{ phase.label }}</span>
@@ -29,9 +30,9 @@
   {% if is_develop %}
     <a href="#develop"><span>★</span><b>Develop</b></a>
     <a href="#admin-partita"><span>🏟️</span><b>Partita</b></a>
+    <a href="#stats"><span>📊</span><b>Log</b></a>
     <a href="#approvals"><span>✅</span><b>Approva</b></a>
     <a href="#roster"><span>👥</span><b>Profili</b></a>
-    <a href="#settings"><span>🧰</span><b>Strumenti</b></a>
   {% else %}
     <a href="#admin-partita"><span>🏟️</span><b>Partita</b></a>
     <a href="#new-match"><span>📅</span><b>Crea</b></a>
@@ -44,9 +45,9 @@
 {% if current_player and can_manage %}
 <nav class="role-view-switch" aria-label="Cambia vista">
   <a href="{{ url_for('player_dashboard') }}"><span>⚽</span><b>Calciatore</b></a>
-  <a class="{% if not is_develop %}active{% endif %}" href="{{ url_for('admin_dashboard') }}#admin-partita"><span>🧢</span><b>Mister</b></a>
+  <a class="{% if admin_view == 'mister' or not is_develop %}active{% endif %}" href="{{ url_for('admin_dashboard') }}?view=mister#admin-partita"><span>🧢</span><b>Mister</b></a>
   {% if is_develop %}
-    <a class="active" href="{{ url_for('admin_dashboard') }}#develop"><span>★</span><b>Develop</b></a>
+    <a class="{% if admin_view != 'mister' %}active{% endif %}" href="{{ url_for('admin_dashboard') }}#develop"><span>★</span><b>Develop</b></a>
     <a href="{{ url_for('player_dashboard') }}?preview=supporter#legagram"><span>🎟️</span><b>Supporter test</b></a>
   {% endif %}
 </nav>
@@ -83,6 +84,37 @@
     <span>Backup, import, news globali e impostazioni delicate restano solo qui, lontane dal Mister.</span>
     <a class="flow-cta" href="#settings">Apri strumenti</a>
   </article>
+</section>
+{% endif %}
+
+{% if is_develop %}
+<section class="panel" id="stats" data-admin-section="stats">
+  <div class="panel-head">
+    <h2>Statistiche e log</h2>
+    <span class="pill">Develop</span>
+  </div>
+  <div class="stat-cards develop-stat-cards">
+    <div><strong>{{ develop_stats.leagues or 0 }}</strong><small>leghe attive</small></div>
+    <div><strong>{{ develop_stats.players or 0 }}</strong><small>calciatori</small></div>
+    <div><strong>{{ develop_stats.supporters or 0 }}</strong><small>supporter</small></div>
+    <div><strong>{{ develop_stats.matches or 0 }}</strong><small>partite</small></div>
+    <div><strong>{{ develop_stats.events or 0 }}</strong><small>azioni log</small></div>
+    <div><strong>{{ develop_stats.pending_leagues or 0 }}</strong><small>leghe richieste</small></div>
+  </div>
+  <div class="activity-log-list">
+    {% for item in activity_logs %}
+      <article class="mini-card activity-log-card">
+        <strong>{{ item.title }}</strong>
+        <span>{{ item.body }}</span>
+        <small>{{ item.event_type }} · {{ item.actor_name or "Sistema" }} · {{ item.created_at }}</small>
+      </article>
+    {% else %}
+      <div class="mini-card">
+        <strong>Nessun movimento</strong>
+        <span>Appena qualcuno entra, commenta, conferma o il Develop cambia qualcosa, lo vedrai qui.</span>
+      </div>
+    {% endfor %}
+  </div>
 </section>
 {% endif %}
 
@@ -632,7 +664,7 @@
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const flow = document.querySelector(".admin-dashboard-flow");
-    const validSections = new Set(["develop", "admin-partita", "new-match", "approvals", "history", "roster", "mercato", "settings"]);
+    const validSections = new Set(["develop", "admin-partita", "stats", "new-match", "approvals", "history", "roster", "mercato", "settings"]);
     const setAdminSection = () => {
       const fallback = flow?.dataset.activeAdminSection || "admin-partita";
       const requested = (window.location.hash || "#" + fallback).replace("#", "");

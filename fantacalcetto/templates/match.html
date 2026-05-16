@@ -63,6 +63,9 @@
       <form method="post" action="{{ url_for('cancel_match', match_id=match.id) }}" onsubmit="return confirm('Annullare la partita? I calciatori la vedranno come annullata.');">
         <button class="button danger" type="submit">Annulla partita</button>
       </form>
+      <form method="post" action="{{ url_for('delete_match', match_id=match.id) }}" onsubmit="return confirm('Eliminare definitivamente questa partita? Sparirà come se non fosse mai esistita.');">
+        <button class="button ghost danger" type="submit">Elimina errore</button>
+      </form>
     </div>
     {% if confirmed_count < match.player_limit %}
       <p class="muted">Per confermare servono {{ match.player_limit }} giocatori. Se siete in meno, aggiungi un esterno o abbassa la quota partita.</p>

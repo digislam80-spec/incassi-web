@@ -2110,6 +2110,20 @@ def rules():
     return render_template("rules.html", rules=RULES, match=latest_match())
 
 
+@app.route("/help")
+def app_help():
+    if not is_admin() and not current_player():
+        return redirect(url_for("player_login", next=request.path))
+    role = "supporter"
+    if is_develop():
+        role = "develop"
+    elif is_mister():
+        role = "mister"
+    elif current_player() and current_player()["account_type"] == "player":
+        role = "player"
+    return render_template("help.html", role=role, rules=RULES)
+
+
 @app.route("/player/guida")
 def player_guide():
     if not is_admin() and not current_player():
@@ -2222,6 +2236,17 @@ def admin_dashboard():
     news_items = recent_league_events(12, include_admin=True)
     news_comments = comments_for_events(news_items)
     leagues = query("select * from leagues order by active desc, name") if is_develop() else []
+    activity_logs = recent_league_events(24, include_admin=True) if is_develop() else []
+    develop_stats = {}
+    if is_develop():
+        develop_stats = {
+            "leagues": query("select count(*) as total from leagues where active = 1", one=True)["total"],
+            "players": query("select count(*) as total from players where account_status = 'approved' and account_type = 'player'", one=True)["total"],
+            "supporters": query("select count(*) as total from players where account_status = 'approved' and account_type = 'supporter'", one=True)["total"],
+            "matches": query("select count(*) as total from matches", one=True)["total"],
+            "events": query("select count(*) as total from league_events", one=True)["total"],
+            "pending_leagues": query("select count(*) as total from league_requests where status = 'pending'", one=True)["total"],
+        }
     transfer_requests = query(
         """
         select tp.*, p.name as player_name, p.nickname as player_nickname
@@ -2261,6 +2286,8 @@ def admin_dashboard():
         app_updates=APP_UPDATES,
         transfer_requests=transfer_requests,
         league_requests=league_requests,
+        activity_logs=activity_logs,
+        develop_stats=develop_stats,
         market_team_ideas=MARKET_TEAM_IDEAS,
         market_offers=MARKET_OFFERS,
         leagues=leagues,
@@ -2626,6 +2653,7 @@ def player_login():
                 session.pop("is_admin", None)
                 session.pop("active_league_id", None)
                 session["player_id"] = player["id"]
+                log_league_event("Accesso effettuato", f"{player['name']} è entrato nello spogliatoio digitale.", "login", player["id"], "admin")
                 return redirect(request.args.get("next") or url_for("player_dashboard"))
         player = query("select * from players where lower(username) = lower(?)", (username,), one=True)
         if player and player["password_hash"] and check_password_hash(player["password_hash"], password):
@@ -2635,6 +2663,7 @@ def player_login():
             session.pop("is_admin", None)
             session.pop("active_league_id", None)
             session["player_id"] = player["id"]
+            log_league_event("Accesso effettuato", f"{player['name']} è entrato nello spogliatoio digitale.", "login", player["id"], "admin")
             return redirect(request.args.get("next") or url_for("player_dashboard"))
         error = "Credenziali sbagliate. Riprova senza tunnel."
     return render_template("player_login.html", error=error, notice=request.args.get("notice", ""))
@@ -3550,9 +3579,31 @@ def reopen_match(match_id):
 @app.route("/matches/<int:match_id>/cancel", methods=["POST"])
 @require_admin
 def cancel_match(match_id):
+    match = get_match(match_id)
     execute("update matches set status = 'cancelled' where id = ?", (match_id,))
     execute("update match_players set team = null where match_id = ?", (match_id,))
+    if match:
+        log_league_event(
+            "Partita annullata",
+            f"{match['title']} è stata annullata. Resta nello storico: la scusa ufficiale entra agli atti.",
+            "match",
+            visibility="all",
+            league_id=match["league_id"],
+        )
     return redirect(url_for("match_detail", match_id=match_id))
+
+
+@app.route("/matches/<int:match_id>/delete", methods=["POST"])
+@require_admin
+def delete_match(match_id):
+    match = get_match(match_id)
+    if not match:
+        return redirect(url_for("admin_dashboard"))
+    execute("delete from match_awards where match_id = ?", (match_id,))
+    execute("delete from match_comments where match_id = ?", (match_id,))
+    execute("delete from match_players where match_id = ?", (match_id,))
+    execute("delete from matches where id = ?", (match_id,))
+    return redirect(url_for("admin_dashboard"))
 
 
 @app.route("/matches/<int:match_id>/external", methods=["POST"])
