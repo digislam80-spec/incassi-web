@@ -282,11 +282,15 @@
 {% endif %}
 
 {% if pending_transfers %}
-<section class="panel transfer-sign-panel" data-app-section="profilo">
+<dialog class="app-modal market-sign-modal" id="market-sign-modal" data-auto-open-market>
+  <form method="dialog">
+    <button class="modal-close" aria-label="Chiudi">×</button>
+  </form>
   <div class="panel-head">
-    <h2>Firma mercato richiesta</h2>
+    <h2>Firma mercato</h2>
     <span class="pill">SkySpogliatoio</span>
   </div>
+  <p class="muted">Hai una proposta ufficiale sul tavolo. Accetti, cambi squadra e finisci nelle breaking news. Rifiuti, il mercato prende nota e l'affidabilità si offende.</p>
   {% for transfer in pending_transfers %}
     <article class="mini-card transfer-offer-card">
       <strong>{{ transfer.from_team or "Svincolati di lusso" }} -> {{ transfer.to_team }}</strong>
@@ -304,7 +308,7 @@
       </div>
     </article>
   {% endfor %}
-</section>
+</dialog>
 {% endif %}
 
 <section class="market-panel" data-app-section="legagram">
@@ -639,8 +643,12 @@
 </div>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+    const marketModal = document.getElementById("market-sign-modal");
     const modal = document.getElementById("confirm-match-modal");
-    if (modal && modal.showModal && modal.dataset.autoOpenConfirm !== "done") {
+    if (marketModal && marketModal.showModal && marketModal.dataset.autoOpenMarket !== "done") {
+      marketModal.dataset.autoOpenMarket = "done";
+      setTimeout(() => marketModal.showModal(), 300);
+    } else if (modal && modal.showModal && modal.dataset.autoOpenConfirm !== "done") {
       modal.dataset.autoOpenConfirm = "done";
       setTimeout(() => modal.showModal(), 350);
     }

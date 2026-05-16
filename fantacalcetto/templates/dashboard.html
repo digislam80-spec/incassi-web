@@ -34,6 +34,7 @@
     <a href="#history"><span>📚</span><b>Storico</b></a>
     <a href="#approvals"><span>✅</span><b>Approva</b></a>
     <a href="#roster"><span>👥</span><b>Profili</b></a>
+    <a href="#mercato"><span>🔁</span><b>Mercato</b></a>
   {% else %}
     <a href="#admin-partita"><span>🏟️</span><b>Partita</b></a>
     <a href="#new-match"><span>📅</span><b>Crea</b></a>
@@ -80,6 +81,12 @@
     <strong>Ruoli e gerarchie</strong>
     <span>Dai o togli ruolo Mister, sposti di lega, degradi a supporter e correggi tutto quello che serve.</span>
     <a class="flow-cta" href="#roster">Gestisci profili</a>
+  </article>
+  <article class="flow-step {% if transfer_requests %}active{% endif %}">
+    <b>🔁</b>
+    <strong>Fantamercato</strong>
+    <span>Apri trattative, controlli firme pendenti e fai partire breaking news su LegaGram.</span>
+    <a class="flow-cta" href="#mercato">Apri mercato</a>
   </article>
   <article class="flow-step">
     <b>🧰</b>
@@ -453,7 +460,33 @@
     <h2>SkySpogliatoio Mercato</h2>
     <span class="pill">{{ transfer_requests|length }} in attesa</span>
   </div>
-  <p class="muted section-intro">Il Mister può fissare una squadra stabile al calciatore e proporre prestiti o cessioni. Il calciatore deve firmare dall'account: se rifiuta, perde affidabilità e score.</p>
+  <p class="muted section-intro">Cabina rapida per Mister e Develop: scegli il calciatore, proponi squadra e offerta, poi il calciatore firma al rientro nell'app. LegaGram pubblica la breaking news.</p>
+  <form class="form market-command-form" method="post" action="{{ url_for('propose_market_transfer') }}">
+    <label>Calciatore
+      <select name="player_id" required>
+        <option value="">Scegli chi finisce sul mercato</option>
+        {% for p in market_players %}
+          <option value="{{ p.id }}">{{ p.name }}{% if p.nickname %} · {{ p.nickname }}{% endif %} · {{ p.permanent_team_name or "Svincolato di lusso" }} · OVR {{ p|overall_rating }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Nuova squadra <input name="to_team" list="market-team-ideas" placeholder="Es. Dinamo Spritz" required></label>
+    <label>Formula
+      <select name="transfer_type">
+        <option value="loan">Prestito con diritto di sfotto'</option>
+        <option value="permanent">Titolo definitivo</option>
+      </select>
+    </label>
+    <label>Offerta rapida
+      <select name="offer_label">
+        {% for offer in market_offers %}
+          <option value="{{ offer }}">{{ offer }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Offerta manuale <input name="custom_offer" placeholder="Es. una graffa e una Coca Zero"></label>
+    <button class="button primary" type="submit">Apri trattativa e pubblica breaking</button>
+  </form>
   <div class="compact-match-list">
     {% for item in transfer_requests %}
       <article class="mini-card market-row">

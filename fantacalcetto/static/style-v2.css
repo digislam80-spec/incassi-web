@@ -956,6 +956,15 @@ h2 { margin: 0; font-size: 21px; }
   background:
     linear-gradient(135deg, rgba(255,246,190,.92), rgba(255,255,255,.98));
 }
+.market-command-form {
+  margin: 12px 0 16px;
+  padding: 14px;
+  border: 1px solid rgba(225,29,47,.18);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(242,201,76,.26), transparent 34%),
+    linear-gradient(135deg, #fff9df, #ffffff);
+}
 .transfer-sign-panel {
   border-color: rgba(15,107,79,.35);
   background:
@@ -3878,6 +3887,19 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
 }
 .confirm-modal-app {
   max-width: min(92vw, 520px);
+}
+.market-sign-modal {
+  max-width: min(92vw, 560px);
+  border-color: rgba(242,201,76,.48);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(216,242,95,.24), transparent 36%),
+    linear-gradient(135deg, #fff8d8, #ffffff 58%);
+}
+.market-sign-modal .panel-head {
+  margin: 0 0 8px;
+}
+.market-sign-modal .transfer-offer-card {
+  margin-top: 12px;
 }
 .confirm-modal-app::backdrop {
   background: rgba(5, 28, 21, .66);

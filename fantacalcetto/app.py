@@ -61,6 +61,11 @@ PUBLIC_DEVELOP_FALLBACK_PASSWORD = "Bombonera2026!"
 
 APP_UPDATES = [
     {
+        "title": "Fantamercato in cabina separata",
+        "body": "Mister e Develop hanno un menu mercato dedicato: aprono trattative rapide, il calciatore firma dal modal e LegaGram pubblica la breaking news.",
+        "tag": "Mercato",
+    },
+    {
         "title": "MVP a tempo",
         "body": "Il Mister assegna l'MVP partita: vale bonus score, finisce su LegaGram e il badge resta solo fino alla partita successiva se il campione conferma davvero.",
         "tag": "Premi",
@@ -2510,6 +2515,16 @@ def admin_dashboard():
         """,
         (league_id, league_id),
     )
+    market_players = query(
+        f"""
+        select p.*, l.name as league_name
+        from players p
+        left join leagues l on l.id = p.league_id
+        where {approved_players_sql('p')} and p.account_type = 'player' and coalesce(p.league_id, ?) = ?
+        order by p.permanent_team_name, p.power desc, p.score desc, p.name
+        """,
+        (league_id, league_id),
+    )
     league_requests = query(
         """
         select lr.*, p.name as player_name, p.username as player_username
@@ -2537,6 +2552,7 @@ def admin_dashboard():
         news_comments=news_comments,
         app_updates=APP_UPDATES,
         transfer_requests=transfer_requests,
+        market_players=market_players,
         league_requests=league_requests,
         activity_logs=activity_logs,
         develop_stats=develop_stats,
@@ -3522,6 +3538,52 @@ def propose_player_transfer(player_id):
         league_id=player["league_id"] or league_id,
     )
     return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/market/transfer", methods=["POST"])
+@require_admin
+def propose_market_transfer():
+    player_id = request.form.get("player_id", type=int)
+    if not player_id:
+        return redirect(url_for("admin_dashboard", _anchor="mercato"))
+    player = query("select * from players where id = ?", (player_id,), one=True)
+    if not player:
+        return redirect(url_for("admin_dashboard", _anchor="mercato"))
+    league_id = current_league_id()
+    if (player["league_id"] or league_id) != league_id:
+        return redirect(url_for("admin_dashboard", _anchor="mercato"))
+    transfer_type = request.form.get("transfer_type", "loan")
+    if transfer_type not in ("loan", "permanent"):
+        transfer_type = "loan"
+    to_team = request.form.get("to_team", "").strip()
+    if not to_team:
+        return redirect(url_for("admin_dashboard", _anchor="mercato"))
+    offer_label = request.form.get("custom_offer", "").strip() or request.form.get("offer_label", "").strip() or random.choice(MARKET_OFFERS)
+    from_team = (player["permanent_team_name"] if "permanent_team_name" in player.keys() else "") or "Svincolati di lusso"
+    execute(
+        """
+        insert into transfer_proposals (league_id, player_id, from_team, to_team, transfer_type, offer_label, status, created_by_player_id)
+        values (?, ?, ?, ?, ?, ?, 'pending', ?)
+        """,
+        (
+            league_id,
+            player_id,
+            from_team,
+            to_team,
+            transfer_type,
+            offer_label,
+            current_player()["id"] if current_player() else None,
+        ),
+    )
+    kind_label = "prestito" if transfer_type == "loan" else "titolo definitivo"
+    log_league_event(
+        "SkySpogliatoio Mercato",
+        f"Trattativa aperta: {player['name']} da {from_team} verso {to_team}, formula {kind_label}. Offerta ufficiale: {offer_label}. Ora serve la firma del calciatore.",
+        "mercato",
+        player_id,
+        league_id=league_id,
+    )
+    return redirect(url_for("admin_dashboard", notice="Trattativa aperta: il calciatore trovera' la firma al prossimo accesso.", _anchor="mercato"))
 
 
 @app.route("/player/transfers/<int:transfer_id>/respond", methods=["POST"])
