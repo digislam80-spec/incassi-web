@@ -558,7 +558,7 @@ function renderOverview() {
   const bestEntry = [...monthEntries].sort((a, b) => Number(b.totale || 0) - Number(a.totale || 0))[0];
   const topEntries = [...monthEntries]
     .sort((a, b) => Number(b.totale || 0) - Number(a.totale || 0))
-    .slice(0, 4);
+    .slice(0, 3);
   const topValue = Math.max(...topEntries.map((entry) => Number(entry.totale || 0)), 1);
 
   monthTotalEl.textContent = eur.format(monthTotal);
