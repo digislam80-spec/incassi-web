@@ -46,6 +46,49 @@
       {% endif %}
     </nav>
   </header>
+  {% if current_player or is_admin %}
+    {% set preview_role = request.args.get("preview", "") %}
+    {% set admin_view = request.args.get("view", "") %}
+    {% set endpoint = request.endpoint or "" %}
+    {% if current_player and endpoint in ["player_dashboard", "player_match_detail", "player_update_profile", "app_help", "league_overview"] %}
+      {% if preview_role == "supporter" or current_player.account_type == "supporter" %}
+        {% set context_icon = "🎟️" %}
+        {% set context_role = "Supporter" %}
+        {% set context_hint = "stai leggendo e commentando da tifoso" %}
+      {% else %}
+        {% set context_icon = "⚽" %}
+        {% set context_role = "Calciatore" %}
+        {% set context_hint = "stai usando profilo, partita e LegaGram da calciatore" %}
+      {% endif %}
+    {% elif is_develop and (endpoint.startswith("admin") or endpoint in ["match_detail"]) %}
+      {% if admin_view == "mister" or endpoint == "match_detail" %}
+        {% set context_icon = "🧢" %}
+        {% set context_role = "Mister sostituto" %}
+        {% set context_hint = "Develop con pieni poteri sulla lega selezionata" %}
+      {% else %}
+        {% set context_icon = "★" %}
+        {% set context_role = "Developer" %}
+        {% set context_hint = "stai gestendo leghe, ruoli, approvazioni e strumenti" %}
+      {% endif %}
+    {% elif can_manage and (endpoint.startswith("admin") or endpoint in ["match_detail"]) %}
+      {% set context_icon = "🧢" %}
+      {% set context_role = "Mister" %}
+      {% set context_hint = "stai creando o gestendo la partita della tua lega" %}
+    {% elif current_player %}
+      {% set context_icon = "⚽" %}
+      {% set context_role = "Account" %}
+      {% set context_hint = "stai usando FantaCalcetto con il tuo profilo" %}
+    {% else %}
+      {% set context_icon = "🧢" %}
+      {% set context_role = "Admin PIN" %}
+      {% set context_hint = "accesso tecnico senza profilo calciatore" %}
+    {% endif %}
+    <div class="role-context-bar">
+      <span>{{ context_icon }}</span>
+      <strong>Stai agendo da {{ context_role }}</strong>
+      <small>{{ current_league.name if current_league else "Lega Bombonera" }} · {{ context_hint }}</small>
+    </div>
+  {% endif %}
   <main class="page">
     {% block content %}{% endblock %}
   </main>
