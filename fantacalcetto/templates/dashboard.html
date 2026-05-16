@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="admin-dashboard-flow" data-active-admin-section="{% if is_develop %}develop{% else %}admin-partita{% endif %}">
-<section class="mobile-focus-card tone-{{ phase.tone }}" id="admin-partita" data-admin-section="admin-partita">
-  <span class="status-kicker">{% if is_develop %}Cabina Develop{% else %}Cabina Mister{% endif %} · {{ current_league.name if current_league else "Lega Bombonera" }} · {{ phase.label }}</span>
+{% if is_develop %}
+<section class="mobile-focus-card tone-{{ phase.tone }}" data-admin-section="develop">
+  <span class="status-kicker">Cabina Develop · {{ current_league.name if current_league else "Lega Bombonera" }} · {{ phase.label }}</span>
   {% if match %}
     <h1>{{ match.title }}</h1>
     <p>{{ match.match_date|datetime_it }} · {{ match.location }}</p>
@@ -22,6 +23,7 @@
     <a class="button primary big" href="#new-match">Crea partita</a>
   {% endif %}
 </section>
+{% endif %}
 
 <nav class="admin-section-nav" aria-label="{% if is_develop %}Menu Develop{% else %}Menu Mister{% endif %}">
   {% if is_develop %}
@@ -84,7 +86,7 @@
 </section>
 {% endif %}
 
-<section class="mister-flow-panel" data-admin-section="admin-partita">
+<section class="mister-flow-panel" id="admin-partita" data-admin-section="admin-partita">
   <div class="flow-panel-head">
     <p class="eyebrow">{% if is_develop %}Percorso Mister della lega{% else %}Percorso Mister{% endif %}</p>
     <h2>Organizza la partita senza perderti</h2>
@@ -412,7 +414,7 @@
       <details class="admin-player-card">
         <summary>
           <span class="admin-player-main">
-            <strong>{% if p.app_role == "develop" %}<span class="role-badge develop">★</span>{% elif p.app_role == "mister" %}<span class="role-badge mister">★</span>{% endif %}{{ p.name }}</strong>
+            <strong>{% if p.app_role == "develop" %}<span class="role-badge develop">DEV</span>{% elif p.app_role == "mister" %}<span class="role-badge mister">M</span>{% endif %}{{ p.name }}</strong>
             <small>{{ p.nickname or "senza soprannome" }} · {{ p.role }} · {{ p.preferred_foot|foot_label }} · {{ p.permanent_team_name or "senza squadra stabile" }}{% if is_develop %} · {{ p.league_name or "senza lega" }} · {{ p.account_type }} · {{ p.account_status|account_status_label }}{% endif %}</small>
           </span>
           <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>

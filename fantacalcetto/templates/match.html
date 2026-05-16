@@ -274,6 +274,24 @@ FantaCalcetto powered by Digislam Print Lab.</textarea>
         <option value="{{ team_name }}"></option>
       {% endfor %}
     </datalist>
+    <div class="team-drag-board" data-team-drag-board>
+      {% for code, label, crest in [("A", match.team_a_name or "Squadra A", match.team_a_logo or "crest-1"), ("", "Da schierare", "crest-11"), ("B", match.team_b_name or "Squadra B", match.team_b_logo or "crest-2")] %}
+        <div class="team-drop-zone {% if not code %}bench{% endif %}" data-team-target="{{ code }}">
+          <h3><span class="team-crest {{ crest }}"></span>{{ label }}</h3>
+          <div class="team-chip-list">
+            {% for p in players if p.response in ["confirmed", "present"] or p.team %}
+              {% if (code == "A" and p.team == "A") or (code == "B" and p.team == "B") or (code == "" and not p.team) %}
+                <button class="team-drag-chip" type="button" draggable="true" data-player-id="{{ p.id }}">
+                  <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
+                  <span>{{ p.name }}<small>OVR {{ p|overall_rating }}</small></span>
+                </button>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <p class="muted">Da telefono: tocchi un calciatore, poi tocchi la squadra dove vuoi metterlo. Da computer puoi anche trascinarlo.</p>
     <div class="team-editor-list">
       {% for p in players if p.response in ["confirmed", "present"] or p.team %}
         <div class="team-editor-row">
@@ -282,7 +300,7 @@ FantaCalcetto powered by Digislam Print Lab.</textarea>
             <strong>{{ p.name }}</strong>
             <small>{{ p.role }} · {{ p.power|stars }} · OVR {{ p|overall_rating }}</small>
           </div>
-          <select name="team_{{ p.id }}">
+          <select name="team_{{ p.id }}" data-team-select="{{ p.id }}">
             <option value="" {% if not p.team %}selected{% endif %}>Senza squadra</option>
             <option value="A" {% if p.team == "A" %}selected{% endif %}>{{ match.team_a_name }}</option>
             <option value="B" {% if p.team == "B" %}selected{% endif %}>{{ match.team_b_name }}</option>
@@ -391,4 +409,50 @@ FantaCalcetto powered by Digislam Print Lab.</textarea>
     </form>
   </div>
 </section>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    let dragged = null;
+    let selectedChip = null;
+    const moveChip = (chip, zone) => {
+      if (!chip || !zone) return;
+      const list = zone.querySelector(".team-chip-list");
+      list.appendChild(chip);
+      const select = document.querySelector(`[data-team-select="${chip.dataset.playerId}"]`);
+      if (select) select.value = zone.dataset.teamTarget;
+      chip.classList.remove("selected");
+      selectedChip = null;
+    };
+    document.querySelectorAll(".team-drag-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        if (selectedChip && selectedChip !== chip) selectedChip.classList.remove("selected");
+        selectedChip = selectedChip === chip ? null : chip;
+        chip.classList.toggle("selected", selectedChip === chip);
+      });
+      chip.addEventListener("dragstart", () => {
+        dragged = chip;
+        chip.classList.add("dragging");
+      });
+      chip.addEventListener("dragend", () => {
+        chip.classList.remove("dragging");
+        dragged = null;
+      });
+    });
+    document.querySelectorAll(".team-drop-zone").forEach((zone) => {
+      zone.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        zone.classList.add("drag-over");
+      });
+      zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+      zone.addEventListener("click", (event) => {
+        if (!selectedChip || event.target.closest(".team-drag-chip")) return;
+        moveChip(selectedChip, zone);
+      });
+      zone.addEventListener("drop", (event) => {
+        event.preventDefault();
+        zone.classList.remove("drag-over");
+        moveChip(dragged, zone);
+      });
+    });
+  });
+</script>
 {% endblock %}

@@ -54,6 +54,21 @@ PUBLIC_DEVELOP_FALLBACK_PASSWORD = "Bombonera2026!"
 
 APP_UPDATES = [
     {
+        "title": "Ticker SkyCalcetto24",
+        "body": "La partita ora parla come una diretta TV: news scorrevoli, countdown più chiaro e stato personale senza blocchi confusi.",
+        "tag": "Partita",
+    },
+    {
+        "title": "Storico solo analisi",
+        "body": "Le partite già fatte aprono una scheda pulita con risultato, formazioni, pagelle e premi. I commenti restano su LegaGram.",
+        "tag": "Storico",
+    },
+    {
+        "title": "Formazioni trascinabili",
+        "body": "Mister e Develop possono spostare graficamente i calciatori tra Squadra A, Squadra B e panchina prima di salvare.",
+        "tag": "Mister",
+    },
+    {
         "title": "SkySpogliatoio Mercato",
         "body": "Il Mister può proporre prestiti o cessioni definitive tra squadre: il calciatore approva, rifiuta o paga dazio in affidabilità.",
         "tag": "Mercato",
@@ -186,6 +201,14 @@ TEAM_NAMES = [
 ]
 
 TEAM_LOGOS = [f"crest-{index}" for index in range(1, 21)]
+
+
+def team_name_ideas():
+    names = []
+    for pair in TEAM_NAMES:
+        names.extend(pair)
+    names.extend(MARKET_TEAM_IDEAS)
+    return sorted(set(names))
 
 MARKET_TEAM_IDEAS = [
     "Real Madrink",
@@ -3044,8 +3067,31 @@ def match_detail(match_id):
         mascots=MASCOTS,
         foot_labels=FOOT_LABELS,
         notice=request.args.get("notice", ""),
-        team_name_ideas=MARKET_TEAM_IDEAS,
+        team_name_ideas=team_name_ideas(),
         team_logos=TEAM_LOGOS,
+    )
+
+
+@app.route("/player/matches/<int:match_id>")
+@require_player
+def player_match_detail(match_id):
+    match = get_match(match_id)
+    if not match:
+        return redirect(url_for("player_dashboard"))
+    players = invited_players(match_id)
+    player = current_player()
+    my_row = next((row for row in players if row["id"] == player["id"]), None)
+    if not my_row and player["account_type"] != "supporter" and not can_manage():
+        return redirect(url_for("player_dashboard"))
+    return render_template(
+        "player_match_detail.html",
+        match=match,
+        players=players,
+        player=player,
+        summary_counts=match_summary_counts(players),
+        match_awards=match_awards(match_id),
+        phase=match_phase(match),
+        my_row=my_row,
     )
 
 

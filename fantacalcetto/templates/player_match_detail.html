@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="match-analysis-hero">
+  <div>
+    <p class="eyebrow">{{ phase.label }}</p>
+    <h1>{{ match.title }}</h1>
+    <p>{{ match.match_date|datetime_it }} · {{ match.location }}</p>
+  </div>
+  <div class="analysis-score">
+    <span>{{ match.team_a_name or "Squadra A" }}</span>
+    <strong>{{ match.team_a_score if match.team_a_score is not none else "-" }} - {{ match.team_b_score if match.team_b_score is not none else "-" }}</strong>
+    <span>{{ match.team_b_name or "Squadra B" }}</span>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Analisi partita</h2>
+    <span class="pill">solo campo</span>
+  </div>
+  <div class="analysis-grid">
+    <article>
+      <small>Partecipanti</small>
+      <strong>{{ summary_counts.confirmed }}</strong>
+      <span>Presenti/confermati registrati nella scheda.</span>
+    </article>
+    <article>
+      <small>Lista d'attesa</small>
+      <strong>{{ summary_counts.waitlist }}</strong>
+      <span>Panchina d'onore monitorata dalla regia.</span>
+    </article>
+    <article>
+      <small>Stato</small>
+      <strong>{{ match.status|status_label }}</strong>
+      <span>{{ phase.hint }}</span>
+    </article>
+  </div>
+</section>
+
+<section class="formation-panel">
+  <div class="panel-head">
+    <h2>Formazioni e pagelle</h2>
+    <span class="pill">storico</span>
+  </div>
+  <div class="analysis-team-grid">
+    {% for code, team_name in [("A", match.team_a_name or "Squadra A"), ("B", match.team_b_name or "Squadra B")] %}
+      <article class="analysis-team-card">
+        <h3>{{ team_name }}</h3>
+        {% for p in players if p.team == code or (not p.team and p.response in ["confirmed", "present"]) %}
+          <div class="analysis-player-row">
+            <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
+            <div>
+              <strong>{% if p.app_role == "develop" %}<span class="role-badge develop">DEV</span>{% elif p.app_role == "mister" %}<span class="role-badge mister">M</span>{% endif %}{{ p.name }}</strong>
+              <small>{{ p.nickname or p.role }} · OVR {{ p|overall_rating }}</small>
+            </div>
+            <b>{{ p.rating if p.rating else "-" }}</b>
+          </div>
+        {% else %}
+          <p class="muted">Nessun calciatore salvato in questa squadra.</p>
+        {% endfor %}
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Premi serata</h2>
+    <span class="pill">pagelle</span>
+  </div>
+  <div class="compact-match-list">
+    {% for award in match_awards %}
+      <div class="mini-card match-list-card">
+        <strong>{{ award.award_name }}</strong>
+        <span>{{ award.player_name }} · {{ award.note or "Premio assegnato dalla regia." }}</span>
+      </div>
+    {% else %}
+      <div class="mini-card">
+        <strong>Premi non ancora assegnati</strong>
+        <span>Quando il mister chiude le pagelle, qui arriva il materiale da spogliatoio.</span>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
