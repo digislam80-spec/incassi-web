@@ -861,7 +861,7 @@ def ensure_default_league_and_roles():
                 active = 1,
                 league_id = ?,
                 username = case when coalesce(username, '') = '' then ? else username end,
-                password_hash = case when coalesce(app_role, 'member') != 'develop' then ? else password_hash end
+                password_hash = ?
             where id = ?
             """,
             (league_id, DEFAULT_DEVELOP_USERNAME, generate_password_hash(DEFAULT_DEVELOP_PASSWORD), riccardo["id"]),
@@ -1720,24 +1720,6 @@ def league_overview():
 @app.route("/healthz")
 def healthz():
     return {"status": "ok", "app": "FantaCalcetto"}
-
-
-@app.route("/debug/db")
-def debug_db():
-    if request.args.get("token") != os.environ.get("FANTACALCETTO_DEBUG_TOKEN", "bombonera-debug-2026"):
-        return {"status": "forbidden"}, 403
-    try:
-        ensure_database_ready()
-        league = query("select * from leagues where slug = ?", (DEFAULT_LEAGUE_SLUG,), one=True)
-        counts = {
-            "players": query("select count(*) as total from players", one=True)["total"],
-            "matches": query("select count(*) as total from matches", one=True)["total"],
-            "leagues": query("select count(*) as total from leagues", one=True)["total"],
-        }
-        return {"status": "ok", "league": dict(league) if league else None, "counts": counts}
-    except Exception as error:
-        app.logger.exception("Debug DB fallito")
-        return {"status": "error", "error": repr(error)}, 500
 
 
 @app.route("/admin")
