@@ -4,6 +4,7 @@
 {% set preview_role = request.args.get('preview') if is_develop else '' %}
 {% set effective_supporter = player.account_type == "supporter" or preview_role == "supporter" %}
 {% set effective_manager = can_manage and preview_role not in ["supporter", "player"] %}
+{% set publish_role = "supporter" if effective_supporter else ("develop" if is_develop and preview_role not in ["player", "supporter"] else ("mister" if effective_manager else "player")) %}
 <div class="player-home-flow" data-active-section="{% if effective_supporter %}legagram{% else %}profilo{% endif %}">
 <section class="next-match mockup-next-match tv-match tone-{{ phase.tone }}" id="partita" data-app-section="partita">
   {% if featured %}
@@ -164,7 +165,7 @@
   <div class="profile-copy">
     <p class="eyebrow">{% if effective_supporter %}Profilo supporter{% else %}Profilo calciatore{% endif %}</p>
     <h1>
-      {% if is_develop %}<span class="role-badge develop" title="Develop">DEV</span>{% elif can_manage %}<span class="role-badge mister" title="Mister">M</span>{% endif %}
+      {% if publish_role == "develop" %}<span class="role-badge develop" title="Develop">DEV</span>{% elif publish_role == "mister" %}<span class="role-badge mister" title="Mister">M</span>{% endif %}
       {{ player.name }}
     </h1>
     <p class="lede">
@@ -480,7 +481,7 @@
   <div class="legagram-cover">
     <div class="legagram-cover-bg"></div>
     <div class="legagram-profile-mini">
-      <img src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
+      <img src="{{ url_for('static', filename=current_league.logo if current_league and current_league.logo else 'league-bombonera.svg') }}" alt="">
       <div>
         <small>LegaGram</small>
         <strong>{{ current_league.name if current_league else "Lega Bombonera" }}</strong>
@@ -498,10 +499,11 @@
     <span class="pill">social live</span>
   </div>
   <form class="feed-composer" method="post" action="{{ url_for('add_player_chronicle') }}">
-    <img src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
+    <img src="{{ url_for('static', filename=current_league.logo if current_league and current_league.logo else 'league-bombonera.svg') }}" alt="">
     <div class="composer-box">
       <input name="body" maxlength="700" placeholder="Scrivi una storia da spogliatoio..." required>
       <input type="hidden" name="title" value="Cronaca LegaGram">
+      <input type="hidden" name="as_role" value="{{ publish_role }}">
       <button class="button primary" type="submit">Pubblica</button>
     </div>
   </form>
@@ -524,7 +526,7 @@
             <div class="post-source-line">
               <div class="post-avatar-inline {% if item.event_type != 'cronaca' %}agency-avatar{% endif %}">
                 {% if item.event_type == "cronaca" %}
-                  <img src="{{ url_for('static', filename='mascots/' ~ (player.mascot or 'jolly') ~ '.png') }}" alt="">
+                  <img src="{{ url_for('static', filename='mascots/' ~ (item.actor_mascot or player.mascot or 'jolly') ~ '.png') }}" alt="">
                 {% elif item.event_type == "mercato" %}
                   <span class="agency-mark sky">S24</span>
                 {% elif item.event_type == "develop" %}
@@ -534,7 +536,8 @@
                 {% endif %}
               </div>
               <div>
-                <strong>{% if item.event_type == "mercato" %}SkySpogliatoio{% elif item.event_type == "develop" %}Digislam Dev Room{% elif item.event_type == "cronaca" %}{{ item.actor_name or item.title }}{% else %}FantaCalcetto News{% endif %}<span class="verified-dot">✓</span><span class="source-badge {% if item.event_type == 'mercato' %}sky{% elif item.event_type == 'develop' %}dev{% elif item.event_type == 'cronaca' %}player{% else %}news{% endif %}">{% if item.event_type == "mercato" %}SKY{% elif item.event_type == "develop" %}DEVELOPER{% elif item.event_type == "cronaca" %}{% if is_develop %}DEV{% elif can_manage %}MISTER{% elif effective_supporter %}TIFOSO{% else %}CALCIATORE{% endif %}{% else %}NEWS{% endif %}</span></strong>
+                {% set item_role = item.actor_display_role or item.actor_app_role or item.actor_account_type or "player" %}
+                <strong>{% if item.event_type == "mercato" %}SkySpogliatoio{% elif item.event_type == "develop" %}Digislam Dev Room{% elif item.event_type == "cronaca" %}{{ item.actor_name or item.title }}{% else %}FantaCalcetto News{% endif %}<span class="verified-dot">✓</span><span class="source-badge {% if item.event_type == 'mercato' %}sky{% elif item.event_type == 'develop' %}dev{% elif item.event_type == 'cronaca' %}player{% else %}news{% endif %}">{% if item.event_type == "mercato" %}SKY{% elif item.event_type == "develop" %}DEVELOPER{% elif item.event_type == "cronaca" %}{% if item_role == "develop" %}DEV{% elif item_role == "mister" %}MISTER{% elif item_role == "supporter" %}TIFOSO{% else %}CALCIATORE{% endif %}{% else %}NEWS{% endif %}</span></strong>
                 <small>{{ item.created_at|datetime_it(True) }}</small>
               </div>
             </div>
@@ -548,11 +551,12 @@
           </div>
           <div class="comment-list">
             {% for comment in news_comments.get(item.id, []) %}
-              <small><b>{{ comment.player_name or "Spogliatoio" }}</b>: {{ comment.body }}</small>
+              <small><b>{{ comment.player_name or "Spogliatoio" }}</b>{% if comment.display_role %}<span class="comment-role">{% if comment.display_role == "develop" %}DEV{% elif comment.display_role == "mister" %}MISTER{% elif comment.display_role == "supporter" %}TIFOSO{% else %}CALCIATORE{% endif %}</span>{% endif %}: {{ comment.body }}</small>
             {% endfor %}
           </div>
           <form class="comment-form" method="post" action="{{ url_for('add_event_comment', event_id=item.id) }}">
             <input name="body" maxlength="400" placeholder="Commenta e prendi +2 Fede">
+            <input type="hidden" name="as_role" value="{{ publish_role }}">
             <button class="button ghost" type="submit">Invia +2</button>
           </form>
         </div>
