@@ -842,6 +842,12 @@ def ensure_default_league_and_roles():
     execute("update league_events set league_id = ? where league_id is null", (league_id,))
 
     riccardo = query(
+        "select * from players where lower(username) = lower(?) order by id limit 1",
+        (DEFAULT_DEVELOP_USERNAME,),
+        one=True,
+    )
+    if not riccardo:
+        riccardo = query(
         """
         select * from players
         where lower(name) like ? or lower(username) in (?, ?)
@@ -850,7 +856,7 @@ def ensure_default_league_and_roles():
         """,
         ("riccardo%", "riccardo", "riccardo.muollo", "%muollo%"),
         one=True,
-    )
+        )
     if riccardo:
         execute(
             """
@@ -866,7 +872,7 @@ def ensure_default_league_and_roles():
             """,
             (league_id, DEFAULT_DEVELOP_USERNAME, generate_password_hash(DEFAULT_DEVELOP_PASSWORD), riccardo["id"]),
         )
-    elif not query("select id from players where app_role = 'develop' limit 1", one=True):
+    else:
         execute(
             """
             insert into players
