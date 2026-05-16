@@ -61,6 +61,11 @@ PUBLIC_DEVELOP_FALLBACK_PASSWORD = "Bombonera2026!"
 
 APP_UPDATES = [
     {
+        "title": "Supporter separati dai calciatori",
+        "body": "Nella cabina Develop i tifosi non vengono più mostrati come calciatori: niente piede, stelle, gol o assist, ma Fede, tifo, legame e ruoli gestionali separati.",
+        "tag": "Ruoli",
+    },
+    {
         "title": "Fantamercato in cabina separata",
         "body": "Mister e Develop hanno un menu mercato dedicato: aprono trattative rapide, il calciatore firma dal modal e LegaGram pubblica la breaking news.",
         "tag": "Mercato",
@@ -3383,7 +3388,7 @@ def player_update_mascot_name():
 def add_player():
     if not is_develop():
         return redirect(url_for("admin_dashboard"))
-    preferred_foot = request.form.get("preferred_foot", "right")
+    preferred_foot = request.form.get("preferred_foot", old_player["preferred_foot"] if "preferred_foot" in old_player.keys() else "right")
     if preferred_foot not in FOOT_LABELS:
         preferred_foot = "right"
     player_id = execute(
@@ -3442,29 +3447,43 @@ def update_player(player_id):
         league = query("select id from leagues where id = ?", (requested_league_id,), one=True)
         if league:
             target_league_id = league["id"]
+    role_value = request.form.get("role", old_player["role"] if "role" in old_player.keys() else "Jolly")
+    power_value = float(request.form.get("power", old_player["power"] if "power" in old_player.keys() else 3))
+    reliability_value = int(request.form.get("reliability", old_player["reliability"] if "reliability" in old_player.keys() else 80))
+    permanent_team_name = request.form.get("permanent_team_name", old_player["permanent_team_name"] if "permanent_team_name" in old_player.keys() else "").strip()
+    supporter_player_name = request.form.get("supporter_player_name", old_player["supporter_player_name"] if "supporter_player_name" in old_player.keys() else "").strip()
+    supporter_relation = request.form.get("supporter_relation", old_player["supporter_relation"] if "supporter_relation" in old_player.keys() else "").strip()
+    try:
+        faith_score = int(request.form.get("faith_score", old_player["faith_score"] if "faith_score" in old_player.keys() else 0))
+    except (TypeError, ValueError):
+        faith_score = old_player["faith_score"] if "faith_score" in old_player.keys() else 0
     execute(
         """
         update players
         set name = ?, nickname = ?, phone = ?, role = ?, power = ?, reliability = ?,
             mascot = ?, mascot_name = ?, preferred_foot = ?, permanent_team_name = ?, app_role = ?,
-            account_type = ?, account_status = ?, league_id = ?, active = case when ? in ('removed', 'rejected') then 0 else 1 end
+            account_type = ?, account_status = ?, league_id = ?, supporter_player_name = ?, supporter_relation = ?,
+            faith_score = ?, active = case when ? in ('removed', 'rejected') then 0 else 1 end
         where id = ?
         """,
         (
             request.form["name"].strip(),
             request.form.get("nickname", "").strip(),
             request.form["phone"].strip(),
-            request.form.get("role", "Jolly"),
-            float(request.form.get("power", 3)),
-            int(request.form.get("reliability", 80)),
+            role_value,
+            power_value,
+            reliability_value,
             request.form.get("mascot", "jolly"),
             request.form.get("mascot_name", "").strip(),
             preferred_foot,
-            request.form.get("permanent_team_name", "").strip(),
+            permanent_team_name,
             app_role,
             account_type,
             account_status,
             target_league_id,
+            supporter_player_name,
+            supporter_relation,
+            faith_score,
             account_status,
             player_id,
         ),

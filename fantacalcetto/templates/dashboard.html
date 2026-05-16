@@ -524,50 +524,76 @@
   </div>
   <div class="admin-player-list">
     {% for p in players %}
-      <details class="admin-player-card">
+      {% set is_supporter_profile = p.account_type == "supporter" %}
+      <details class="admin-player-card {% if is_supporter_profile %}supporter-admin-card{% endif %}">
         <summary>
           <span class="admin-player-main">
-            <strong>{% if p.app_role == "develop" %}<span class="role-badge develop">DEV</span>{% elif p.app_role == "mister" %}<span class="role-badge mister">M</span>{% endif %}{{ p.name }}</strong>
-            <small>{{ p.nickname or "senza soprannome" }} · {{ p.role }} · {{ p.preferred_foot|foot_label }} · {{ p.permanent_team_name or "senza squadra stabile" }}{% if is_develop %} · {{ p.league_name or "senza lega" }} · {{ p.account_type }} · {{ p.account_status|account_status_label }}{% endif %}</small>
+            <strong>{% if p.app_role == "develop" %}<span class="role-badge develop">DEV</span>{% elif p.app_role == "mister" %}<span class="role-badge mister">M</span>{% endif %}{% if is_supporter_profile %}<span class="role-badge supporter">TIFOSO</span>{% endif %}{{ p.name }}</strong>
+            {% if is_supporter_profile %}
+              <small>{{ p.nickname or "senza soprannome" }} · Supporter · Fede {{ p.faith_score or 0 }}{% if p.supporter_player_name %} · tifa {{ p.supporter_player_name }}{% endif %}{% if p.supporter_relation %} · {{ p.supporter_relation }}{% endif %}{% if is_develop %} · {{ p.league_name or "senza lega" }} · {{ p.account_status|account_status_label }}{% endif %}</small>
+            {% else %}
+              <small>{{ p.nickname or "senza soprannome" }} · {{ p.role }} · {{ p.preferred_foot|foot_label }} · {{ p.permanent_team_name or "senza squadra stabile" }}{% if is_develop %} · {{ p.league_name or "senza lega" }} · Calciatore · {{ p.account_status|account_status_label }}{% endif %}</small>
+            {% endif %}
           </span>
           <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
-          <span class="stars">{{ p.power|stars }}</span>
-          <span class="overall-mini">{{ p|overall_rating }}</span>
+          {% if is_supporter_profile %}
+            <span class="supporter-score-mini">{{ p.faith_score or 0 }}</span>
+          {% else %}
+            <span class="stars">{{ p.power|stars }}</span>
+            <span class="overall-mini">{{ p|overall_rating }}</span>
+          {% endif %}
         </summary>
         <div class="admin-player-body">
-          <div class="admin-player-stats">
-            <span><strong>{{ p.score }}</strong><small>score</small></span>
-            <span><strong>{{ p.reliability }}%</strong><small>affidabilità</small></span>
-            <span><strong>{{ p.matches }}</strong><small>presenze</small></span>
-            <span><strong>{{ p.goals }}</strong><small>gol</small></span>
-            <span><strong>{{ p.assists }}</strong><small>assist</small></span>
-          </div>
+          {% if is_supporter_profile %}
+            <div class="admin-player-stats supporter-stats">
+              <span><strong>{{ p.faith_score or 0 }}</strong><small>fede</small></span>
+              <span><strong>{{ p.supporter_player_name or "Curva" }}</strong><small>tifo</small></span>
+              <span><strong>{{ p.supporter_relation or "libero" }}</strong><small>legame</small></span>
+              <span><strong>{{ p.account_status|account_status_label }}</strong><small>stato</small></span>
+            </div>
+          {% else %}
+            <div class="admin-player-stats">
+              <span><strong>{{ p.score }}</strong><small>score</small></span>
+              <span><strong>{{ p.reliability }}%</strong><small>affidabilità</small></span>
+              <span><strong>{{ p.matches }}</strong><small>presenze</small></span>
+              <span><strong>{{ p.goals }}</strong><small>gol</small></span>
+              <span><strong>{{ p.assists }}</strong><small>assist</small></span>
+            </div>
+          {% endif %}
           <form class="form admin-player-form" method="post" action="{{ url_for('update_player', player_id=p.id) }}">
             <label>Nome <input name="name" value="{{ p.name }}" required></label>
             <label>Soprannome <input name="nickname" value="{{ p.nickname or '' }}"></label>
             <label>Telefono <input name="phone" value="{{ p.phone }}" required></label>
-            <label>Ruolo
-              <select name="role">
-                {% for role in ["Jolly", "Portiere", "Difensore", "Centrocampista", "Attaccante"] %}
-                  <option value="{{ role }}" {% if p.role == role %}selected{% endif %}>{{ role }}</option>
-                {% endfor %}
-              </select>
-            </label>
-            <label>Stelle
-              <select name="power">
-                {% for value in [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] %}
-                  <option value="{{ value }}" {% if p.power|float == value %}selected{% endif %}>{{ value|format_power }} stelle</option>
-                {% endfor %}
-              </select>
-            </label>
-            <label>Affidabilità <input type="number" name="reliability" min="0" max="100" value="{{ p.reliability }}"></label>
-            <label>Piede
-              <select name="preferred_foot">
-                {% for key, label in foot_labels.items() %}
-                  <option value="{{ key }}" {% if (p.preferred_foot or "right") == key %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-              </select>
-            </label>
+            {% if is_supporter_profile %}
+              <label>Supporter di <input name="supporter_player_name" value="{{ p.supporter_player_name or '' }}" placeholder="Nome calciatore o squadra del cuore"></label>
+              <label>Grado di parentela / amicizia <input name="supporter_relation" value="{{ p.supporter_relation or '' }}" placeholder="Es. fratello, moglie, amico, ultrà"></label>
+              {% if is_develop %}
+                <label>Punteggio Fede <input type="number" name="faith_score" min="0" max="999" value="{{ p.faith_score or 0 }}"></label>
+              {% endif %}
+            {% else %}
+              <label>Ruolo
+                <select name="role">
+                  {% for role in ["Jolly", "Portiere", "Difensore", "Centrocampista", "Attaccante"] %}
+                    <option value="{{ role }}" {% if p.role == role %}selected{% endif %}>{{ role }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <label>Stelle
+                <select name="power">
+                  {% for value in [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5] %}
+                    <option value="{{ value }}" {% if p.power|float == value %}selected{% endif %}>{{ value|format_power }} stelle</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <label>Affidabilità <input type="number" name="reliability" min="0" max="100" value="{{ p.reliability }}"></label>
+              <label>Piede
+                <select name="preferred_foot">
+                  {% for key, label in foot_labels.items() %}
+                    <option value="{{ key }}" {% if (p.preferred_foot or "right") == key %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+            {% endif %}
             <label>Mascotte
               <select name="mascot">
                 {% for key, mascot in mascots.items() %}
@@ -576,7 +602,9 @@
               </select>
             </label>
             <label>Nome mascotte <input name="mascot_name" value="{{ p.mascot_name or '' }}" placeholder="Nome mascotte personalizzato"></label>
-            <label>Squadra stabile <input name="permanent_team_name" value="{{ p.permanent_team_name or '' }}" list="market-team-ideas" placeholder="Es. Real Madrink"></label>
+            {% if not is_supporter_profile %}
+              <label>Squadra stabile <input name="permanent_team_name" value="{{ p.permanent_team_name or '' }}" list="market-team-ideas" placeholder="Es. Real Madrink"></label>
+            {% endif %}
             {% if is_develop %}
               <label>Lega
                 <select name="league_id">
