@@ -225,6 +225,107 @@ h2 { margin: 0; font-size: 21px; }
   background: rgba(255,255,255,.14);
   font-size: 12px;
 }
+.bigmatch-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin: 18px 0 4px;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: var(--radius);
+  background: rgba(0,0,0,.18);
+}
+.bigmatch-team {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.bigmatch-team.right { text-align: right; }
+.bigmatch-team strong {
+  overflow-wrap: anywhere;
+  font-size: 18px;
+  line-height: 1.05;
+}
+.bigmatch-team span,
+.countdown-box small {
+  color: rgba(255,255,255,.72);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.countdown-box {
+  display: grid;
+  place-items: center;
+  min-width: 104px;
+  padding: 9px 10px;
+  border-radius: 14px;
+  color: #18211d;
+  background: linear-gradient(145deg, #fff2a6, #f2c94c);
+}
+.countdown-box strong {
+  font-size: 18px;
+  line-height: 1;
+}
+.bigmatch-board.is-live .countdown-box {
+  color: white;
+  background: #d75142;
+  box-shadow: 0 0 0 5px rgba(215,81,66,.18);
+}
+.formation-showcase { overflow: hidden; }
+.formation-pitch {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  min-height: 430px;
+  padding: 18px;
+  border: 3px solid rgba(255,255,255,.75);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(90deg, transparent 49.5%, rgba(255,255,255,.65) 49.5% 50.5%, transparent 50.5%),
+    radial-gradient(circle at 50% 50%, transparent 0 42px, rgba(255,255,255,.65) 43px 46px, transparent 47px),
+    repeating-linear-gradient(90deg, #187648 0 34px, #1f8453 34px 68px);
+  color: white;
+}
+.pitch-side {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+.pitch-side.right { justify-items: end; text-align: right; }
+.pitch-side h3 {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.22);
+  font-size: 16px;
+}
+.pitch-player {
+  display: inline-grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  max-width: 220px;
+  padding: 7px 9px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.16);
+  backdrop-filter: blur(6px);
+}
+.pitch-side.right .pitch-player { grid-template-columns: minmax(0, 1fr) 48px; }
+.pitch-side.right .pitch-player img { grid-column: 2; grid-row: 1; }
+.pitch-side.right .pitch-player span { grid-column: 1; grid-row: 1; }
+.pitch-player img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 8px rgba(0,0,0,.24));
+}
+.pitch-player span {
+  overflow-wrap: anywhere;
+  font-weight: 1000;
+  line-height: 1.05;
+}
 .develop-panel {
   border-color: rgba(242, 201, 76, .55);
   background:
@@ -622,6 +723,21 @@ h2 { margin: 0; font-size: 21px; }
 }
 .admin-inline-buttons form { margin: 0; }
 .admin-inline-buttons .button { width: 100%; }
+.compact-field {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+.compact-field select { min-height: 42px; }
+.inline-league-switch {
+  margin: 14px 0 18px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
 .admin-accordion {
   padding: 0;
   overflow: hidden;
@@ -1891,7 +2007,7 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
   .page { width: min(100% - 20px, 1180px); margin-top: 14px; }
   .hero, .match-header { min-height: 0; padding: 20px; }
   .site-footer { padding-bottom: 92px; }
-  .form, .roster-row, .stat-row, .quick-pagella-row, .scoreline, .stat-cards, .admin-actions, .admin-player-stats, .league-card, .league-metrics, .match-quickbar, .notification-grid, .award-row, .data-actions, .password-request-row, .password-reset-form, .team-name-grid, .team-editor-row, .comment-form, .help-grid, .admin-hub-grid, .admin-split, .admin-inline-buttons, .sticky-form-actions, .role-choice-grid, .league-choice-grid { grid-template-columns: 1fr; }
+  .form, .roster-row, .stat-row, .quick-pagella-row, .scoreline, .stat-cards, .admin-actions, .admin-player-stats, .league-card, .league-metrics, .match-quickbar, .notification-grid, .award-row, .data-actions, .password-request-row, .password-reset-form, .team-name-grid, .team-editor-row, .comment-form, .help-grid, .admin-hub-grid, .admin-split, .admin-inline-buttons, .inline-league-switch, .sticky-form-actions, .role-choice-grid, .league-choice-grid { grid-template-columns: 1fr; }
   .admin-hub-grid { gap: 8px; }
   .hub-tile { min-height: 82px; }
   .admin-accordion > summary { padding: 16px; }

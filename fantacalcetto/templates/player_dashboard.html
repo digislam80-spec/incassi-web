@@ -2,11 +2,25 @@
 {% block content %}
 {% set featured = matches[0] if matches else none %}
 <section class="mobile-focus-card tone-{{ phase.tone }}">
-  <span class="status-kicker">{{ phase.label }}</span>
+  <span class="status-kicker">Next Match · {{ phase.label }}</span>
   {% if featured %}
     <h1>{{ featured.title }}</h1>
     <p>{{ featured.match_date|datetime_it }} · {{ featured.location }}</p>
     <small>{{ phase.hint }}</small>
+    <div class="bigmatch-board" data-match-date="{{ featured.match_date }}">
+      <div class="bigmatch-team">
+        <strong>{{ featured.team_a_name or "Squadra A" }}</strong>
+        <span>{% if featured.status in ["teams", "teams_auto"] %}Formazione pronta{% else %}In attesa squadre{% endif %}</span>
+      </div>
+      <div class="countdown-box">
+        <small>manca</small>
+        <strong data-countdown>--:--:--</strong>
+      </div>
+      <div class="bigmatch-team right">
+        <strong>{{ featured.team_b_name or "Squadra B" }}</strong>
+        <span>{% if featured.status in ["teams", "teams_auto"] %}Formazione pronta{% else %}In attesa squadre{% endif %}</span>
+      </div>
+    </div>
     <div class="action-stack">
       {% if player.account_status == "approved" and player.account_type == "player" and featured.status not in ["cancelled", "closed"] %}
         {% if featured.response in ["confirmed", "present"] %}
@@ -23,12 +37,42 @@
         {% endif %}
       {% endif %}
       <a class="button big" href="{{ url_for('player_match_calendar', match_id=featured.id) }}">Aggiungi al calendario</a>
+      {% if featured.status in ["teams", "teams_auto"] %}<a class="button ghost big" href="#formazioni">Vedi formazioni</a>{% endif %}
     </div>
   {% else %}
     <h1>Nessuna partita</h1>
     <p>Appena il mister crea un evento, lo trovi qui.</p>
   {% endif %}
 </section>
+
+{% if featured and featured.status in ["teams", "teams_auto"] %}
+<section class="panel formation-showcase" id="formazioni">
+  <div class="panel-head">
+    <h2>Formazioni ufficiali</h2>
+    <span class="pill">Campo tattico</span>
+  </div>
+  <div class="formation-pitch">
+    <div class="pitch-side">
+      <h3>{{ featured.team_a_name or "Squadra A" }}</h3>
+      {% for p in featured_players if p.team == "A" %}
+        <div class="pitch-player">
+          <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
+          <span>{{ p.nickname or p.name }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="pitch-side right">
+      <h3>{{ featured.team_b_name or "Squadra B" }}</h3>
+      {% for p in featured_players if p.team == "B" %}
+        <div class="pitch-player">
+          <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
+          <span>{{ p.nickname or p.name }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
 
 <section class="hero profile-hero">
   <div>

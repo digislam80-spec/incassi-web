@@ -3,7 +3,7 @@
 <section class="public-card">
   <p class="eyebrow">Registrazione FantaCalcetto</p>
   <h1>Entra nello spogliatoio.</h1>
-  <p class="lede">Puoi entrare subito come supporter/tifoso. Se vuoi giocare, chiedi la promozione a calciatore: Mister o Develop ti renderanno arruolabile per questa lega.</p>
+  <p class="lede">Puoi entrare subito come supporter/tifoso. Se vuoi giocare, chiedi la promozione a calciatore: il Develop ti aggancia alla lega giusta e ti rende arruolabile.</p>
   <div class="rules-box">
     <h2>Patto goliardico della Lega del Venerdì</h2>
     <p>Prima di indossare la maglia immaginaria, giura solennemente di rispettare il pallone, il gruppo e le disdette fatte in tempo umano.</p>
@@ -19,7 +19,7 @@
   <form class="form register-form" method="post">
     <div class="league-choice-grid">
       <strong>Scegli la lega</strong>
-      <span>Se chiedi di diventare calciatore, Mister e Develop vedranno la richiesta nella lega scelta.</span>
+      <span>Se chiedi di diventare calciatore, il Develop vedrà la richiesta nella lega scelta.</span>
       {% for lega in leagues %}
         <label class="league-choice">
           <input type="radio" name="league_id" value="{{ lega.id }}" {% if loop.first %}checked{% endif %}>
@@ -38,7 +38,7 @@
       </label>
       <label class="role-choice">
         <input type="radio" name="requested_role" value="player">
-        <span><b>⚽ Chiedo di diventare calciatore</b><small>Entri subito come supporter, poi Mister o Develop ti promuovono ad arruolabile.</small></span>
+        <span><b>⚽ Chiedo di diventare calciatore</b><small>Entri subito come supporter, poi il Develop ti promuove ad arruolabile nella lega giusta.</small></span>
       </label>
     </div>
     <label>Nome <input name="name" required></label>

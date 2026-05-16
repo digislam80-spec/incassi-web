@@ -14,7 +14,7 @@
     <div class="action-stack">
       <a class="button primary big" href="{{ url_for('match_detail', match_id=match.id) }}">Gestisci partita</a>
       <a class="button big" href="#new-match">Nuova partita</a>
-      <a class="button ghost big" href="#approvals">Approvazioni</a>
+      {% if is_develop %}<a class="button ghost big" href="#approvals">Approvazioni</a>{% endif %}
     </div>
   {% else %}
     <h1>Nessuna partita</h1>
@@ -34,9 +34,19 @@
     <img class="league-logo-preview" src="{{ url_for('static', filename=current_league.logo or 'league-bombonera.svg') }}" alt="{{ current_league.name if current_league else 'Lega Bombonera' }}">
     <div>
       <strong>{{ current_league.name if current_league else "Lega Bombonera" }}</strong>
-      <small>Logo lega attivo · Develop: {{ develop_username }}</small>
+      <small>Lega che stai gestendo ora · Develop: {{ develop_username }}</small>
     </div>
   </div>
+  <form class="form inline-league-switch" method="post" action="{{ url_for('switch_develop_league') }}">
+    <label>Apri cabina lega
+      <select name="league_id">
+        {% for lega in leagues %}
+          <option value="{{ lega.id }}" {% if current_league and lega.id == current_league.id %}selected{% endif %}>{{ lega.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button class="button primary" type="submit">Gestisci questa lega</button>
+  </form>
   <form class="form" method="post" action="{{ url_for('create_league') }}">
     <label>Nome nuova lega <input name="name" placeholder="Es. Lega Vesuvio League"></label>
     <label>Logo <input name="logo" value="league-bombonera.svg"></label>
@@ -79,9 +89,11 @@
     <span>{% if match %}{{ phase.label }} · {{ match.match_date|datetime_it(True) }}{% else %}Crea la prima partita{% endif %}</span>
   </a>
   <a class="hub-tile" href="#new-match"><strong>Nuova partita</strong><span>Creazione guidata, separata dalle modifiche.</span></a>
-  <a class="hub-tile" href="#approvals"><strong>Approvazioni</strong><span>{{ pending_players|length }} iscrizioni · {{ reset_requests|length }} password.</span></a>
+  {% if is_develop %}
+    <a class="hub-tile" href="#approvals"><strong>Approvazioni</strong><span>{{ pending_players|length }} iscrizioni · {{ reset_requests|length }} password.</span></a>
+  {% endif %}
   <a class="hub-tile" href="#history"><strong>Archivio</strong><span>Future e giocate, senza mischiare tutto.</span></a>
-  <a class="hub-tile" href="#roster"><strong>Rosa</strong><span>{{ players|length }} approvati e modificabili.</span></a>
+  <a class="hub-tile" href="#roster"><strong>{% if is_develop %}Profili{% else %}Rosa{% endif %}</strong><span>{{ players|length }} {% if is_develop %}account modificabili{% else %}approvati e modificabili{% endif %}.</span></a>
   <a class="hub-tile" href="#settings"><strong>News e strumenti</strong><span>Cronache, link e cose leggere. Backup solo Develop.</span></a>
 </section>
 
@@ -100,6 +112,7 @@
   </form>
 </section>
 
+{% if is_develop %}
 <section class="panel" id="approvals">
   <div class="panel-head">
     <h2>Approvazioni e accessi</h2>
@@ -112,13 +125,20 @@
         {% for p in pending_players %}
           <article class="mini-card pending-card">
             <strong>{{ p.name }}</strong>
-            <span>{{ p.nickname or "senza soprannome" }} · {{ p.phone }}</span>
+            <span>{{ p.nickname or "senza soprannome" }} · {{ p.phone }} · {{ p.league_name or "Lega non assegnata" }}</span>
             {% if p.supporter_player_name or p.supporter_relation %}
               <span>Supporter di {{ p.supporter_player_name or "qualcuno da scoprire" }} · {{ p.supporter_relation or "parentela non dichiarata" }}</span>
             {% endif %}
             <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
             <div class="admin-inline-buttons">
               <form method="post" action="{{ url_for('approve_player', player_id=p.id) }}">
+                <label class="compact-field">Lega
+                  <select name="league_id">
+                    {% for lega in leagues %}
+                      <option value="{{ lega.id }}" {% if p.league_id == lega.id %}selected{% endif %}>{{ lega.name }}</option>
+                    {% endfor %}
+                  </select>
+                </label>
                 <button class="button primary" type="submit">Promuovi calciatore</button>
               </form>
               <form method="post" action="{{ url_for('reject_player', player_id=p.id) }}">
@@ -172,6 +192,7 @@
     </div>
   </div>
 </section>
+{% endif %}
 
 <section class="panel" id="history">
   <div class="panel-head">
@@ -220,6 +241,7 @@
   </div>
 </section>
 
+{% if is_develop %}
 <details class="panel admin-accordion">
   <summary>
     <strong>Nuovo giocatore manuale</strong>
@@ -264,11 +286,12 @@
     </form>
   </div>
 </details>
+{% endif %}
 
 <section class="panel" id="roster">
   <div class="panel-head">
-    <h2>Approvati e Arruolabili</h2>
-    <span class="pill">{{ players|length }} approvati</span>
+    <h2>{% if is_develop %}Profili e ruoli piattaforma{% else %}Approvati e Arruolabili{% endif %}</h2>
+    <span class="pill">{{ players|length }} {% if is_develop %}profili{% else %}approvati{% endif %}</span>
   </div>
   <div class="admin-player-list">
     {% for p in players %}
@@ -276,7 +299,7 @@
         <summary>
           <span class="admin-player-main">
             <strong>{{ p.name }}</strong>
-            <small>{{ p.nickname or "senza soprannome" }} · {{ p.role }} · {{ p.preferred_foot|foot_label }}</small>
+            <small>{{ p.nickname or "senza soprannome" }} · {{ p.role }} · {{ p.preferred_foot|foot_label }}{% if is_develop %} · {{ p.league_name or "senza lega" }} · {{ p.account_type }} · {{ p.account_status|account_status_label }}{% endif %}</small>
           </span>
           <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
           <span class="stars">{{ p.power|stars }}</span>
@@ -325,6 +348,27 @@
             </label>
             <label>Nome mascotte <input name="mascot_name" value="{{ p.mascot_name or '' }}" placeholder="Nome mascotte personalizzato"></label>
             {% if is_develop %}
+              <label>Lega
+                <select name="league_id">
+                  {% for lega in leagues %}
+                    <option value="{{ lega.id }}" {% if p.league_id == lega.id %}selected{% endif %}>{{ lega.name }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <label>Tipo profilo
+                <select name="account_type">
+                  <option value="player" {% if p.account_type == "player" %}selected{% endif %}>Calciatore</option>
+                  <option value="supporter" {% if p.account_type == "supporter" %}selected{% endif %}>Supporter / tifoso</option>
+                </select>
+              </label>
+              <label>Stato account
+                <select name="account_status">
+                  <option value="approved" {% if p.account_status == "approved" %}selected{% endif %}>Approvato</option>
+                  <option value="pending" {% if p.account_status == "pending" %}selected{% endif %}>In attesa</option>
+                  <option value="rejected" {% if p.account_status == "rejected" %}selected{% endif %}>Respinto</option>
+                  <option value="removed" {% if p.account_status == "removed" %}selected{% endif %}>Rimosso</option>
+                </select>
+              </label>
               <label>Ruolo gestionale
                 <select name="app_role">
                   <option value="member" {% if (p.app_role or "member") == "member" %}selected{% endif %}>Calciatore / supporter</option>
@@ -335,9 +379,11 @@
             {% endif %}
             <button class="button primary" type="submit">Salva scheda</button>
           </form>
-          <form class="inline-actions" method="post" action="{{ url_for('remove_player', player_id=p.id) }}" onsubmit="return confirm('Rimuovere {{ p.name }} dalla rosa arruolabili? Lo storico resta salvato.');">
-            <button class="button danger" type="submit">Rimuovi dalla rosa</button>
-          </form>
+          {% if is_develop %}
+            <form class="inline-actions" method="post" action="{{ url_for('remove_player', player_id=p.id) }}" onsubmit="return confirm('Rimuovere {{ p.name }} dalla rosa arruolabili? Lo storico resta salvato.');">
+              <button class="button danger" type="submit">Rimuovi dalla rosa</button>
+            </form>
+          {% endif %}
         </div>
       </details>
     {% else %}
@@ -369,7 +415,7 @@
 <details class="panel admin-accordion" id="settings">
   <summary>
     <strong>News e strumenti leggeri</strong>
-    <span>Il Mister gestisce la lega. Backup, import e reset restano al Develop.</span>
+    <span>{% if is_develop %}Il Develop controlla piattaforma, leghe, backup e ruoli.{% else %}Il Mister gestisce la partita. Backup, import e reset restano al Develop.{% endif %}</span>
   </summary>
   <div class="accordion-body">
     <p class="muted">Link unico spogliatoio: <strong>{{ request.host_url.rstrip('/') }}{{ url_for('player_login') }}</strong></p>

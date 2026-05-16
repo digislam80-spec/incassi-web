@@ -57,7 +57,7 @@
       <a href="{{ url_for('player_dashboard') }}">Partita</a>
       <a href="{{ url_for('player_update_profile') }}">Profilo</a>
       <a href="{{ url_for('league_overview') }}">Stats</a>
-      <a href="{{ url_for('admin_dashboard') if can_manage else url_for('player_guide') }}">{% if can_manage %}Mister{% else %}Guida{% endif %}</a>
+      <a href="{{ url_for('admin_dashboard') if can_manage else url_for('player_guide') }}">{% if is_develop %}Develop{% elif can_manage %}Mister{% else %}Guida{% endif %}</a>
     </nav>
   {% elif is_admin %}
     <nav class="bottom-nav">
@@ -84,6 +84,25 @@
         button.textContent = "Copiato";
       }
     });
+    function updateCountdowns() {
+      document.querySelectorAll("[data-match-date]").forEach((box) => {
+        const target = new Date(box.dataset.matchDate);
+        const label = box.querySelector("[data-countdown]");
+        if (!label || Number.isNaN(target.getTime())) return;
+        const diff = target.getTime() - Date.now();
+        if (diff <= 0) {
+          label.textContent = "LIVE";
+          box.classList.add("is-live");
+          return;
+        }
+        const hours = Math.floor(diff / 3600000);
+        const minutes = Math.floor((diff % 3600000) / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        label.textContent = `${hours}h ${String(minutes).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}s`;
+      });
+    }
+    updateCountdowns();
+    setInterval(updateCountdowns, 1000);
   </script>
 </body>
 </html>

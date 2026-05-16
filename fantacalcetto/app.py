@@ -53,6 +53,16 @@ PUBLIC_DEVELOP_FALLBACK_PASSWORD = "Bombonera2026!"
 
 APP_UPDATES = [
     {
+        "title": "Develop arbitro delle leghe",
+        "body": "Approvazioni, spostamenti di lega, promozioni e degradazioni a supporter passano dal Develop: il Mister pensa alla partita.",
+        "tag": "Develop",
+    },
+    {
+        "title": "Next Match più hype",
+        "body": "La home calciatore mette davanti countdown, squadre e formazioni quando sono pronte: meno caos, più serata Champions.",
+        "tag": "Partita",
+    },
+    {
         "title": "Scelta lega in registrazione",
         "body": "Chi si registra sceglie subito la lega: supporter e richieste calciatore finiscono nello spogliatoio corretto.",
         "tag": "Leghe",
@@ -149,7 +159,7 @@ APP_UPDATES = [
     },
     {
         "title": "Ruoli Supporter e Calciatore",
-        "body": "Chi si registra entra subito come supporter. Mister o Develop possono poi promuoverlo a calciatore arruolabile.",
+        "body": "Chi si registra entra subito come supporter. Il Develop può poi promuoverlo a calciatore arruolabile nella lega giusta.",
         "tag": "Account",
     },
 ]
@@ -952,8 +962,10 @@ def current_league():
         return g.current_league_value
     player = current_player()
     league = None
+    if is_develop() and session.get("develop_league_id"):
+        league = query("select * from leagues where id = ?", (session.get("develop_league_id"),), one=True)
     if player and "league_id" in player.keys() and player["league_id"]:
-        league = query("select * from leagues where id = ?", (player["league_id"],), one=True)
+        league = league or query("select * from leagues where id = ?", (player["league_id"],), one=True)
     if not league:
         league = default_league()
     g.current_league_value = league
@@ -1786,18 +1798,44 @@ def admin_dashboard():
     maybe_auto_generate(match)
     match = featured_match()
     league_id = current_league_id()
-    players = query(
-        f"select * from players where {approved_players_sql()} and coalesce(league_id, ?) = ? order by power desc, score desc, name",
-        (league_id, league_id),
-    )
-    pending_players = query(
-        "select * from players where account_status = 'pending' and coalesce(league_id, ?) = ? order by created_at desc",
-        (league_id, league_id),
-    )
-    rejected_players = query(
-        "select * from players where account_status in ('rejected', 'removed') and coalesce(league_id, ?) = ? order by created_at desc limit 20",
-        (league_id, league_id),
-    )
+    if is_develop():
+        players = query(
+            """
+            select p.*, l.name as league_name
+            from players p
+            left join leagues l on l.id = p.league_id
+            where coalesce(p.account_status, 'approved') != 'pending'
+            order by l.name, p.active desc, p.account_status, p.account_type, p.power desc, p.score desc, p.name
+            """
+        )
+        pending_players = query(
+            """
+            select p.*, l.name as league_name
+            from players p
+            left join leagues l on l.id = p.league_id
+            where p.account_status = 'pending'
+            order by p.created_at desc
+            """
+        )
+        rejected_players = query(
+            """
+            select p.*, l.name as league_name
+            from players p
+            left join leagues l on l.id = p.league_id
+            where p.account_status in ('rejected', 'removed')
+            order by p.created_at desc limit 30
+            """
+        )
+    else:
+        players = query(
+            f"select * from players where {approved_players_sql()} and coalesce(league_id, ?) = ? order by power desc, score desc, name",
+            (league_id, league_id),
+        )
+        pending_players = []
+        rejected_players = query(
+            "select * from players where account_status in ('rejected', 'removed') and coalesce(league_id, ?) = ? order by created_at desc limit 20",
+            (league_id, league_id),
+        )
     reset_requests = query(
         """
         select pr.*, p.name as player_name, p.username as player_username
@@ -1957,6 +1995,22 @@ def create_league():
     return redirect(url_for("admin_dashboard"))
 
 
+@app.route("/develop/league-context", methods=["POST"])
+@require_admin
+def switch_develop_league():
+    if not is_develop():
+        return redirect(url_for("admin_dashboard"))
+    try:
+        league_id = int(request.form.get("league_id") or 0)
+    except (TypeError, ValueError):
+        league_id = 0
+    league = query("select id from leagues where id = ?", (league_id,), one=True)
+    if league:
+        session["develop_league_id"] = league["id"]
+        g.pop("current_league_value", None)
+    return redirect(url_for("admin_dashboard"))
+
+
 @app.route("/develop/leagues/<int:league_id>", methods=["POST"])
 @require_admin
 def update_league(league_id):
@@ -2065,6 +2119,7 @@ def register_player():
                 event_title,
                 event_body,
                 "registration",
+                league_id=selected_league["id"],
             )
             return render_template("register_done.html", requested_role=requested_role)
     return render_template(
@@ -2223,11 +2278,13 @@ def player_dashboard():
         if my_match["response"] == "waitlist":
             my_waitlist_positions[my_match["id"]] = waitlist_positions(my_match["id"]).get(player["id"])
     news_items = recent_league_events(8)
+    featured_players = invited_players(my_matches[0]["id"]) if my_matches else []
     return render_template(
         "player_dashboard.html",
         player=player,
         matches=my_matches,
         past_matches=past_matches,
+        featured_players=featured_players,
         match=match,
         phase=match_phase(match),
         waitlist_positions=my_waitlist_positions,
@@ -2464,6 +2521,8 @@ def player_update_mascot_name():
 @app.route("/players", methods=["POST"])
 @require_admin
 def add_player():
+    if not is_develop():
+        return redirect(url_for("admin_dashboard"))
     preferred_foot = request.form.get("preferred_foot", "right")
     if preferred_foot not in FOOT_LABELS:
         preferred_foot = "right"
@@ -2485,8 +2544,8 @@ def add_player():
         ),
     )
     log_league_event(
-        "Giocatore aggiunto dal mister",
-        f"{request.form['name'].strip()} entra nella rosa arruolabili dalla porta admin.",
+        "Giocatore aggiunto dal Develop",
+        f"{request.form['name'].strip()} entra nella rosa arruolabili dalla porta Develop.",
         "admin",
         player_id,
     )
@@ -2497,6 +2556,8 @@ def add_player():
 @require_admin
 def update_player(player_id):
     old_player = query("select * from players where id = ?", (player_id,), one=True)
+    if not old_player:
+        return redirect(url_for("admin_dashboard"))
     preferred_foot = request.form.get("preferred_foot", "right")
     if preferred_foot not in FOOT_LABELS:
         preferred_foot = "right"
@@ -2504,10 +2565,29 @@ def update_player(player_id):
     if requested_app_role not in ("member", "mister", "develop"):
         requested_app_role = "member"
     app_role = requested_app_role if is_develop() else (old_player["app_role"] if old_player and "app_role" in old_player.keys() else "member")
+    account_type = old_player["account_type"] if "account_type" in old_player.keys() else "player"
+    account_status = old_player["account_status"] if "account_status" in old_player.keys() else "approved"
+    target_league_id = old_player["league_id"] if "league_id" in old_player.keys() else current_league_id()
+    if is_develop():
+        account_type = request.form.get("account_type", account_type)
+        if account_type not in ("player", "supporter"):
+            account_type = "supporter"
+        account_status = request.form.get("account_status", account_status)
+        if account_status not in ("approved", "pending", "rejected", "removed"):
+            account_status = "approved"
+        try:
+            requested_league_id = int(request.form.get("league_id") or target_league_id or 0)
+        except (TypeError, ValueError):
+            requested_league_id = target_league_id
+        league = query("select id from leagues where id = ?", (requested_league_id,), one=True)
+        if league:
+            target_league_id = league["id"]
     execute(
         """
         update players
-        set name = ?, nickname = ?, phone = ?, role = ?, power = ?, reliability = ?, mascot = ?, mascot_name = ?, preferred_foot = ?, app_role = ?
+        set name = ?, nickname = ?, phone = ?, role = ?, power = ?, reliability = ?,
+            mascot = ?, mascot_name = ?, preferred_foot = ?, app_role = ?,
+            account_type = ?, account_status = ?, league_id = ?, active = case when ? in ('removed', 'rejected') then 0 else 1 end
         where id = ?
         """,
         (
@@ -2521,6 +2601,10 @@ def update_player(player_id):
             request.form.get("mascot_name", "").strip(),
             preferred_foot,
             app_role,
+            account_type,
+            account_status,
+            target_league_id,
+            account_status,
             player_id,
         ),
     )
@@ -2536,7 +2620,7 @@ def update_player(player_id):
             changes.append("stelle ritoccate")
     log_league_event(
         "Scheda calciatore modificata",
-        f"{request.form['name'].strip()} aggiornato dal mister. {', '.join(changes) if changes else 'Piccoli ritocchi da spogliatoio.'}",
+        f"{request.form['name'].strip()} aggiornato da {'Develop' if is_develop() else 'Mister'}. {', '.join(changes) if changes else 'Piccoli ritocchi da spogliatoio.'}",
         "admin",
         player_id,
     )
@@ -2574,13 +2658,27 @@ def update_player_power(player_id):
 @app.route("/players/<int:player_id>/approve", methods=["POST"])
 @require_admin
 def approve_player(player_id):
-    execute("update players set account_status = 'approved', account_type = 'player', active = 1 where id = ?", (player_id,))
-    player = query("select name from players where id = ?", (player_id,), one=True)
+    if not is_develop():
+        return redirect(url_for("admin_dashboard"))
+    player = query("select * from players where id = ?", (player_id,), one=True)
+    target_league_id = player["league_id"] if player and "league_id" in player.keys() else current_league_id()
+    try:
+        requested_league_id = int(request.form.get("league_id") or target_league_id or 0)
+    except (TypeError, ValueError):
+        requested_league_id = target_league_id
+    league = query("select id from leagues where id = ?", (requested_league_id,), one=True)
+    if league:
+        target_league_id = league["id"]
+    execute(
+        "update players set account_status = 'approved', account_type = 'player', active = 1, league_id = ? where id = ?",
+        (target_league_id, player_id),
+    )
     log_league_event(
         "Calciatore approvato",
-        f"{player['name'] if player else 'Un nuovo calciatore'} è stato promosso calciatore arruolabile. Si scaldi la panchina.",
+        f"{player['name'] if player else 'Un nuovo calciatore'} è stato promosso calciatore arruolabile dal Develop. Si scaldi la panchina.",
         "approval",
         player_id,
+        league_id=target_league_id,
     )
     return redirect(url_for("admin_dashboard"))
 
@@ -2588,11 +2686,13 @@ def approve_player(player_id):
 @app.route("/players/<int:player_id>/reject", methods=["POST"])
 @require_admin
 def reject_player(player_id):
+    if not is_develop():
+        return redirect(url_for("admin_dashboard"))
     execute("update players set account_status = 'rejected', active = 0 where id = ?", (player_id,))
     player = query("select name from players where id = ?", (player_id,), one=True)
     log_league_event(
         "Richiesta respinta",
-        f"{player['name'] if player else 'Una richiesta'} è stata respinta dal mister.",
+        f"{player['name'] if player else 'Una richiesta'} è stata respinta dal Develop.",
         "admin",
         player_id,
         "admin",
@@ -2603,6 +2703,8 @@ def reject_player(player_id):
 @app.route("/players/<int:player_id>/remove", methods=["POST"])
 @require_admin
 def remove_player(player_id):
+    if not is_develop():
+        return redirect(url_for("admin_dashboard"))
     execute(
         "update players set account_status = 'removed', active = 0 where id = ?",
         (player_id,),
