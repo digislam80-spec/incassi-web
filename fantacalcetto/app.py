@@ -56,6 +56,16 @@ PUBLIC_DEVELOP_FALLBACK_PASSWORD = "Bombonera2026!"
 
 APP_UPDATES = [
     {
+        "title": "MVP a tempo",
+        "body": "Il Mister assegna l'MVP partita: vale bonus score, finisce su LegaGram e il badge resta solo fino alla partita successiva se il campione conferma davvero.",
+        "tag": "Premi",
+    },
+    {
+        "title": "Formazioni più leggibili",
+        "body": "Campo tattico e liste squadra danno più spazio a mascotte, nomi veri, overall e dettagli tecnici: più TV, meno elenco della spesa.",
+        "tag": "Partita",
+    },
+    {
         "title": "Richiesta nuova lega",
         "body": "Dal login un supporter può chiedere al Develop di aprire una nuova lega. Se approvato, diventa Mister solo di quella lega.",
         "tag": "Leghe",
@@ -1927,6 +1937,52 @@ def active_award_types():
     return query("select * from award_types where active = 1 order by name")
 
 
+def mvp_award_type():
+    return query("select * from award_types where lower(name) like 'mvp%' order by id limit 1", one=True)
+
+
+def is_mvp_award(award_type_id):
+    award = query("select name from award_types where id = ?", (award_type_id,), one=True)
+    return bool(award and (award["name"] or "").lower().startswith("mvp"))
+
+
+def latest_mvp_player_id(league_id=None, before_match_id=None):
+    target_league_id = league_id or current_league_id()
+    before_clause = ""
+    params = [target_league_id, target_league_id]
+    if before_match_id:
+        before_clause = "and m.id != ?"
+        params.append(before_match_id)
+    latest_closed = query(
+        f"""
+        select m.id
+        from matches m
+        where coalesce(m.league_id, ?) = ?
+          and m.status = 'closed'
+          {before_clause}
+        order by m.match_date desc, m.id desc
+        limit 1
+        """,
+        tuple(params),
+        one=True,
+    )
+    if not latest_closed:
+        return None
+    row = query(
+        """
+        select ma.player_id
+        from match_awards ma
+        join award_types at on at.id = ma.award_type_id
+        where ma.match_id = ? and lower(at.name) like 'mvp%'
+        order by ma.created_at desc, ma.id desc
+        limit 1
+        """,
+        (latest_closed["id"],),
+        one=True,
+    )
+    return row["player_id"] if row else None
+
+
 def match_awards(match_id):
     return query(
         """
@@ -1938,6 +1994,58 @@ def match_awards(match_id):
         order by at.name, p.name
         """,
         (match_id,),
+    )
+
+
+def save_award_assignment(match_id, award_type_id, player_id, note=""):
+    if not award_type_id or not player_id:
+        return
+    match = get_match(match_id)
+    player = query("select id, name from players where id = ?", (player_id,), one=True)
+    if not match or not player:
+        return
+    note = (note or "").strip()
+    if is_mvp_award(award_type_id):
+        existing = query(
+            """
+            select id, player_id from match_awards
+            where match_id = ? and award_type_id = ?
+            """,
+            (match_id, award_type_id),
+        )
+        same_player = next((row for row in existing if row["player_id"] == player_id), None)
+        changed_holder = any(row["player_id"] != player_id for row in existing) or not same_player
+        for row in existing:
+            if row["player_id"] != player_id:
+                execute("update players set score = max(0, score - 3) where id = ?", (row["player_id"],))
+        execute("delete from match_awards where match_id = ? and award_type_id = ? and player_id != ?", (match_id, award_type_id, player_id))
+        if same_player:
+            execute("update match_awards set note = ? where id = ?", (note, same_player["id"]))
+        else:
+            execute(
+                """
+                insert into match_awards (match_id, award_type_id, player_id, note)
+                values (?, ?, ?, ?)
+                """,
+                (match_id, award_type_id, player_id, note),
+            )
+            execute("update players set score = score + 3 where id = ?", (player_id,))
+        if changed_holder:
+            log_league_event(
+                "MVP assegnato",
+                f"{player['name']} si prende l'MVP: +3 score, badge pronto per la prossima partita se conferma. Lo spogliatoio ora pretende una prestazione da copertina.",
+                event_type="news",
+                actor_player_id=player_id,
+                visibility="all",
+                league_id=match["league_id"],
+            )
+        return
+    execute(
+        """
+        insert into match_awards (match_id, award_type_id, player_id, note)
+        values (?, ?, ?, ?)
+        """,
+        (match_id, award_type_id, player_id, note),
     )
 
 
@@ -2061,6 +2169,7 @@ RULES = [
     "Il calciatore è tenuto a controllare la propria scheda evento: orario, campo, conferma o annullamento vivono lì dentro.",
     "La disdetta è libera, ma non gratis: più è vicina alla partita, più pesa su score, affidabilità e stelle.",
     "Gol, assist, vittorie e presenza fanno crescere. Il talento sale, ma pure la puntualità conta.",
+    "L'MVP lo assegna il Mister: dà +3 score, va su LegaGram e resta come stemma fino alla partita successiva solo se il giocatore conferma.",
     "Le stelle sono sacre ma non eterne: il mister assegna la base, poi il campo e le disdette fanno il resto.",
     "Mascotte e soprannomi devono essere goliardici, non offensivi: si ride insieme, non addosso.",
     "Il gruppo WhatsApp serve per il folklore; la verità ufficiale sta dentro FantaCalcetto.",
@@ -2792,6 +2901,7 @@ def player_dashboard():
     seed_develop_feed()
     news_items = recent_league_events(14)
     featured_players = invited_players(my_matches[0]["id"]) if my_matches else []
+    current_mvp_player_id = latest_mvp_player_id(league_id, my_matches[0]["id"]) if my_matches else None
     pending_transfers = pending_transfer_for_player(player["id"])
     return render_template(
         "player_dashboard.html",
@@ -2811,6 +2921,7 @@ def player_dashboard():
         pending_transfers=pending_transfers,
         mascots=MASCOTS,
         memberships=player_league_memberships(player["id"]),
+        current_mvp_player_id=current_mvp_player_id,
     )
 
 
@@ -3482,6 +3593,7 @@ def match_detail(match_id):
         notice=request.args.get("notice", ""),
         team_name_ideas=team_name_ideas(),
         team_logos=TEAM_LOGOS,
+        current_mvp_player_id=latest_mvp_player_id(match["league_id"], match_id),
     )
 
 
@@ -3505,6 +3617,7 @@ def player_match_detail(match_id):
         match_awards=match_awards(match_id),
         phase=match_phase(match),
         my_row=my_row,
+        current_mvp_player_id=latest_mvp_player_id(match["league_id"], match_id),
     )
 
 
@@ -3796,19 +3909,25 @@ def save_match_awards(match_id):
     award_type_id = int(request.form.get("award_type_id", 0) or 0)
     player_id = int(request.form.get("player_id", 0) or 0)
     if award_type_id and player_id:
-        execute(
-            """
-            insert into match_awards (match_id, award_type_id, player_id, note)
-            values (?, ?, ?, ?)
-            """,
-            (match_id, award_type_id, player_id, request.form.get("note", "").strip()),
-        )
+        save_award_assignment(match_id, award_type_id, player_id, request.form.get("note", ""))
     return redirect(url_for("match_detail", match_id=match_id))
 
 
 @app.route("/matches/<int:match_id>/awards/<int:award_id>/delete", methods=["POST"])
 @require_admin
 def delete_match_award(match_id, award_id):
+    award = query(
+        """
+        select ma.*, at.name as award_name
+        from match_awards ma
+        join award_types at on at.id = ma.award_type_id
+        where ma.id = ? and ma.match_id = ?
+        """,
+        (award_id, match_id),
+        one=True,
+    )
+    if award and (award["award_name"] or "").lower().startswith("mvp"):
+        execute("update players set score = max(0, score - 3) where id = ?", (award["player_id"],))
     execute("delete from match_awards where id = ? and match_id = ?", (award_id, match_id))
     return redirect(url_for("match_detail", match_id=match_id))
 
@@ -3867,16 +3986,12 @@ def save_result(match_id):
                 (match_id, row["player_id"], award_type_id),
                 one=True,
             )
-            if existing_award:
+            if is_mvp_award(award_type_id):
+                save_award_assignment(match_id, award_type_id, row["player_id"], award_note)
+            elif existing_award:
                 execute("update match_awards set note = ? where id = ?", (award_note, existing_award["id"]))
             else:
-                execute(
-                    """
-                    insert into match_awards (match_id, award_type_id, player_id, note)
-                    values (?, ?, ?, ?)
-                    """,
-                    (match_id, award_type_id, row["player_id"], award_note),
-                )
+                save_award_assignment(match_id, award_type_id, row["player_id"], award_note)
         goals_delta = goals - int(row["goals"] or 0)
         assists_delta = assists - int(row["assists"] or 0)
         score_delta = points - int(row["points_awarded"] or 0)

@@ -328,8 +328,11 @@
         {% if p.team == "A" or (featured.status not in ["teams", "teams_auto"] and loop.index is odd) %}
           <div class="player-row">
             <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
-            <strong>{% if p.app_role == "develop" %}<span class="role-badge develop">DEV</span>{% elif p.app_role == "mister" %}<span class="role-badge mister">M</span>{% endif %}{{ p.name }}</strong>
-            <small>{{ p.nickname or "senza soprannome" }} · {{ p.role[:3]|upper }} · OVR {{ p|overall_rating }}</small>
+            <div>
+              <strong>{% if p.app_role == "develop" %}<span class="role-badge develop">DEV</span>{% elif p.app_role == "mister" %}<span class="role-badge mister">M</span>{% endif %}{% if p.id == current_mvp_player_id and p.response in ["confirmed", "present"] %}<span class="mvp-chip">MVP</span>{% endif %}{{ p.name }}</strong>
+              <small>{{ p.nickname or "senza soprannome" }} · {{ p.role[:3]|upper }} · OVR {{ p|overall_rating }}</small>
+              <em>{{ p.power|stars }} · {{ p.preferred_foot|foot_label }} · {{ p.response|response_label }}</em>
+            </div>
           </div>
         {% endif %}
       {% else %}
@@ -342,6 +345,7 @@
         {% if p.team == "A" or (featured.status not in ["teams", "teams_auto"] and loop.index is odd) %}
           <div class="field-player team-a slot-a-{{ loop.index }}">
             <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
+            {% if p.id == current_mvp_player_id and p.response in ["confirmed", "present"] %}<i class="field-mvp">MVP</i>{% endif %}
             <b>{{ p.nickname or p.name }}</b>
             <small>{{ p|overall_rating }}</small>
           </div>
@@ -351,6 +355,7 @@
         {% if p.team == "B" or (featured.status not in ["teams", "teams_auto"] and loop.index is even) %}
           <div class="field-player team-b slot-b-{{ loop.index }}">
             <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
+            {% if p.id == current_mvp_player_id and p.response in ["confirmed", "present"] %}<i class="field-mvp">MVP</i>{% endif %}
             <b>{{ p.nickname or p.name }}</b>
             <small>{{ p|overall_rating }}</small>
           </div>
@@ -364,8 +369,11 @@
         {% if p.team == "B" or (featured.status not in ["teams", "teams_auto"] and loop.index is even) %}
           <div class="player-row">
             <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
-            <strong>{% if p.app_role == "develop" %}<span class="role-badge develop">DEV</span>{% elif p.app_role == "mister" %}<span class="role-badge mister">M</span>{% endif %}{{ p.name }}</strong>
-            <small>{{ p.nickname or "senza soprannome" }} · {{ p.role[:3]|upper }} · OVR {{ p|overall_rating }}</small>
+            <div>
+              <strong>{% if p.app_role == "develop" %}<span class="role-badge develop">DEV</span>{% elif p.app_role == "mister" %}<span class="role-badge mister">M</span>{% endif %}{% if p.id == current_mvp_player_id and p.response in ["confirmed", "present"] %}<span class="mvp-chip">MVP</span>{% endif %}{{ p.name }}</strong>
+              <small>{{ p.nickname or "senza soprannome" }} · {{ p.role[:3]|upper }} · OVR {{ p|overall_rating }}</small>
+              <em>{{ p.power|stars }} · {{ p.preferred_foot|foot_label }} · {{ p.response|response_label }}</em>
+            </div>
           </div>
         {% endif %}
       {% else %}
@@ -448,7 +456,7 @@
     <h2>Regole crescita</h2>
     <span class="pill">{{ player.power|player_title }}</span>
   </div>
-  <p class="muted">Confermare vale +1 score e +2 affidabilità. In partita: vittoria +3, pareggio +1, gol +2, assist +1. Se fai almeno 5 punti in una partita prendi +0.5 stella. Disdire costa score e affidabilità: sotto 24h perdi anche 0.5 stella, sotto 3h perdi 1 stella.</p>
+  <p class="muted">Confermare vale +1 score e +2 affidabilità. In partita: vittoria +3, pareggio +1, gol +2, assist +1, MVP +3 score. Se fai almeno 5 punti in una partita prendi +0.5 stella. Disdire costa score e affidabilità: sotto 24h perdi anche 0.5 stella, sotto 3h perdi 1 stella.</p>
 </section>
 
 <section class="panel" data-app-section="profilo">
