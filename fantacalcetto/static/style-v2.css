@@ -1706,9 +1706,7 @@ h2 { margin: 0; font-size: 21px; }
 .supporter-card small { display: block; color: var(--muted); font-weight: 850; }
 .post-list { display: grid; gap: 12px; margin-top: 12px; }
 .post-card {
-  display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
-  gap: 10px;
+  display: block;
   padding: 13px;
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -1719,6 +1717,33 @@ h2 { margin: 0; font-size: 21px; }
   justify-content: space-between;
   gap: 10px;
   align-items: start;
+}
+.post-source-line {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+.post-avatar-inline {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  overflow: hidden;
+  border-radius: 15px;
+  background: #edf7ec;
+}
+.post-avatar-inline img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 7px 5px rgba(0,0,0,.14));
+}
+.post-avatar-inline .agency-mark {
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  font-size: 13px;
 }
 .post-card header strong { display: block; line-height: 1.1; }
 .verified-dot {
@@ -3356,9 +3381,10 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
 .comment-form input { min-height: 38px; }
 .profile-help-button {
   margin-top: 0;
-  border-color: rgba(255,255,255,.5);
-  background: rgba(255,255,255,.14);
-  color: white;
+  border-color: rgba(216,242,95,.96);
+  background: linear-gradient(135deg, var(--lime), var(--yellow));
+  color: #10251a;
+  box-shadow: 0 10px 22px rgba(0,0,0,.16);
 }
 .app-modal {
   width: min(720px, calc(100% - 28px));
@@ -3536,6 +3562,101 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
   }
   .page { width: min(100% - 20px, 1180px); margin-top: 14px; }
   .hero, .match-header { min-height: 0; padding: 20px; }
+  .profile-hero {
+    grid-template-columns: minmax(0, 1fr) clamp(112px, 30vw, 136px);
+    gap: 10px;
+    align-items: center;
+    padding: 16px;
+  }
+  .profile-hero h1 {
+    font-size: clamp(28px, 8vw, 40px);
+    line-height: .98;
+  }
+  .profile-hero .lede {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.28;
+  }
+  .profile-hero .hero-actions {
+    gap: 7px;
+    margin-top: 12px;
+  }
+  .profile-hero .hero-actions .button {
+    flex: 1 1 118px;
+    min-height: 40px;
+    padding: 9px 10px;
+    font-size: 12px;
+  }
+  .profile-card-stage {
+    width: clamp(112px, 30vw, 136px);
+    min-height: 152px;
+    justify-self: end;
+  }
+  .fifa-premium-card {
+    width: clamp(112px, 30vw, 136px);
+    min-height: 154px;
+    padding: 10px 8px 12px;
+    border-radius: 20px;
+  }
+  .fifa-premium-card::after {
+    inset: 42px 8px 42px;
+  }
+  .fifa-premium-card .fifa-card-top {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+  .fifa-premium-card .fifa-rating strong { font-size: 30px; line-height: .9; }
+  .fifa-premium-card .fifa-rating span,
+  .fifa-premium-card .fifa-rating b {
+    font-size: 9px;
+    line-height: 1;
+  }
+  .fifa-premium-card .fifa-card-mascot {
+    width: 104px;
+    height: 104px;
+    margin: -14px -18px -24px -18px;
+    transform: translate(-5px, 8px) scale(1.08);
+  }
+  .fifa-premium-card .fifa-nameplate {
+    margin-top: 0;
+    padding-top: 0;
+  }
+  .fifa-premium-card .fifa-nameplate b {
+    font-size: 12px;
+    line-height: 1;
+  }
+  .fifa-premium-card .fifa-nameplate small {
+    display: block;
+    font-size: 10px;
+  }
+  .fifa-premium-card .fifa-stats { display: none; }
+  .supporter-profile-card {
+    width: clamp(112px, 30vw, 136px);
+    min-height: 154px;
+    gap: 5px;
+    padding: 10px 8px;
+    border-radius: 20px;
+  }
+  .supporter-profile-card img {
+    width: 78px;
+    height: 78px;
+    padding: 5px;
+    border-radius: 18px;
+  }
+  .supporter-profile-card span {
+    padding: 4px 7px;
+    font-size: 8px;
+  }
+  .supporter-profile-card strong {
+    max-width: 100%;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .supporter-profile-card small,
+  .supporter-profile-card div { display: none; }
   .site-footer { padding-bottom: 92px; }
   .form, .roster-row, .stat-row, .quick-pagella-row, .scoreline, .admin-actions, .admin-player-stats, .league-card, .league-metrics, .match-quickbar, .notification-grid, .award-row, .data-actions, .password-request-row, .password-reset-form, .team-name-grid, .team-editor-row, .comment-form, .help-grid, .admin-hub-grid, .admin-split, .admin-inline-buttons, .inline-league-switch, .league-context-switch, .sticky-form-actions, .role-choice-grid, .league-choice-grid, .team-drag-board, .match-analysis-hero, .analysis-grid, .analysis-team-grid { grid-template-columns: 1fr; }
   .match-head { display: grid; }

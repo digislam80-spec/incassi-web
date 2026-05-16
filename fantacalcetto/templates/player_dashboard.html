@@ -510,22 +510,24 @@
   <div class="post-list">
     {% for item in news_items %}
       <article class="post-card">
-        <div class="post-avatar {% if item.event_type != 'cronaca' %}agency-avatar{% endif %}">
-          {% if item.event_type == "cronaca" %}
-            <img src="{{ url_for('static', filename='mascots/' ~ (player.mascot or 'jolly') ~ '.png') }}" alt="">
-          {% elif item.event_type == "mercato" %}
-            <span class="agency-mark sky">S24</span>
-          {% elif item.event_type == "develop" %}
-            <span class="agency-mark dev">DEV</span>
-          {% else %}
-            <span class="agency-mark news">FCN</span>
-          {% endif %}
-        </div>
         <div>
           <header>
-            <div>
-              <strong>{% if item.event_type == "mercato" %}SkySpogliatoio{% elif item.event_type == "develop" %}Digislam Dev Room{% elif item.event_type == "cronaca" %}{{ item.actor_name or item.title }}{% else %}FantaCalcetto News{% endif %}<span class="verified-dot">✓</span><span class="source-badge {% if item.event_type == 'mercato' %}sky{% elif item.event_type == 'develop' %}dev{% elif item.event_type == 'cronaca' %}player{% else %}news{% endif %}">{% if item.event_type == "mercato" %}SKY{% elif item.event_type == "develop" %}DEVELOPER{% elif item.event_type == "cronaca" %}{% if is_develop %}DEV{% elif can_manage %}MISTER{% elif effective_supporter %}TIFOSO{% else %}CALCIATORE{% endif %}{% else %}NEWS{% endif %}</span></strong>
-              <small>{{ item.created_at }} · {{ current_league.name if current_league else "Lega Bombonera" }}</small>
+            <div class="post-source-line">
+              <div class="post-avatar-inline {% if item.event_type != 'cronaca' %}agency-avatar{% endif %}">
+                {% if item.event_type == "cronaca" %}
+                  <img src="{{ url_for('static', filename='mascots/' ~ (player.mascot or 'jolly') ~ '.png') }}" alt="">
+                {% elif item.event_type == "mercato" %}
+                  <span class="agency-mark sky">S24</span>
+                {% elif item.event_type == "develop" %}
+                  <span class="agency-mark dev">DEV</span>
+                {% else %}
+                  <span class="agency-mark news">FCN</span>
+                {% endif %}
+              </div>
+              <div>
+                <strong>{% if item.event_type == "mercato" %}SkySpogliatoio{% elif item.event_type == "develop" %}Digislam Dev Room{% elif item.event_type == "cronaca" %}{{ item.actor_name or item.title }}{% else %}FantaCalcetto News{% endif %}<span class="verified-dot">✓</span><span class="source-badge {% if item.event_type == 'mercato' %}sky{% elif item.event_type == 'develop' %}dev{% elif item.event_type == 'cronaca' %}player{% else %}news{% endif %}">{% if item.event_type == "mercato" %}SKY{% elif item.event_type == "develop" %}DEVELOPER{% elif item.event_type == "cronaca" %}{% if is_develop %}DEV{% elif can_manage %}MISTER{% elif effective_supporter %}TIFOSO{% else %}CALCIATORE{% endif %}{% else %}NEWS{% endif %}</span></strong>
+                <small>{{ item.created_at }} · {{ current_league.name if current_league else "Lega Bombonera" }}</small>
+              </div>
             </div>
             <small>{% if item.event_type == "mercato" %}🔁 mercato{% elif item.event_type == "develop" %}🛠️ update app{% elif item.event_type == "cronaca" %}⚽ storia{% else %}📣 ufficiale{% endif %}</small>
           </header>
