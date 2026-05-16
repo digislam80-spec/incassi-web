@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-title" content="Incassi">
     <title>Incassi</title>
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="stylesheet" href="/style.css?v=20260516-3">
+    <link rel="stylesheet" href="/style.css?v=20260516-4">
   </head>
   <body>
     <section class="login" id="loginView">
@@ -28,9 +28,9 @@
       </form>
     </section>
 
-    <main class="shell">
-      <header class="topbar">
-        <div class="brand">
+    <main class="app-frame shell">
+      <header class="app-header topbar">
+        <div class="brand-lockup brand">
           <span class="brand-mark" aria-hidden="true"></span>
           <div>
             <h1>Registro incassi</h1>
@@ -38,31 +38,68 @@
           </div>
         </div>
         <div class="top-actions">
-          <button class="icon-button" id="refreshButton" type="button" aria-label="Aggiorna">↻</button>
-          <button class="icon-button" id="logoutButton" type="button" aria-label="Esci">×</button>
+          <button class="round-button icon-button" id="refreshButton" type="button" aria-label="Aggiorna">↻</button>
+          <button class="round-button icon-button muted-action" id="logoutButton" type="button" aria-label="Esci">×</button>
         </div>
       </header>
 
-      <section class="month-overview" aria-label="Andamento mese">
-        <div class="month-picker-card">
+      <section class="month-hero month-overview" aria-label="Andamento mensile">
+        <div class="hero-top">
+          <button class="month-arrow" id="previousMonthButton" type="button" aria-label="Mese precedente">‹</button>
           <label>
-            <span>Mese</span>
-            <input id="overviewMonth" type="month">
+            <span id="heroMonthLabel">Mese</span>
+            <input id="overviewMonth" type="month" aria-label="Mese">
           </label>
+          <button class="month-arrow" id="nextMonthButton" type="button" aria-label="Mese successivo">›</button>
         </div>
-        <div class="month-total-card">
-          <span>Totale mese</span>
-          <strong id="monthTotal">€ 0,00</strong>
-          <p id="monthTrend">Mese precedente: € 0,00</p>
+        <strong class="hero-amount month-total-card" id="monthTotal">€ 0,00</strong>
+        <div class="hero-meta">
+          <span id="heroDays">0 giorni</span>
+          <span>Oggi <b id="todayTotal">€ 0,00</b></span>
+          <span id="monthTrend">Mese precedente: € 0,00</span>
         </div>
-        <div class="today-card">
-          <span>Oggi</span>
-          <strong id="todayTotal">€ 0,00</strong>
-        </div>
-        <div class="month-breakdown" id="monthBreakdown"></div>
+        <nav class="hero-tabs" aria-label="Periodo statistiche">
+          <button class="active" data-screen-button="history" type="button">Mese</button>
+          <button data-screen-button="stats" type="button">Sett.</button>
+          <button data-screen-button="stats" type="button">Anno</button>
+          <button data-screen-button="stats" type="button">Date</button>
+        </nav>
+        <div class="hero-trend" id="heroTrend" aria-label="Andamento con importi"></div>
       </section>
 
-      <nav class="screen-nav" aria-label="Navigazione app">
+      <section class="method-grid month-breakdown" id="monthBreakdown" aria-label="Riepilogo metodi"></section>
+
+      <section class="command-panel" aria-label="Azioni rapide">
+        <button class="command primary-command" id="historyAddButton" type="button" aria-label="Aggiungi nuovo incasso">
+          <span>+</span>
+          <strong>Nuovo incasso</strong>
+        </button>
+        <button class="command" data-screen-button="history" type="button">
+          <span>✎</span>
+          <strong>Correggi</strong>
+        </button>
+        <button class="command" data-screen-button="stats" type="button">
+          <span>⌁</span>
+          <strong>Insight</strong>
+        </button>
+      </section>
+
+      <section class="insight-strip" aria-label="Insight mese">
+        <span>
+          <b>Media</b>
+          <em id="monthAverage">€ 0/giorno</em>
+        </span>
+        <span>
+          <b>Migliore</b>
+          <em id="bestDay">Nessun dato</em>
+        </span>
+        <span>
+          <b>Backup</b>
+          <em>Automatico</em>
+        </span>
+      </section>
+
+      <nav class="bottom-nav screen-nav" aria-label="Navigazione app">
         <button class="secondary back-button" id="backButton" type="button" hidden>Indietro</button>
         <button class="secondary active" data-screen-button="history" type="button">Lista</button>
         <button class="secondary" data-screen-button="stats" type="button">Grafici</button>
@@ -250,18 +287,22 @@
         <p class="hint" id="importResult"></p>
       </section>
 
-      <section class="history screen" id="historyScreen" data-screen="history" aria-label="Storico incassi">
-        <div class="history-head">
-          <h2>Lista storica rapida</h2>
-          <button class="add-button compact" id="historyAddButton" type="button" aria-label="Aggiungi nuovo incasso">
-            <span>+</span>
-            Nuovo
-          </button>
+      <section class="quick-list history screen" id="historyScreen" data-screen="history" aria-label="Storico incassi">
+        <div class="section-head history-head">
+          <div>
+            <span>Storico</span>
+            <h2>Lista rapida</h2>
+          </div>
+          <button type="button" data-screen-button="stats">Tutti</button>
         </div>
+        <nav class="list-switch" aria-label="Tipo visualizzazione">
+          <button class="active" type="button">Totale giornata</button>
+          <button type="button">Dettaglio</button>
+        </nav>
         <div id="entries" class="entries"></div>
       </section>
     </main>
 
-    <script src="/app.js?v=20260516-3"></script>
+    <script src="/app.js?v=20260516-4"></script>
   </body>
 </html>

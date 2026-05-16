@@ -17,6 +17,11 @@ const monthTotalEl = document.querySelector("#monthTotal");
 const monthTrendEl = document.querySelector("#monthTrend");
 const monthBreakdownEl = document.querySelector("#monthBreakdown");
 const todayTotalEl = document.querySelector("#todayTotal");
+const heroMonthLabel = document.querySelector("#heroMonthLabel");
+const heroDaysEl = document.querySelector("#heroDays");
+const heroTrendEl = document.querySelector("#heroTrend");
+const monthAverageEl = document.querySelector("#monthAverage");
+const bestDayEl = document.querySelector("#bestDay");
 const appError = document.querySelector("#appError");
 const statsMode = document.querySelector("#statsMode");
 const statsDay = document.querySelector("#statsDay");
@@ -56,6 +61,8 @@ const yesterdayButton = document.querySelector("#yesterdayButton");
 const todayButton = document.querySelector("#todayButton");
 const formTitle = document.querySelector("#formTitle");
 const backButton = document.querySelector("#backButton");
+const previousMonthButton = document.querySelector("#previousMonthButton");
+const nextMonthButton = document.querySelector("#nextMonthButton");
 const screenButtons = document.querySelectorAll("[data-screen-button]");
 const screens = document.querySelectorAll("[data-screen]");
 
@@ -68,7 +75,7 @@ const eur = new Intl.NumberFormat("it-IT", {
   style: "currency",
   currency: "EUR",
 });
-const chartColors = ["#0f766e", "#2563eb", "#9333ea", "#c2410c", "#64748b"];
+const chartColors = ["#111827", "#c71f36", "#0f766e", "#7c3aed", "#6b7280"];
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -548,15 +555,36 @@ function renderOverview() {
   const previousTotal = sumEntries(previousEntries);
   const diff = monthTotal - previousTotal;
   const totals = methodTotals(monthEntries);
+  const bestEntry = [...monthEntries].sort((a, b) => Number(b.totale || 0) - Number(a.totale || 0))[0];
+  const topEntries = [...monthEntries]
+    .sort((a, b) => Number(b.totale || 0) - Number(a.totale || 0))
+    .slice(0, 4);
+  const topValue = Math.max(...topEntries.map((entry) => Number(entry.totale || 0)), 1);
 
   monthTotalEl.textContent = eur.format(monthTotal);
-  monthTrendEl.textContent = `${readableMonth(previous)}: ${eur.format(previousTotal)} (${diff >= 0 ? "+" : ""}${eur.format(diff)})`;
+  heroMonthLabel.textContent = readableMonth(selectedMonth);
+  heroDaysEl.textContent = `${monthEntries.length} ${monthEntries.length === 1 ? "giorno" : "giorni"}`;
+  monthTrendEl.textContent = `${diff >= 0 ? "+" : ""}${eur.format(diff)}`;
+  monthTrendEl.classList.toggle("up", diff >= 0);
+  monthTrendEl.classList.toggle("down", diff < 0);
+  monthAverageEl.textContent = `${eur.format(monthEntries.length ? monthTotal / monthEntries.length : 0)}/giorno`;
+  bestDayEl.textContent = bestEntry ? `${readableDate(bestEntry.data).replace(/\s\d{4}$/, "")} · ${eur.format(bestEntry.totale || 0)}` : "Nessun dato";
+  heroTrendEl.innerHTML = topEntries.length
+    ? topEntries.map((entry, index) => `
+        <span class="${entry.data === today() ? "today" : ""}" style="--value:${Math.max(8, Math.round((Number(entry.totale || 0) / topValue) * 100))}%">
+          <em>${entry.data === today() ? "Oggi" : readableDate(entry.data).replace(/\s\d{4}$/, "")}</em>
+          <i></i>
+          <strong>${eur.format(entry.totale || 0).replace(",00", "")}</strong>
+        </span>
+      `).join("")
+    : '<span style="--value:0%"><em>Nessun dato</em><i></i><strong>€ 0</strong></span>';
   monthBreakdownEl.innerHTML = fields
     .map((field, index) => `
-      <div style="border-left-color:${chartColors[index]}">
+      <article style="--accent:${chartColors[index]}">
         <span>${labels[field]}</span>
         <strong>${eur.format(totals[field])}</strong>
-      </div>
+        <em>${monthTotal ? Math.round((totals[field] / monthTotal) * 100) : 0}%</em>
+      </article>
     `)
     .join("");
 }
@@ -593,23 +621,27 @@ function renderHistory() {
     const list = section.querySelector(".history-list");
     items.forEach((entry) => {
       const row = document.createElement("button");
-      row.className = "history-row";
+      row.className = "daily-row history-row";
       row.type = "button";
+      const activeMethods = fields
+        .filter((field) => Number(entry[field] || 0) > 0)
+        .map((field) => labels[field])
+        .join(" + ") || "Nessun incasso";
+      const date = new Date(`${entry.data}T12:00:00`);
+      const day = new Intl.DateTimeFormat("it-IT", { day: "2-digit" }).format(date);
+      const monthShort = new Intl.DateTimeFormat("it-IT", { month: "short" }).format(date).replace(".", "");
       row.innerHTML = `
-        <span class="row-main">
-          <span>
-            <span>${readableDate(entry.data)}</span>
-          </span>
-          <strong class="row-total">${eur.format(entry.totale || 0)}</strong>
+        <time>
+          <b>${day}</b>
+          ${monthShort}
+        </time>
+        <span>
+          <b>${activeMethods}</b>
+          <small>
+            ${fields.map((field) => `<i>${labels[field]} ${eur.format(entry[field] || 0).replace(",00", "")}</i>`).join("")}
+          </small>
         </span>
-        <span class="row-body">
-          <span class="row-methods">
-            ${fields.map((field) => `<span><small>${labels[field]}</small>${eur.format(entry[field] || 0)}</span>`).join("")}
-          </span>
-          <span class="row-action">
-            <em aria-label="Osserva e modifica">✎</em>
-          </span>
-        </span>
+        <strong>${eur.format(entry.totale || 0)}</strong>
       `;
       row.addEventListener("click", () => openForm(entry));
       list.appendChild(row);
@@ -818,6 +850,16 @@ importButton.addEventListener("click", importJson);
 exportButton.addEventListener("click", exportBackup);
 overviewMonth.addEventListener("input", renderOverview);
 overviewMonth.addEventListener("change", renderOverview);
+previousMonthButton.addEventListener("click", () => {
+  overviewMonth.value = previousMonth(overviewMonth.value || currentMonth());
+  render();
+});
+nextMonthButton.addEventListener("click", () => {
+  const date = new Date(`${overviewMonth.value || currentMonth()}-01T12:00:00`);
+  date.setMonth(date.getMonth() + 1);
+  overviewMonth.value = date.toISOString().slice(0, 7);
+  render();
+});
 [statsMode, statsDay, statsWeek, statsMonth, statsYear, statsFrom, statsTo].forEach((input) => {
   input.addEventListener("input", renderStats);
   input.addEventListener("change", renderStats);
