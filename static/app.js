@@ -39,6 +39,16 @@ const importResult = document.querySelector("#importResult");
 const transferList = document.querySelector("#transferList");
 const addTransferButton = document.querySelector("#addTransferButton");
 const transferTotalEl = document.querySelector("#transferTotal");
+const entryMode = document.querySelector("#entryMode");
+const quickEntry = document.querySelector("#quickEntry");
+const quickData = document.querySelector("#quickData");
+const quickType = document.querySelector("#quickType");
+const quickAmount = document.querySelector("#quickAmount");
+const quickTransferNameRow = document.querySelector("#quickTransferNameRow");
+const quickTransferName = document.querySelector("#quickTransferName");
+const quickYesterdayButton = document.querySelector("#quickYesterdayButton");
+const quickTodayButton = document.querySelector("#quickTodayButton");
+const dailyEditSections = document.querySelectorAll(".daily-edit-section");
 const historyAddButton = document.querySelector("#historyAddButton");
 const closeFormButton = document.querySelector("#closeFormButton");
 const deleteCurrentButton = document.querySelector("#deleteCurrentButton");
@@ -208,7 +218,7 @@ function goBack() {
 function openForm(entry = null) {
   resetForm(entry);
   showScreen("form", true, { instant: true });
-  focusFormStart();
+  focusFormStart(Boolean(entry));
 }
 
 function closeForm() {
@@ -219,11 +229,23 @@ function closeForm() {
 
 function resetForm(entry = null) {
   form.reset();
+  const isEditing = Boolean(entry);
+  entryMode.value = isEditing ? "edit" : "quick";
+  quickEntry.hidden = isEditing;
+  dailyEditSections.forEach((section) => {
+    section.hidden = !isEditing;
+  });
+
   document.querySelector("#entryId").value = entry?.id || "";
   document.querySelector("#data").value = entry?.data || today();
+  quickData.value = entry?.data || today();
+  quickType.value = "os";
+  quickAmount.value = "";
+  quickTransferName.value = "";
+  updateQuickTransferVisibility();
   document.querySelector("#note").value = entry?.note || "";
-  formTitle.textContent = entry ? "Modifica incasso" : "Aggiungi nuovo incasso";
-  deleteCurrentButton.hidden = !entry;
+  formTitle.textContent = isEditing ? "Modifica incasso" : "Aggiungi incasso";
+  deleteCurrentButton.hidden = !isEditing;
 
   fields.forEach((field) => {
     const input = document.querySelector(`#${field}`);
@@ -238,11 +260,16 @@ function resetForm(entry = null) {
   updateTransferTotal();
 }
 
-function focusFormStart() {
+function focusFormStart(isEditing = false) {
   requestAnimationFrame(() => {
     form.scrollIntoView({ block: "start", behavior: "auto" });
-    document.querySelector("#data").focus({ preventScroll: true });
+    const target = isEditing ? document.querySelector("#data") : quickAmount;
+    target.focus({ preventScroll: true });
   });
+}
+
+function updateQuickTransferVisibility() {
+  quickTransferNameRow.hidden = quickType.value !== "bonifici";
 }
 
 function resetStatsDefaults() {
@@ -286,6 +313,11 @@ async function loadEntries() {
 async function saveEntry(event) {
   event.preventDefault();
 
+  if (entryMode.value === "quick") {
+    await saveQuickEntry();
+    return;
+  }
+
   const payload = {
     id: document.querySelector("#entryId").value,
     data: document.querySelector("#data").value,
@@ -315,6 +347,77 @@ async function saveEntry(event) {
   await loadEntries();
   screenStack = ["history"];
   showScreen("history", false);
+}
+
+async function saveQuickEntry() {
+  const date = quickData.value || today();
+  const type = quickType.value;
+  const amount = parseNumber(quickAmount.value);
+
+  if (!amount) {
+    showAppError("Inserisci un importo da aggiungere.");
+    quickAmount.focus();
+    return;
+  }
+
+  const existing = entries.find((entry) => entry.data === date);
+  const payload = existing
+    ? {
+        ...existing,
+        bonifici_dettagli: [...(existing.bonifici_dettagli || [])],
+      }
+    : {
+        id: "",
+        data: date,
+        note: "",
+        bonifici_dettagli: [],
+        os: 0,
+        contanti: 0,
+        bonifici: 0,
+        paypal: 0,
+        altri: 0,
+      };
+
+  payload.data = date;
+  payload[type] = Number(payload[type] || 0) + amount;
+
+  if (type === "bonifici") {
+    const existingTransferTotal = payload.bonifici_dettagli.reduce((sum, item) => sum + Number(item.importo || 0), 0);
+    const undocumentedTransferTotal = Number(existing?.bonifici || 0) - existingTransferTotal;
+    if (undocumentedTransferTotal > 0.009) {
+      payload.bonifici_dettagli.push({
+        nome: "Bonifici precedenti",
+        importo: roundMoney(undocumentedTransferTotal),
+      });
+    }
+    payload.bonifici_dettagli.push({
+      nome: quickTransferName.value.trim(),
+      importo: amount,
+    });
+  }
+
+  const response = await fetch("/api/incassi", {
+    method: "POST",
+    headers: authHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    showAppError(error.message || "Errore nel salvataggio.");
+    return;
+  }
+
+  resetForm();
+  screenStack = ["history"];
+  showScreen("history", false);
+  await loadEntries();
+  screenStack = ["history"];
+  showScreen("history", false);
+}
+
+function roundMoney(value) {
+  return Math.round(Number(value || 0) * 100) / 100;
 }
 
 async function deleteEntry(id) {
@@ -704,6 +807,13 @@ yesterdayButton.addEventListener("click", () => {
 todayButton.addEventListener("click", () => {
   document.querySelector("#data").value = today();
 });
+quickYesterdayButton.addEventListener("click", () => {
+  quickData.value = addDays(today(), -1);
+});
+quickTodayButton.addEventListener("click", () => {
+  quickData.value = today();
+});
+quickType.addEventListener("change", updateQuickTransferVisibility);
 importButton.addEventListener("click", importJson);
 exportButton.addEventListener("click", exportBackup);
 overviewMonth.addEventListener("input", renderOverview);

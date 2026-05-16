@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#0f766e">
+    <meta name="theme-color" content="#151515">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Incassi">
     <title>Incassi</title>
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="stylesheet" href="/style.css?v=20260515-15">
+    <link rel="stylesheet" href="/style.css?v=20260516-2">
   </head>
   <body>
     <section class="login" id="loginView">
@@ -31,10 +31,10 @@
     <main class="shell">
       <header class="topbar">
         <div class="brand">
-          <img src="/logo-digislam.png" alt="Digislam Print Lab">
+          <span class="brand-mark" aria-hidden="true"></span>
           <div>
-            <p class="eyebrow">Incassi condivisi</p>
             <h1>Registro incassi</h1>
+            <p class="eyebrow">Digislam Print Lab</p>
           </div>
         </div>
         <div class="top-actions">
@@ -64,9 +64,9 @@
 
       <nav class="screen-nav" aria-label="Navigazione app">
         <button class="secondary back-button" id="backButton" type="button" hidden>Indietro</button>
-        <button class="secondary active" data-screen-button="history" type="button">Lista rapida</button>
-        <button class="secondary" data-screen-button="stats" type="button">Statistiche</button>
-        <button class="secondary" data-screen-button="import" type="button">Importa</button>
+        <button class="secondary active" data-screen-button="history" type="button">Lista</button>
+        <button class="secondary" data-screen-button="stats" type="button">Grafici</button>
+        <button class="secondary" data-screen-button="import" type="button">Backup</button>
       </nav>
 
       <p class="error app-error" id="appError" role="alert"></p>
@@ -142,13 +142,46 @@
 
       <form class="entry-form screen" id="entryForm" data-screen="form" hidden>
         <input type="hidden" id="entryId">
+        <input type="hidden" id="entryMode" value="quick">
 
         <div class="form-head">
           <h2 id="formTitle">Aggiungi nuovo incasso</h2>
           <button class="icon-button" id="closeFormButton" type="button" aria-label="Chiudi">×</button>
         </div>
 
-        <div class="date-row">
+        <section class="quick-entry" id="quickEntry">
+          <div class="quick-entry-grid">
+            <label>
+              <span>Data</span>
+              <input id="quickData" type="date" required>
+            </label>
+            <label>
+              <span>Tipo incasso</span>
+              <select id="quickType">
+                <option value="os">POS</option>
+                <option value="contanti">Contanti</option>
+                <option value="bonifici">Bonifico</option>
+                <option value="paypal">PayPal</option>
+                <option value="altri">Altri metodi</option>
+              </select>
+            </label>
+          </div>
+          <div class="quick-dates compact" aria-label="Date rapide nuovo incasso">
+            <button class="secondary" id="quickYesterdayButton" type="button">Ieri</button>
+            <button class="secondary" id="quickTodayButton" type="button">Oggi</button>
+          </div>
+          <label>
+            <span>Importo</span>
+            <input id="quickAmount" type="text" inputmode="decimal" placeholder="0,00">
+          </label>
+          <label id="quickTransferNameRow" hidden>
+            <span>Nome bonifico</span>
+            <input id="quickTransferName" type="text" placeholder="Chi ha fatto il bonifico">
+          </label>
+          <p class="hint">Ogni nuovo incasso si somma automaticamente alla giornata scelta.</p>
+        </section>
+
+        <div class="date-row daily-edit-section">
           <div class="quick-dates" aria-label="Date rapide">
             <button class="secondary" id="yesterdayButton" type="button">Ieri</button>
             <button class="secondary" id="todayButton" type="button">Oggi</button>
@@ -159,7 +192,7 @@
           </label>
         </div>
 
-        <div class="grid">
+        <div class="grid daily-edit-section">
           <label>
             <span>POS</span>
             <input id="os" name="os" type="text" inputmode="decimal" placeholder="0,00">
@@ -178,7 +211,7 @@
           </label>
         </div>
 
-        <section class="transfer-panel" aria-label="Bonifici">
+        <section class="transfer-panel daily-edit-section" aria-label="Bonifici">
           <div class="panel-head compact">
             <div>
               <h2>Bonifici</h2>
@@ -193,7 +226,7 @@
           </div>
         </section>
 
-        <label>
+        <label class="daily-edit-section">
           <span>Note</span>
           <textarea id="note" name="note" rows="2" placeholder="Facoltative"></textarea>
         </label>
@@ -229,6 +262,6 @@
       </section>
     </main>
 
-    <script src="/app.js?v=20260515-15"></script>
+    <script src="/app.js?v=20260516-2"></script>
   </body>
 </html>

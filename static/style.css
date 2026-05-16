@@ -11,6 +11,490 @@
   --shadow: 0 10px 28px rgba(21, 33, 31, 0.08);
 }
 
+/* Final premium overrides: keep these at the end of the stylesheet. */
+body {
+  background:
+    radial-gradient(circle at 14% 4%, rgba(199, 31, 54, 0.09), transparent 28%),
+    radial-gradient(circle at 90% 8%, rgba(15, 118, 110, 0.11), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(244, 244, 241, 0.96) 30%),
+    var(--premium-bg);
+}
+
+.shell {
+  width: min(430px, 100%);
+  padding: max(14px, env(safe-area-inset-top)) 14px calc(94px + env(safe-area-inset-bottom));
+}
+
+.topbar {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.brand {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand img {
+  display: none;
+}
+
+.brand h1 {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.month-overview {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.month-total-card {
+  order: -2;
+  grid-column: 1 / -1;
+  border-color: rgba(255, 255, 255, 0.18);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.14), transparent 30%),
+    radial-gradient(circle at 82% 12%, rgba(199, 31, 54, 0.18), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent),
+    var(--premium-ink);
+  color: white;
+  padding: 18px;
+  text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 22px 48px rgba(21, 21, 21, 0.2);
+}
+
+.month-total-card span,
+.month-total-card p {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.month-total-card strong {
+  color: white;
+  font-size: 42px;
+}
+
+.month-picker-card,
+.today-card,
+.month-breakdown,
+.history,
+.panel,
+.entry-form {
+  border-color: rgba(21, 21, 21, 0.1);
+  background: var(--premium-panel);
+  box-shadow:
+    var(--premium-highlight),
+    var(--shadow);
+}
+
+.month-breakdown {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.month-breakdown div {
+  grid-column: span 3;
+  border-left: 0 !important;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.16), transparent 38%),
+    linear-gradient(180deg, var(--method-color, var(--accent)), color-mix(in srgb, var(--method-color, var(--accent)), black 10%));
+  color: white;
+}
+
+.month-breakdown div:nth-child(1) {
+  --method-color: #111827;
+}
+
+.month-breakdown div:nth-child(2) {
+  --method-color: var(--premium-red);
+}
+
+.month-breakdown div:nth-child(3) {
+  --method-color: var(--accent);
+  grid-column: span 2;
+}
+
+.month-breakdown div:nth-child(4) {
+  --method-color: var(--premium-purple);
+  grid-column: span 2;
+}
+
+.month-breakdown div:nth-child(5) {
+  --method-color: var(--premium-gray);
+  grid-column: span 2;
+}
+
+.month-breakdown span,
+.month-breakdown strong {
+  color: white;
+}
+
+.screen-nav {
+  position: fixed;
+  left: 50%;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  z-index: 4;
+  width: min(402px, calc(100vw - 20px));
+  transform: translateX(-50%);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid rgba(21, 21, 21, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 16px 38px rgba(21, 21, 21, 0.16);
+  padding: 6px;
+  backdrop-filter: blur(16px);
+}
+
+.screen-nav .secondary {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.screen-nav .active {
+  background: linear-gradient(180deg, #262626, #111);
+  color: white;
+  box-shadow: 0 10px 22px rgba(21, 21, 21, 0.16);
+}
+
+.screen-nav .back-button:not([hidden]) {
+  grid-column: 1 / -1;
+}
+
+.entry-form {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 5;
+  width: min(430px, 100vw);
+  max-height: calc(88vh - env(safe-area-inset-top));
+  overflow-y: auto;
+  transform: translateX(-50%);
+  border-radius: 8px 8px 0 0;
+  padding: 10px 14px calc(16px + env(safe-area-inset-bottom));
+}
+
+.entry-form::before {
+  display: block;
+  width: 44px;
+  height: 5px;
+  margin: 0 auto 10px;
+  border-radius: 999px;
+  background: rgba(21, 21, 21, 0.16);
+  content: "";
+}
+
+.quick-entry-grid {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+}
+
+/* Premium mobile skin */
+:root {
+  --premium-bg: #f4f4f1;
+  --premium-ink: #151515;
+  --premium-panel: rgba(255, 255, 255, 0.92);
+  --premium-red: #c71f36;
+  --premium-purple: #7c3aed;
+  --premium-gray: #6b7280;
+  --premium-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+}
+
+body {
+  background:
+    radial-gradient(circle at 14% 4%, rgba(199, 31, 54, 0.09), transparent 28%),
+    radial-gradient(circle at 90% 8%, rgba(15, 118, 110, 0.11), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(244, 244, 241, 0.96) 30%),
+    var(--premium-bg);
+}
+
+.shell {
+  position: relative;
+  width: min(430px, 100%);
+  min-height: 100vh;
+  padding: max(14px, env(safe-area-inset-top)) 14px calc(94px + env(safe-area-inset-bottom));
+}
+
+.shell::before {
+  position: fixed;
+  inset: 0;
+  max-width: 430px;
+  margin: 0 auto;
+  pointer-events: none;
+  content: "";
+  background-image:
+    linear-gradient(rgba(21, 21, 21, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(21, 21, 21, 0.03) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(180deg, black, transparent 62%);
+}
+
+.topbar,
+.month-overview,
+.screen-nav,
+.history,
+.entry-form,
+.panel {
+  position: relative;
+}
+
+.topbar {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  margin-bottom: 12px;
+  padding: 0;
+}
+
+.brand {
+  gap: 10px;
+}
+
+.brand-mark {
+  display: block;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(21, 21, 21, 0.12);
+  border-radius: 8px;
+  background:
+    url("/digislam-favicon.png") center / 34px auto no-repeat,
+    white;
+  box-shadow:
+    var(--premium-highlight),
+    0 10px 22px rgba(21, 21, 21, 0.08);
+}
+
+.brand img {
+  display: none;
+}
+
+.brand h1 {
+  color: var(--premium-ink);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.eyebrow {
+  margin-top: 2px;
+  font-size: 11px;
+}
+
+.icon-button {
+  border-color: rgba(21, 21, 21, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--accent-dark);
+  box-shadow:
+    var(--premium-highlight),
+    0 8px 18px rgba(21, 21, 21, 0.08);
+}
+
+.month-overview {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.month-total-card {
+  order: -2;
+  grid-column: 1 / -1;
+  border-color: rgba(255, 255, 255, 0.18);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.14), transparent 30%),
+    radial-gradient(circle at 82% 12%, rgba(199, 31, 54, 0.18), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent),
+    var(--premium-ink);
+  color: white;
+  padding: 18px;
+  text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 22px 48px rgba(21, 21, 21, 0.2);
+}
+
+.month-total-card span {
+  color: rgba(255, 255, 255, 0.64);
+}
+
+.month-total-card strong {
+  font-size: 42px;
+}
+
+.month-total-card p {
+  display: inline-block;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+  color: rgba(255, 255, 255, 0.84);
+  padding: 8px 10px;
+}
+
+.month-picker-card,
+.today-card,
+.month-breakdown,
+.history,
+.panel,
+.entry-form {
+  border-color: rgba(21, 21, 21, 0.1);
+  background: var(--premium-panel);
+  box-shadow:
+    var(--premium-highlight),
+    var(--shadow);
+}
+
+.month-breakdown {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.month-breakdown div {
+  grid-column: span 3;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(21, 21, 21, 0.08);
+  border-left: 0 !important;
+  border-radius: 8px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.16), transparent 38%),
+    linear-gradient(180deg, var(--method-color, var(--accent)), color-mix(in srgb, var(--method-color, var(--accent)), black 10%));
+  color: white;
+  box-shadow: 0 12px 24px rgba(21, 21, 21, 0.08);
+}
+
+.month-breakdown div:nth-child(1) {
+  --method-color: #111827;
+}
+
+.month-breakdown div:nth-child(2) {
+  --method-color: var(--premium-red);
+}
+
+.month-breakdown div:nth-child(3) {
+  --method-color: var(--accent);
+  grid-column: span 2;
+}
+
+.month-breakdown div:nth-child(4) {
+  --method-color: var(--premium-purple);
+  grid-column: span 2;
+}
+
+.month-breakdown div:nth-child(5) {
+  --method-color: var(--premium-gray);
+  grid-column: span 2;
+}
+
+.month-breakdown span {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.month-breakdown strong {
+  color: white;
+}
+
+.screen-nav {
+  position: fixed;
+  left: 50%;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  z-index: 4;
+  width: min(402px, calc(100vw - 20px));
+  transform: translateX(-50%);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid rgba(21, 21, 21, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 16px 38px rgba(21, 21, 21, 0.16);
+  padding: 6px;
+  backdrop-filter: blur(16px);
+}
+
+.screen-nav .secondary {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.screen-nav .active {
+  background: linear-gradient(180deg, #262626, #111);
+  color: white;
+  box-shadow: 0 10px 22px rgba(21, 21, 21, 0.16);
+}
+
+.screen-nav .back-button:not([hidden]) {
+  grid-column: 1 / -1;
+}
+
+.history-head {
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.history-head h2 {
+  font-size: 22px;
+}
+
+.add-button,
+.primary {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.18), transparent 42%),
+    linear-gradient(180deg, var(--premium-red), #a91d30);
+  border-color: transparent;
+  box-shadow: 0 16px 30px rgba(199, 31, 54, 0.22);
+}
+
+.entry-form {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 5;
+  width: min(430px, 100vw);
+  max-height: calc(88vh - env(safe-area-inset-top));
+  overflow-y: auto;
+  transform: translateX(-50%);
+  border-radius: 8px 8px 0 0;
+  padding: 10px 14px calc(16px + env(safe-area-inset-bottom));
+}
+
+.entry-form::before {
+  display: block;
+  width: 44px;
+  height: 5px;
+  margin: 0 auto 10px;
+  border-radius: 999px;
+  background: rgba(21, 21, 21, 0.16);
+  content: "";
+}
+
+.form-head h2 {
+  font-size: 24px;
+}
+
+.quick-entry,
+.transfer-panel {
+  background: #f8faf8;
+}
+
+.quick-entry-grid {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+}
+
+.quick-entry input,
+.quick-entry select,
+input,
+textarea,
+select {
+  border-color: rgba(21, 21, 21, 0.1);
+  background: rgba(255, 255, 255, 0.94);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -492,10 +976,47 @@ canvas {
   align-items: end;
 }
 
+.quick-entry {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfb;
+  padding: 12px;
+}
+
+.quick-entry[hidden],
+.daily-edit-section[hidden] {
+  display: none;
+}
+
+.quick-entry-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 8px;
+  align-items: end;
+}
+
+.quick-entry input,
+.quick-entry select {
+  width: 100%;
+  min-width: 0;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+#quickData {
+  font-size: 14px;
+}
+
 .quick-dates {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+}
+
+.quick-dates.compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .transfer-panel {
@@ -985,5 +1506,226 @@ button {
   .history-head .add-button.compact {
     width: auto;
     flex: 0 0 auto;
+  }
+}
+
+/* Final premium overrides: this block intentionally stays last. */
+body {
+  background:
+    radial-gradient(circle at 14% 4%, rgba(199, 31, 54, 0.09), transparent 28%),
+    radial-gradient(circle at 90% 8%, rgba(15, 118, 110, 0.11), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(244, 244, 241, 0.96) 30%),
+    var(--premium-bg);
+}
+
+.shell {
+  width: min(430px, 100%);
+  padding: max(14px, env(safe-area-inset-top)) 14px calc(94px + env(safe-area-inset-bottom));
+}
+
+.topbar {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.brand {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand img {
+  display: none;
+}
+
+.brand h1 {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.month-overview {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.month-total-card {
+  order: -2;
+  grid-column: 1 / -1;
+  border-color: rgba(255, 255, 255, 0.18);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.14), transparent 30%),
+    radial-gradient(circle at 82% 12%, rgba(199, 31, 54, 0.18), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent),
+    var(--premium-ink);
+  color: white;
+  padding: 18px;
+  text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 22px 48px rgba(21, 21, 21, 0.2);
+}
+
+.month-total-card span,
+.month-total-card p {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.month-total-card strong {
+  color: white;
+  font-size: 42px;
+}
+
+.month-picker-card,
+.today-card,
+.month-breakdown,
+.history,
+.panel,
+.entry-form {
+  border-color: rgba(21, 21, 21, 0.1);
+  background: var(--premium-panel);
+  box-shadow:
+    var(--premium-highlight),
+    var(--shadow);
+}
+
+.month-breakdown {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.month-breakdown div {
+  grid-column: span 3;
+  border-left: 0 !important;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.16), transparent 38%),
+    linear-gradient(180deg, var(--method-color, var(--accent)), color-mix(in srgb, var(--method-color, var(--accent)), black 10%));
+  color: white;
+}
+
+.month-breakdown div:nth-child(1) {
+  --method-color: #111827;
+}
+
+.month-breakdown div:nth-child(2) {
+  --method-color: var(--premium-red);
+}
+
+.month-breakdown div:nth-child(3) {
+  --method-color: var(--accent);
+  grid-column: span 2;
+}
+
+.month-breakdown div:nth-child(4) {
+  --method-color: var(--premium-purple);
+  grid-column: span 2;
+}
+
+.month-breakdown div:nth-child(5) {
+  --method-color: var(--premium-gray);
+  grid-column: span 2;
+}
+
+.month-breakdown span,
+.month-breakdown strong {
+  color: white;
+}
+
+.screen-nav {
+  position: fixed;
+  left: 50%;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  z-index: 4;
+  width: min(402px, calc(100% - 28px));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid rgba(21, 21, 21, 0.08);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow:
+    0 18px 50px rgba(21, 21, 21, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  transform: translateX(-50%);
+  backdrop-filter: blur(18px);
+}
+
+.screen-nav:has(.back-button[hidden]) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.screen-nav button {
+  min-height: 48px;
+  border-radius: 20px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.screen-nav button.active {
+  background: var(--premium-ink);
+  color: white;
+}
+
+.entry-form:not([hidden]) {
+  position: fixed;
+  left: 50%;
+  right: auto;
+  bottom: 0;
+  z-index: 5;
+  display: grid;
+  width: min(430px, 100%);
+  max-height: min(88vh, 720px);
+  overflow: auto;
+  border-radius: 28px 28px 0 0;
+  padding: 18px 14px calc(22px + env(safe-area-inset-bottom));
+  box-shadow:
+    0 -22px 60px rgba(21, 21, 21, 0.22),
+    var(--premium-highlight);
+  transform: translateX(-50%);
+}
+
+.quick-entry {
+  border-color: rgba(21, 21, 21, 0.08);
+  background: #f4f5f2;
+}
+
+.quick-entry-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(112px, 0.72fr);
+  align-items: end;
+}
+
+.quick-entry-grid label {
+  min-width: 0;
+}
+
+.quick-entry-grid .quick-date-actions,
+.quick-entry-grid .quick-amount,
+.quick-entry-grid .quick-transfer-name {
+  grid-column: 1 / -1;
+}
+
+.quick-date-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 430px) {
+  .month-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .month-total-card {
+    grid-column: 1 / -1;
+  }
+
+  .month-picker-card,
+  .today-card {
+    min-width: 0;
+  }
+
+  .month-breakdown {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .quick-entry-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(106px, 0.7fr);
   }
 }
