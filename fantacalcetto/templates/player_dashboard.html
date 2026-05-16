@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 {% set featured = matches[0] if matches else none %}
-<section class="next-match mockup-next-match tone-{{ phase.tone }}">
+<div class="player-home-flow">
+<section class="next-match mockup-next-match tone-{{ phase.tone }}" id="partita">
   {% if featured %}
     <div class="match-head">
       <div>
@@ -43,7 +44,7 @@
       </article>
     </div>
 
-    <div class="match-actions">
+    <div class="match-actions match-status-actions">
       {% if player.account_status == "approved" and player.account_type == "player" and featured.status not in ["cancelled", "closed"] %}
         {% if featured.response in ["confirmed", "present"] %}
           <button class="button primary confirmed-button" type="button" disabled>Confermato</button>
@@ -53,9 +54,7 @@
         {% elif featured.response == "waitlist" %}
           <button class="button waitlist-button" type="button" disabled>In lista d'attesa</button>
         {% else %}
-          <form method="post" action="{{ url_for('player_confirm', match_id=featured.id) }}">
-            <button class="button primary" type="submit">Confermo che gioco</button>
-          </form>
+          <button class="button confirm-neutral-button" type="button" data-open-confirm>Apri convocazione</button>
         {% endif %}
       {% endif %}
       <a class="button ghost" href="{{ url_for('player_match_calendar', match_id=featured.id) }}">Aggiungi al calendario</a>
@@ -71,6 +70,29 @@
     <p>Appena il mister crea un evento, lo trovi qui.</p>
   {% endif %}
 </section>
+
+{% if featured and player.account_status == "approved" and player.account_type == "player" and featured.status not in ["cancelled", "closed"] and featured.response not in ["confirmed", "present", "waitlist"] %}
+<dialog class="app-modal confirm-modal-app" id="confirm-match-modal" data-auto-open-confirm>
+  <form method="dialog">
+    <button class="modal-close" aria-label="Chiudi">×</button>
+  </form>
+  <p class="eyebrow">Convocazione ufficiale</p>
+  <h2>{{ featured.title }}</h2>
+  <p>{{ featured.match_date|datetime_it }} · {{ featured.location }}</p>
+  <div class="confirm-match-card">
+    <strong>Ci sei o fai pretattica?</strong>
+    <span>Conferma la presenza e il sistema ti mette tra i convocati. Se la quota è piena entri in lista d'attesa, con dignità e pettorina pronta.</span>
+  </div>
+  <div class="confirm-actions">
+    <form method="post" action="{{ url_for('player_confirm', match_id=featured.id) }}">
+      <button class="button primary" type="submit">Confermo che gioco</button>
+    </form>
+    <form method="dialog">
+      <button class="button ghost" type="submit">Decido tra poco</button>
+    </form>
+  </div>
+</dialog>
+{% endif %}
 
 <section class="pre-match-strip">
   <article class="pre-card">
@@ -90,7 +112,7 @@
   </article>
 </section>
 
-<section class="hero profile-hero">
+<section class="hero profile-hero" id="profilo">
   <div>
         <p class="eyebrow">{% if player.account_type == "supporter" %}Profilo supporter{% else %}Profilo calciatore{% endif %}</p>
     <h1>{{ player.name }}</h1>
@@ -104,6 +126,9 @@
     <div class="hero-actions">
       <a class="button primary" href="{{ url_for('player_update_profile') }}">Modifica profilo</a>
       <button class="button profile-help-button" type="button" onclick="document.getElementById('player-help').showModal()">Cosa posso fare qui?</button>
+      {% if can_manage %}
+        <a class="button ghost" href="{{ url_for('admin_dashboard') }}">{% if is_develop %}Cabina Develop{% else %}Cabina Mister{% endif %}</a>
+      {% endif %}
     </div>
   </div>
   <div class="profile-card-stage" aria-label="{% if player.account_type == 'supporter' %}Card supporter{% else %}Card calciatore{% endif %}">
@@ -149,6 +174,13 @@
     {% endif %}
   </div>
 </section>
+
+<nav class="player-section-nav" aria-label="Menu calciatore">
+  <a href="#profilo">Profilo</a>
+  <a href="#partita">Partita</a>
+  <a href="#storico">Storico</a>
+  <a href="#legagram">LegaGram</a>
+</nav>
 
 <dialog class="app-modal" id="player-help">
   <form method="dialog">
@@ -300,7 +332,7 @@
 </section>
 {% endif %}
 
-<section class="panel">
+<section class="panel" id="profilo-stats">
   <div class="panel-head">
     <h2>Statistiche</h2>
     <a class="button ghost" href="{{ url_for('player_update_profile') }}">Modifica profilo</a>
@@ -313,7 +345,7 @@
   </div>
 </section>
 
-<section class="panel">
+<section class="panel" id="storico">
   <div class="panel-head">
     <h2>Le mie partite</h2>
     <span class="pill">Prossime</span>
@@ -388,7 +420,7 @@
   <p class="muted">Confermare vale +1 score e +2 affidabilità. In partita: vittoria +3, pareggio +1, gol +2, assist +1. Se fai almeno 5 punti in una partita prendi +0.5 stella. Disdire costa score e affidabilità: sotto 24h perdi anche 0.5 stella, sotto 3h perdi 1 stella.</p>
 </section>
 
-<section class="social-feed">
+<section class="social-feed" id="legagram">
   <div class="panel-head">
     <h2>LegaGram Bombonera</h2>
     <span class="pill">Bacheca social</span>
@@ -470,4 +502,20 @@
   </div>
 </section>
 {% endif %}
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const modal = document.getElementById("confirm-match-modal");
+    if (modal && modal.showModal && modal.dataset.autoOpenConfirm !== "done") {
+      modal.dataset.autoOpenConfirm = "done";
+      setTimeout(() => modal.showModal(), 350);
+    }
+    document.querySelectorAll("[data-open-confirm]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = document.getElementById("confirm-match-modal");
+        if (target && target.showModal) target.showModal();
+      });
+    });
+  });
+</script>
 {% endblock %}

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="mobile-focus-card tone-{{ phase.tone }}">
+<section class="mobile-focus-card tone-{{ phase.tone }}" id="admin-partita">
   <span class="status-kicker">{% if is_develop %}Cabina Develop{% else %}Cabina Mister{% endif %} · {{ current_league.name if current_league else "Lega Bombonera" }} · {{ phase.label }}</span>
   {% if match %}
     <h1>{{ match.title }}</h1>
@@ -21,6 +21,37 @@
     <p>Crea la prossima gara e manda tutti nello spogliatoio digitale.</p>
     <a class="button primary big" href="#new-match">Crea partita</a>
   {% endif %}
+</section>
+
+<nav class="admin-section-nav" aria-label="Menu mister">
+  <a href="#admin-partita">Partita</a>
+  <a href="#new-match">Crea</a>
+  <a href="#history">Storico</a>
+  <a href="#roster">{% if is_develop %}Profili{% else %}Rosa{% endif %}</a>
+  <a href="#mercato">Mercato</a>
+</nav>
+
+<section class="mister-flow-panel">
+  <article class="flow-step {% if not match %}active{% endif %}">
+    <b>📅</b>
+    <strong>Crea evento</strong>
+    <span>Data, ora, campo e messaggio da mandare al gruppo.</span>
+  </article>
+  <article class="flow-step {% if match and match.status in ['open'] and summary_counts.confirmed < match.player_limit %}active{% endif %}">
+    <b>🙋</b>
+    <strong>Attendi quota</strong>
+    <span>{{ summary_counts.confirmed if match else 0 }}/{{ match.player_limit if match else 10 }} confermati, lista d'attesa pronta.</span>
+  </article>
+  <article class="flow-step {% if match and match.status not in ['teams', 'teams_auto', 'closed', 'cancelled'] and summary_counts.confirmed >= match.player_limit %}active{% endif %}">
+    <b>🛡️</b>
+    <strong>Forma squadre</strong>
+    <span>Genera, modifica, scegli nomi e loghi senza perdere tempo.</span>
+  </article>
+  <article class="flow-step {% if match and match.status in ['teams', 'teams_auto'] %}active{% endif %}">
+    <b>⭐</b>
+    <strong>Chiudi e pagelle</strong>
+    <span>Risultato, voti, premi e sfottò ufficiali.</span>
+  </article>
 </section>
 
 {% if is_develop %}

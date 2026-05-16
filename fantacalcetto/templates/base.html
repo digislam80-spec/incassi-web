@@ -54,10 +54,10 @@
   </footer>
   {% if current_player %}
     <nav class="bottom-nav">
-      <a href="{{ url_for('player_dashboard') }}">Partita</a>
-      <a href="{{ url_for('player_update_profile') }}">Profilo</a>
-      <a href="{{ url_for('league_overview') }}">Stats</a>
-      <a href="{{ url_for('admin_dashboard') if can_manage else url_for('player_guide') }}">{% if is_develop %}Develop{% elif can_manage %}Mister{% else %}Guida{% endif %}</a>
+      <a href="{{ url_for('player_dashboard') }}#profilo">Profilo</a>
+      <a href="{{ url_for('player_dashboard') }}#partita">Partita</a>
+      <a href="{{ url_for('player_dashboard') }}#storico">Storico</a>
+      <a href="{{ url_for('player_dashboard') }}#legagram">LegaGram</a>
     </nav>
   {% elif is_admin %}
     <nav class="bottom-nav">
