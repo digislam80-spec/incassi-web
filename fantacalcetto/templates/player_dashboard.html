@@ -1,78 +1,94 @@
 {% extends "base.html" %}
 {% block content %}
 {% set featured = matches[0] if matches else none %}
-<section class="mobile-focus-card tone-{{ phase.tone }}">
-  <span class="status-kicker">Next Match · {{ phase.label }}</span>
+<section class="next-match mockup-next-match tone-{{ phase.tone }}">
   {% if featured %}
-    <h1>{{ featured.title }}</h1>
-    <p>{{ featured.match_date|datetime_it }} · {{ featured.location }}</p>
-    <small>{{ phase.hint }}</small>
-    <div class="bigmatch-board" data-match-date="{{ featured.match_date }}">
-      <div class="bigmatch-team">
+    <div class="match-head">
+      <div>
+        <p class="eyebrow">Big Match del Venerdì</p>
+        <h2>{{ featured.title }}</h2>
+        <p>{{ featured.match_date|datetime_it }} · {{ featured.location }}</p>
+      </div>
+      <span class="status-chip">{{ phase.label }}</span>
+    </div>
+
+    <div class="versus" data-match-date="{{ featured.match_date }}">
+      <div class="mock-team">
+        <div class="team-crest crest-1"></div>
         <strong>{{ featured.team_a_name or "Squadra A" }}</strong>
-        <span>{% if featured.status in ["teams", "teams_auto"] %}Formazione pronta{% else %}In attesa squadre{% endif %}</span>
+        <span>{% if featured.status in ["teams", "teams_auto"] %}Formazione pronta{% else %}Spogliatoio in attesa{% endif %}</span>
       </div>
-      <div class="countdown-box">
+      <div class="versus-center">
         <small>manca</small>
-        <strong data-countdown>--:--:--</strong>
+        <b data-countdown>--:--:--</b>
+        <i>VS</i>
       </div>
-      <div class="bigmatch-team right">
+      <div class="mock-team">
+        <div class="team-crest crest-2"></div>
         <strong>{{ featured.team_b_name or "Squadra B" }}</strong>
-        <span>{% if featured.status in ["teams", "teams_auto"] %}Formazione pronta{% else %}In attesa squadre{% endif %}</span>
+        <span>{% if featured.status in ["teams", "teams_auto"] %}Formazione pronta{% else %}Mister al telefono{% endif %}</span>
       </div>
     </div>
-    <div class="action-stack">
+
+    <div class="locker-grid">
+      <article class="locker-live">
+        <small>Stato personale</small>
+        <strong>{% if featured.response in ["confirmed", "present"] %}Hai firmato la presenza{% elif featured.response == "waitlist" %}Panchina d'attesa{% else %}Devi ancora rispondere{% endif %}</strong>
+        <span>{{ phase.hint }}</span>
+      </article>
+      <article class="locker-live hype-meter">
+        <small>Hype partita</small>
+        <div class="meter-track"><div class="meter-fill"></div></div>
+        <strong>Clima da Champions, tecnica da venerdì sera.</strong>
+      </article>
+    </div>
+
+    <div class="match-actions">
       {% if player.account_status == "approved" and player.account_type == "player" and featured.status not in ["cancelled", "closed"] %}
         {% if featured.response in ["confirmed", "present"] %}
-          <button class="button primary confirmed-button big" type="button" disabled>Confermato</button>
+          <button class="button primary confirmed-button" type="button" disabled>Confermato</button>
           <form method="post" action="{{ url_for('player_cancel', match_id=featured.id) }}">
-            <button class="button ghost big" type="submit">Disdico</button>
+            <button class="button ghost" type="submit">Disdico</button>
           </form>
         {% elif featured.response == "waitlist" %}
-          <button class="button waitlist-button big" type="button" disabled>In lista d'attesa</button>
+          <button class="button waitlist-button" type="button" disabled>In lista d'attesa</button>
         {% else %}
           <form method="post" action="{{ url_for('player_confirm', match_id=featured.id) }}">
-            <button class="button primary big" type="submit">Confermo che gioco</button>
+            <button class="button primary" type="submit">Confermo che gioco</button>
           </form>
         {% endif %}
       {% endif %}
-      <a class="button big" href="{{ url_for('player_match_calendar', match_id=featured.id) }}">Aggiungi al calendario</a>
-      {% if featured.status in ["teams", "teams_auto"] %}<a class="button ghost big" href="#formazioni">Vedi formazioni</a>{% endif %}
+      <a class="button ghost" href="{{ url_for('player_match_calendar', match_id=featured.id) }}">Aggiungi al calendario</a>
+      <a class="button ghost" href="#formazioni">Vedi campo</a>
     </div>
   {% else %}
-    <h1>Nessuna partita</h1>
+    <div class="match-head">
+      <div>
+        <p class="eyebrow">Next Match</p>
+        <h2>Nessuna partita</h2>
+      </div>
+    </div>
     <p>Appena il mister crea un evento, lo trovi qui.</p>
   {% endif %}
 </section>
 
-{% if featured and featured.status in ["teams", "teams_auto"] %}
-<section class="panel formation-showcase" id="formazioni">
-  <div class="panel-head">
-    <h2>Formazioni ufficiali</h2>
-    <span class="pill">Campo tattico</span>
-  </div>
-  <div class="formation-pitch">
-    <div class="pitch-side">
-      <h3>{{ featured.team_a_name or "Squadra A" }}</h3>
-      {% for p in featured_players if p.team == "A" %}
-        <div class="pitch-player">
-          <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
-          <span>{{ p.nickname or p.name }}</span>
-        </div>
-      {% endfor %}
-    </div>
-    <div class="pitch-side right">
-      <h3>{{ featured.team_b_name or "Squadra B" }}</h3>
-      {% for p in featured_players if p.team == "B" %}
-        <div class="pitch-player">
-          <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
-          <span>{{ p.nickname or p.name }}</span>
-        </div>
-      {% endfor %}
-    </div>
-  </div>
+<section class="pre-match-strip">
+  <article class="pre-card">
+    <small>Spogliatoio live</small>
+    <strong>{% if featured %}{{ featured_players|length }} convocati in movimento{% else %}In attesa evento{% endif %}</strong>
+    <span>Ogni conferma alza l'hype, ogni disdetta produce giurisprudenza sportiva.</span>
+  </article>
+  <article class="pre-card">
+    <small>Missione personale</small>
+    <strong>Arriva, rispondi, non inventare parcheggi impossibili</strong>
+    <span>Affidabilità e score ringraziano quando fai il professionista per finta.</span>
+  </article>
+  <article class="pre-card">
+    <small>Premio serata</small>
+    <strong>Trofeo "Sciabolata Morale"</strong>
+    <span>Al gesto più bello o alla giocata assurda riuscita per puro caso.</span>
+  </article>
 </section>
-{% endif %}
 
 <section class="hero profile-hero">
   <div>
@@ -198,6 +214,92 @@
 </section>
 {% endif %}
 
+<section class="market-panel">
+  <div class="panel-head">
+    <h2>FantaCalcetto Mercato</h2>
+    <span class="pill">SkySpogliatoio 24</span>
+  </div>
+  <div class="market-breaking">
+    <small>Breaking spogliatoio</small>
+    <strong>{% if player.permanent_team_name %}{{ player.name }} oggi risulta in orbita {{ player.permanent_team_name }}.{% else %}{{ player.name }} è ancora svincolato di lusso.{% endif %}</strong>
+    <p>Quando il Mister sposta qualcuno parte la notizia ufficiale: prestito, cessione, offerta in cornetti e polemica allegata.</p>
+  </div>
+  <div class="market-grid">
+    {% for item in news_items if item.event_type == "mercato" %}
+      <article class="market-card">
+        <small>{{ item.title }}</small>
+        <strong>{{ item.actor_name or "Mercato Bombonera" }}</strong>
+        <span>{{ item.body }}</span>
+      </article>
+    {% else %}
+      <article class="market-card">
+        <small>Mercato quieto</small>
+        <strong>Nessun trasferimento fresco</strong>
+        <span>Appena il Mister apre una trattativa, qui sembra subito una diretta Sky senza giacca.</span>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+{% if featured %}
+<section class="formation-panel" id="formazioni">
+  <div class="panel-head">
+    <h2>{% if featured.status in ["teams", "teams_auto"] %}Formazioni ufficiali{% else %}Formazioni probabili{% endif %}</h2>
+    <span class="pill">Campo tattico</span>
+  </div>
+  <div class="formation-layout">
+    <aside class="side-list">
+      <h3>{{ featured.team_a_name or "Squadra A" }}</h3>
+      {% for p in featured_players %}
+        {% if p.team == "A" or (featured.status not in ["teams", "teams_auto"] and loop.index is odd) %}
+          <div class="player-row">
+            <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
+            <strong>{{ p.nickname or p.name }}</strong>
+            <small>{{ p.role[:3]|upper }}</small>
+          </div>
+        {% endif %}
+      {% else %}
+        <p class="muted">Squadra non ancora schierata.</p>
+      {% endfor %}
+    </aside>
+
+    <div class="pitch">
+      {% for p in featured_players %}
+        {% if p.team == "A" or (featured.status not in ["teams", "teams_auto"] and loop.index is odd) %}
+          <div class="field-player team-a slot-a-{{ loop.index }}">
+            <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
+            <b>{{ p.nickname or p.name }}</b>
+          </div>
+        {% endif %}
+      {% endfor %}
+      {% for p in featured_players %}
+        {% if p.team == "B" or (featured.status not in ["teams", "teams_auto"] and loop.index is even) %}
+          <div class="field-player team-b slot-b-{{ loop.index }}">
+            <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
+            <b>{{ p.nickname or p.name }}</b>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <aside class="side-list">
+      <h3>{{ featured.team_b_name or "Squadra B" }}</h3>
+      {% for p in featured_players %}
+        {% if p.team == "B" or (featured.status not in ["teams", "teams_auto"] and loop.index is even) %}
+          <div class="player-row">
+            <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
+            <strong>{{ p.nickname or p.name }}</strong>
+            <small>{{ p.role[:3]|upper }}</small>
+          </div>
+        {% endif %}
+      {% else %}
+        <p class="muted">Squadra non ancora schierata.</p>
+      {% endfor %}
+    </aside>
+  </div>
+</section>
+{% endif %}
+
 <section class="panel">
   <div class="panel-head">
     <h2>Statistiche</h2>
@@ -286,27 +388,46 @@
   <p class="muted">Confermare vale +1 score e +2 affidabilità. In partita: vittoria +3, pareggio +1, gol +2, assist +1. Se fai almeno 5 punti in una partita prendi +0.5 stella. Disdire costa score e affidabilità: sotto 24h perdi anche 0.5 stella, sotto 3h perdi 1 stella.</p>
 </section>
 
-<section class="grid two">
-  <div class="panel news-panel">
-    <div class="panel-head">
-      <h2>Cronache Spogliatoio</h2>
-      <span class="pill">Lega live</span>
+<section class="social-feed">
+  <div class="panel-head">
+    <h2>LegaGram Bombonera</h2>
+    <span class="pill">Bacheca social</span>
+  </div>
+  <form class="feed-composer" method="post" action="{{ url_for('add_player_chronicle') }}">
+    <img src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
+    <div class="composer-box">
+      <input name="body" maxlength="700" placeholder="Scrivi una storia da spogliatoio..." required>
+      <input type="hidden" name="title" value="Cronaca LegaGram">
+      <button class="button primary" type="submit">Pubblica</button>
     </div>
-    <details class="chronicle-composer">
-      <summary>Scrivi una cronaca</summary>
-      <form class="form" method="post" action="{{ url_for('add_player_chronicle') }}">
-        <label>Titolo <input name="title" maxlength="90" placeholder="Es. Il mister ha perso il fischietto"></label>
-        <label>Testo <textarea name="body" maxlength="700" rows="4" placeholder="Racconta la perla, la scusa, la sentenza o il momento da tramandare." required></textarea></label>
-        <button class="button primary" type="submit">Pubblica in bacheca</button>
-      </form>
-    </details>
-    <div class="news-list">
-      {% for item in news_items %}
-        <article class="news-item">
-          <span>{{ item.event_type }}</span>
-          <strong>{{ item.title }}</strong>
+  </form>
+
+  {% if player.account_type == "supporter" %}
+    <div class="supporter-card">
+      <i>🎺</i>
+      <div>
+        <strong>Modalità Supporter/Tifoso</strong>
+        <small>Segui partite, pagelle, mercato e LegaGram. Puoi giudicare con amore, ma senza entrare nelle convocazioni.</small>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="post-list">
+    {% for item in news_items %}
+      <article class="post-card">
+        <div class="post-avatar">
+          <img src="{{ url_for('static', filename='mascots/' ~ (player.mascot or 'jolly') ~ '.png') }}" alt="">
+        </div>
+        <div>
+          <header>
+            <div>
+              <strong>{{ item.actor_name or item.title }}</strong>
+              <small>{{ item.created_at }} · Lega Bombonera</small>
+            </div>
+            <small>{% if item.event_type == "mercato" %}🔁 transfer{% elif item.event_type == "cronaca" %}⚽ storia{% else %}📣 news{% endif %}</small>
+          </header>
           <p>{{ item.body }}</p>
-          <small>{{ item.created_at }}{% if item.actor_name %} · {{ item.actor_name }}{% endif %}</small>
+          <div class="reactions"><span>❤️</span><span>😂</span><span>🔥</span><span>Commenta</span></div>
           <div class="comment-list">
             {% for comment in news_comments.get(item.id, []) %}
               <small><b>{{ comment.player_name or "Spogliatoio" }}</b>: {{ comment.body }}</small>
@@ -314,28 +435,39 @@
           </div>
           <form class="comment-form" method="post" action="{{ url_for('add_event_comment', event_id=item.id) }}">
             <input name="body" maxlength="400" placeholder="Commenta senza fare fallo da rosso">
-            <button class="button ghost" type="submit">Commenta</button>
+            <button class="button ghost" type="submit">Invia</button>
           </form>
-        </article>
-      {% else %}
-        <p class="muted">Ancora nessuna cronaca. Qualcuno faccia qualcosa di calcisticamente discutibile.</p>
-      {% endfor %}
-    </div>
-  </div>
-  <div class="panel news-panel">
-    <div class="panel-head">
-      <h2>Novità App</h2>
-      <span class="pill">Cosa cambia</span>
-    </div>
-    <div class="news-list">
-      {% for item in app_updates %}
-        <article class="news-item app-update">
-          <span>{{ item.tag }}</span>
-          <strong>{{ item.title }}</strong>
-          <p>{{ item.body }}</p>
-        </article>
-      {% endfor %}
-    </div>
+        </div>
+      </article>
+    {% else %}
+      <p class="muted">Ancora nessuna storia: la curva è pronta, manca il primo post.</p>
+    {% endfor %}
   </div>
 </section>
+
+{% if player.account_type == "supporter" and featured %}
+<section class="ticket-panel">
+  <div class="panel-head">
+    <h2>Biglietto da tifoso</h2>
+    <span class="pill">Tribuna virtuale</span>
+  </div>
+  <div class="ticket-card">
+    <div>
+      <p class="eyebrow">Big Match del Venerdì</p>
+      <h3>Ingresso Tribuna Bombonera</h3>
+      <p>{{ player.nickname or player.name }} · tifoso autorizzato{% if player.supporter_player_name %} di {{ player.supporter_player_name }}{% endif %}. Valido per urlare "passala!" anche dal telefono.</p>
+      <div class="ticket-meta">
+        <span>{{ featured.match_date|datetime_it }}</span>
+        <span>{{ featured.location }}</span>
+        <span>Settore: {{ player.supporter_relation or "Divano Nord" }}</span>
+      </div>
+      <div class="match-actions ticket-actions">
+        <a class="button primary" href="{{ url_for('player_match_calendar', match_id=featured.id) }}">Parteciperò</a>
+        <a class="button" href="{{ url_for('player_match_calendar', match_id=featured.id) }}">Salva biglietto</a>
+      </div>
+    </div>
+    <div class="ticket-stub">Esibire solo con faccia seria</div>
+  </div>
+</section>
+{% endif %}
 {% endblock %}
