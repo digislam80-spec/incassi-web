@@ -360,6 +360,15 @@ def handle_unexpected_error(error):
     return render_template("error.html", error=error), 500
 
 
+def safe_schema_execute(connection, statement):
+    try:
+        connection.execute(statement)
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        app.logger.exception("Migrazione schema ignorata: %s", statement)
+
+
 def init_db():
     connection = db()
     if USE_POSTGRES:
@@ -541,32 +550,36 @@ def init_db():
                 active = 1
             """
         )
-        connection.execute("alter table players alter column power type numeric(2,1) using power::numeric")
-        connection.execute("alter table players add column if not exists preferred_foot text not null default 'right'")
-        connection.execute("alter table players add column if not exists is_guest integer not null default 0")
-        connection.execute("alter table players add column if not exists account_type text not null default 'player'")
-        connection.execute("alter table players add column if not exists app_role text not null default 'member'")
-        connection.execute("alter table players add column if not exists league_id integer")
-        connection.execute("alter table players add column if not exists supporter_player_name text default ''")
-        connection.execute("alter table players add column if not exists supporter_relation text default ''")
-        connection.execute("alter table matches add column if not exists league_id integer")
-        connection.execute("alter table matches add column if not exists result_processed integer not null default 0")
-        connection.execute("alter table league_events add column if not exists league_id integer")
-        connection.execute("alter table match_players add column if not exists responded_at timestamptz")
-        connection.execute("alter table match_players add column if not exists rating numeric(3,1)")
-        connection.execute("alter table match_players add column if not exists review text default ''")
-        connection.execute("alter table match_players add column if not exists points_awarded integer not null default 0")
-        connection.execute("alter table match_players add column if not exists win_awarded integer not null default 0")
-        connection.execute("alter table match_players add column if not exists power_bonus_awarded numeric(2,1) not null default 0")
-        connection.execute("alter table password_reset_requests add column if not exists temp_password_set integer not null default 0")
-        connection.execute(
+        connection.commit()
+        for statement in (
+            "alter table players alter column power type numeric(2,1) using power::numeric",
+            "alter table players add column if not exists preferred_foot text not null default 'right'",
+            "alter table players add column if not exists is_guest integer not null default 0",
+            "alter table players add column if not exists account_type text not null default 'player'",
+            "alter table players add column if not exists app_role text not null default 'member'",
+            "alter table players add column if not exists league_id integer",
+            "alter table players add column if not exists supporter_player_name text default ''",
+            "alter table players add column if not exists supporter_relation text default ''",
+            "alter table matches add column if not exists league_id integer",
+            "alter table matches add column if not exists result_processed integer not null default 0",
+            "alter table league_events add column if not exists league_id integer",
+            "alter table match_players add column if not exists responded_at timestamptz",
+            "alter table match_players add column if not exists rating numeric(3,1)",
+            "alter table match_players add column if not exists review text default ''",
+            "alter table match_players add column if not exists points_awarded integer not null default 0",
+            "alter table match_players add column if not exists win_awarded integer not null default 0",
+            "alter table match_players add column if not exists power_bonus_awarded numeric(2,1) not null default 0",
+            "alter table password_reset_requests add column if not exists temp_password_set integer not null default 0",
+        ):
+            safe_schema_execute(connection, statement)
+        safe_schema_execute(
+            connection,
             """
             update match_players
             set responded_at = current_timestamp
             where response in ('confirmed', 'present') and responded_at is null
-            """
+            """,
         )
-        connection.commit()
         ensure_default_league_and_roles()
         seed_award_types()
         seed_initial_data()
