@@ -23,34 +23,85 @@
   {% endif %}
 </section>
 
-<nav class="admin-section-nav" aria-label="Menu mister">
-  <a href="#admin-partita">Partita</a>
-  <a href="#new-match">Crea</a>
-  <a href="#history">Storico</a>
-  <a href="#roster">{% if is_develop %}Profili{% else %}Rosa{% endif %}</a>
-  <a href="#mercato">Mercato</a>
+<nav class="admin-section-nav" aria-label="{% if is_develop %}Menu Develop{% else %}Menu Mister{% endif %}">
+  {% if is_develop %}
+    <a href="#develop">Develop</a>
+    <a href="#admin-partita">Partita</a>
+    <a href="#approvals">Approvazioni</a>
+    <a href="#roster">Profili</a>
+    <a href="#settings">Strumenti</a>
+  {% else %}
+    <a href="#admin-partita">Partita</a>
+    <a href="#new-match">Crea</a>
+    <a href="#history">Storico</a>
+    <a href="#roster">Rosa</a>
+    <a href="#mercato">Mercato</a>
+  {% endif %}
 </nav>
 
+{% if is_develop %}
+<section class="develop-flow-panel">
+  <div class="flow-panel-head">
+    <p class="eyebrow">Percorso Develop</p>
+    <h2>Gestisci piattaforma, leghe e ruoli</h2>
+    <span>Prima scegli la lega, poi sistemi persone, ruoli e strumenti. Il Mister resta leggero: la parte delicata la governi tu.</span>
+  </div>
+  <article class="flow-step active">
+    <b>🏆</b>
+    <strong>Scegli o crea lega</strong>
+    <span>Ogni torneo resta separato: Bombonera oggi, altre leghe domani, senza mischiare giocatori e storico.</span>
+    <a class="flow-cta" href="#develop">Apri leghe</a>
+  </article>
+  <article class="flow-step {% if pending_players or reset_requests %}active{% endif %}">
+    <b>✅</b>
+    <strong>Approva e recupera accessi</strong>
+    <span>Promuovi supporter a calciatore, assegni la lega giusta e salvi chi dimentica la password dopo due birre.</span>
+    <a class="flow-cta" href="#approvals">Vai alle richieste</a>
+  </article>
+  <article class="flow-step">
+    <b>⭐</b>
+    <strong>Ruoli e gerarchie</strong>
+    <span>Dai o togli ruolo Mister, sposti di lega, degradi a supporter e correggi tutto quello che serve.</span>
+    <a class="flow-cta" href="#roster">Gestisci profili</a>
+  </article>
+  <article class="flow-step">
+    <b>🧰</b>
+    <strong>Strumenti Develop</strong>
+    <span>Backup, import, news globali e impostazioni delicate restano solo qui, lontane dal Mister.</span>
+    <a class="flow-cta" href="#settings">Apri strumenti</a>
+  </article>
+</section>
+{% endif %}
+
 <section class="mister-flow-panel">
+  <div class="flow-panel-head">
+    <p class="eyebrow">{% if is_develop %}Percorso Mister della lega{% else %}Percorso Mister{% endif %}</p>
+    <h2>Organizza la partita senza perderti</h2>
+    <span>Un passo alla volta: evento, conferme, squadre, poi risultato e pagelle. Quello che è già stato fatto resta leggibile nello storico.</span>
+  </div>
   <article class="flow-step {% if not match %}active{% endif %}">
     <b>📅</b>
     <strong>Crea evento</strong>
     <span>Data, ora, campo e messaggio da mandare al gruppo.</span>
+    <a class="flow-cta" href="#new-match">Crea partita</a>
   </article>
   <article class="flow-step {% if match and match.status in ['open'] and summary_counts.confirmed < match.player_limit %}active{% endif %}">
     <b>🙋</b>
     <strong>Attendi quota</strong>
     <span>{{ summary_counts.confirmed if match else 0 }}/{{ match.player_limit if match else 10 }} confermati, lista d'attesa pronta.</span>
+    <a class="flow-cta" href="{% if match %}{{ url_for('match_detail', match_id=match.id) }}{% else %}#history{% endif %}">Controlla convocati</a>
   </article>
   <article class="flow-step {% if match and match.status not in ['teams', 'teams_auto', 'closed', 'cancelled'] and summary_counts.confirmed >= match.player_limit %}active{% endif %}">
     <b>🛡️</b>
     <strong>Forma squadre</strong>
     <span>Genera, modifica, scegli nomi e loghi senza perdere tempo.</span>
+    <a class="flow-cta" href="{% if match %}{{ url_for('match_detail', match_id=match.id) }}#teams{% else %}#history{% endif %}">Vai alle squadre</a>
   </article>
   <article class="flow-step {% if match and match.status in ['teams', 'teams_auto'] %}active{% endif %}">
     <b>⭐</b>
     <strong>Chiudi e pagelle</strong>
     <span>Risultato, voti, premi e sfottò ufficiali.</span>
+    <a class="flow-cta" href="{% if match %}{{ url_for('match_detail', match_id=match.id) }}#pagelle{% else %}#history{% endif %}">Apri pagelle</a>
   </article>
 </section>
 
