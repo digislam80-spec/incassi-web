@@ -4028,3 +4028,174 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
   .mascot-scene img { width: 62px; height: 62px; }
   .mascot-scene img:nth-child(2) { width: 78px; height: 78px; }
 }
+
+@media (max-width: 600px) {
+  .role-context-bar {
+    position: sticky;
+    top: 6px;
+    grid-template-columns: 26px minmax(0, 1fr);
+    width: min(100% - 24px, 460px);
+    margin: 6px auto 8px;
+    padding: 6px 8px;
+    border-radius: 14px;
+    box-shadow: 0 8px 18px rgba(12,27,22,.10);
+  }
+  .role-context-bar span {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+  }
+  .role-context-bar strong {
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+  }
+  .role-context-bar small {
+    grid-column: 2;
+    display: block;
+    max-width: 100%;
+    margin-top: -3px;
+    font-size: 10px;
+    line-height: 1.1;
+  }
+  .role-view-switch {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    margin: 8px 0 10px;
+    padding: 6px;
+    border-radius: 14px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+  .role-view-switch a {
+    flex: 0 0 auto;
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    min-width: 112px;
+    min-height: 38px;
+    padding: 7px 10px;
+    border-radius: 11px;
+    scroll-snap-align: start;
+  }
+  .role-view-switch a span,
+  .role-view-switch a b {
+    display: inline;
+    margin: 0;
+  }
+  .role-view-switch a span {
+    font-size: 16px;
+  }
+  .role-view-switch a b {
+    font-size: 12px;
+  }
+  .profile-hero {
+    display: grid !important;
+    grid-template-columns: 104px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 12px !important;
+    row-gap: 8px !important;
+    min-height: 0 !important;
+    padding: 16px 14px 14px !important;
+    align-items: center !important;
+    background-position: center top;
+  }
+  .profile-card-stage {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 104px !important;
+    min-height: 126px !important;
+    align-self: center !important;
+    justify-self: start !important;
+  }
+  .profile-copy {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+  }
+  .profile-copy .eyebrow {
+    margin-bottom: 5px;
+    font-size: 10px;
+  }
+  .profile-copy h1 {
+    max-width: none;
+    margin: 0 0 6px;
+    font-size: clamp(27px, 9vw, 38px);
+    line-height: .95;
+  }
+  .profile-copy .lede {
+    -webkit-line-clamp: 3;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.22;
+  }
+  .profile-actions {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    width: 100%;
+    margin: 0 !important;
+    padding: 7px;
+  }
+  .profile-actions .button {
+    min-height: 42px;
+    padding: 7px 8px;
+    font-size: 12px;
+    line-height: 1.05;
+  }
+  .profile-hero .fifa-premium-card {
+    width: 104px !important;
+    min-height: 126px !important;
+    padding: 8px 7px 10px !important;
+    border-radius: 16px !important;
+  }
+  .profile-hero .fifa-premium-card .fifa-card-top {
+    grid-template-columns: 32px minmax(0, 1fr) !important;
+  }
+  .profile-hero .fifa-premium-card .fifa-rating strong {
+    font-size: 28px !important;
+  }
+  .profile-hero .fifa-premium-card .fifa-rating span,
+  .profile-hero .fifa-premium-card .fifa-rating b {
+    font-size: 8px !important;
+  }
+  .profile-hero .fifa-premium-card .fifa-rating i {
+    width: 24px;
+    margin: 4px 0;
+  }
+  .profile-hero .fifa-premium-card .fifa-card-mascot {
+    width: 84px !important;
+    height: 84px !important;
+    margin: -11px -18px -18px -12px !important;
+    transform: translate(-3px, 5px) scale(1.06) !important;
+  }
+  .profile-hero .fifa-premium-card .fifa-nameplate {
+    margin-top: 0 !important;
+  }
+  .profile-hero .fifa-premium-card .fifa-nameplate b {
+    font-size: 10px !important;
+  }
+  .profile-hero .fifa-premium-card .fifa-nameplate small {
+    font-size: 9px !important;
+  }
+  .profile-hero .supporter-profile-card {
+    width: 104px !important;
+    min-height: 126px !important;
+    padding: 8px !important;
+    border-radius: 16px !important;
+  }
+  .profile-hero .supporter-profile-card img {
+    width: 68px !important;
+    height: 68px !important;
+  }
+  .profile-hero .supporter-profile-card strong {
+    font-size: 13px !important;
+  }
+}
