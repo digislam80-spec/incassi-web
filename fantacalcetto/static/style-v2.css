@@ -339,6 +339,26 @@ h2 { margin: 0; font-size: 21px; }
   background: rgba(255,255,255,.14);
   font-size: 12px;
 }
+.supporter-hero {
+  background:
+    linear-gradient(90deg, rgba(4,20,48,.86), rgba(11,55,104,.56)),
+    url("/static/generated/hero-cartoon.jpg") center/cover;
+}
+.supporter-hero::after {
+  background:
+    radial-gradient(circle at 18% 30%, rgba(96,165,250,.20), transparent 30%),
+    linear-gradient(90deg, rgba(4,20,48,.92), rgba(11,55,104,.50));
+}
+.supporter-hero .profile-actions .button.primary,
+.supporter-hero .profile-help-button {
+  color: white;
+  background: linear-gradient(135deg, #1d4ed8, #38bdf8);
+}
+.supporter-hero .profile-actions .button.ghost {
+  border-color: rgba(191,219,254,.90);
+  color: white;
+  background: linear-gradient(135deg, rgba(30,64,175,.96), rgba(14,116,144,.96));
+}
 .bigmatch-board {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
