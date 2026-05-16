@@ -26,7 +26,7 @@
     <label>Nome visualizzato <input name="name" value="{{ player.name }}" required></label>
     <label>Soprannome <input name="nickname" value="{{ player.nickname or '' }}" placeholder="Es. Trivela"></label>
     <label>WhatsApp <input name="phone" value="{{ player.phone or '' }}" placeholder="333..." required></label>
-    <label>Data di nascita <input type="date" name="birth_date" value="{{ player.birth_date or '' }}" required></label>
+    <label>Data di nascita <input type="date" name="birth_date" value="{{ player.birth_date or '' }}" min="{{ birth_date_min }}" max="{{ birth_date_max }}" required></label>
     <label>Nome mascotte <input name="mascot_name" value="{{ player.mascot_name or '' }}" placeholder="Es. O' Mast d'a fascia"></label>
     <label>Piede preferito
       <select name="preferred_foot">

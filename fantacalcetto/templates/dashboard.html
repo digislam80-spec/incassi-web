@@ -597,7 +597,7 @@
             <label>Nome <input name="name" value="{{ p.name }}" required></label>
             <label>Soprannome <input name="nickname" value="{{ p.nickname or '' }}"></label>
             <label>Telefono <input name="phone" value="{{ p.phone }}" required></label>
-            <label>Data di nascita <input type="date" name="birth_date" value="{{ p.birth_date or '' }}"></label>
+            <label>Data di nascita <input type="date" name="birth_date" value="{{ p.birth_date or '' }}" min="{{ birth_date_min }}" max="{{ birth_date_max }}"></label>
             {% if is_supporter_profile %}
               <label>Supporter di <input name="supporter_player_name" value="{{ p.supporter_player_name or '' }}" placeholder="Nome calciatore o squadra del cuore"></label>
               <label>Grado di parentela / amicizia <input name="supporter_relation" value="{{ p.supporter_relation or '' }}" placeholder="Es. fratello, moglie, amico, ultrà"></label>

@@ -106,7 +106,7 @@
     <p class="eyebrow">Dati figurina</p>
     <h2>Inserisci la tua data di nascita</h2>
     <p class="muted">Serve per mostrare l'età nelle news, nel mercato e nelle schede. Promesso: niente visita medica, solo anagrafe da spogliatoio.</p>
-    <label>Data di nascita <input type="date" name="birth_date" required></label>
+    <label>Data di nascita <input type="date" name="birth_date" min="{{ birth_date_min }}" max="{{ birth_date_max }}" required></label>
     <button class="button primary" type="submit">Salva età e continua</button>
   </form>
 </dialog>

@@ -562,6 +562,8 @@ def inject_user_state():
         "current_player": current_player(),
         "current_league": current_league(),
         "current_memberships": player_league_memberships(current_player()["id"]) if current_player() else [],
+        "birth_date_min": "1930-01-01",
+        "birth_date_max": datetime.now().date().isoformat(),
     }
 
 
