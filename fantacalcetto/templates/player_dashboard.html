@@ -40,7 +40,7 @@
     </div>
 
     <div class="tv-news-ticker">
-      <strong>Sky Calcetto 24 · Diretta</strong>
+      <strong><span class="skycalcetto-logo">SC24</span><span>Sky Calcetto 24 · Diretta</span></strong>
       <div>
         <span class="ticker-source">Sky Calcetto 24 aggiorna la Bombonera in tempo reale.</span>
         <span>{% if featured.response in ["confirmed", "present"] %}{{ player.nickname or player.name }} risulta presente: firma depositata in segreteria.{% elif featured.response == "waitlist" %}Lista d'attesa attiva: pettorina calda e speranza in panchina.{% else %}Convocazione aperta: serve risposta prima che partano gli audio lunghi.{% endif %}</span>

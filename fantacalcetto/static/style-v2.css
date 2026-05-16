@@ -1491,15 +1491,30 @@ h2 { margin: 0; font-size: 21px; }
   position: relative;
   z-index: 2;
   align-self: stretch;
-  display: grid;
-  place-items: center;
-  padding: 10px 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
   color: white;
-  background: linear-gradient(135deg, #d51f36, #172554);
+  background: linear-gradient(135deg, #e11d2f 0 58%, #172554 58% 100%);
   font-size: 12px;
   letter-spacing: .03em;
   text-transform: uppercase;
   white-space: nowrap;
+}
+.skycalcetto-logo {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 24px;
+  border-radius: 6px;
+  color: #fff;
+  background:
+    linear-gradient(135deg, #102a76 0 48%, #ffffff 48% 53%, #e11d2f 53% 100%);
+  font-size: 10px;
+  font-weight: 1000;
+  letter-spacing: 0;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.38), 0 5px 10px rgba(0,0,0,.24);
 }
 .tv-news-ticker > div {
   display: flex;
@@ -1974,18 +1989,19 @@ h2 { margin: 0; font-size: 21px; }
 }
 .pitch {
   position: relative;
-  aspect-ratio: 16 / 9;
-  min-height: 360px;
+  aspect-ratio: 16 / 9.4;
+  min-height: 330px;
   border: 4px solid rgba(255,255,255,.88);
-  border-radius: 10px;
+  border-radius: 16px;
   overflow: hidden;
   background:
     radial-gradient(circle at center, rgba(255,255,255,.62) 0 3px, transparent 4px),
-    radial-gradient(circle at center, transparent 0 54px, rgba(255,255,255,.62) 55px 58px, transparent 59px),
-    linear-gradient(0deg, transparent 49.4%, rgba(255,255,255,.64) 49.6% 50.4%, transparent 50.6%),
-    linear-gradient(90deg, rgba(255,255,255,.20), transparent 12%, transparent 88%, rgba(0,0,0,.12)),
+    radial-gradient(circle at center, transparent 0 58px, rgba(255,255,255,.68) 59px 62px, transparent 63px),
+    linear-gradient(90deg, transparent 49.45%, rgba(255,255,255,.72) 49.7% 50.3%, transparent 50.55%),
+    radial-gradient(ellipse at 18% 50%, rgba(255,255,255,.09), transparent 22%),
+    radial-gradient(ellipse at 82% 50%, rgba(255,255,255,.09), transparent 22%),
     repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 2px, transparent 2px 7px),
-    repeating-linear-gradient(0deg, #206f45 0 42px, #238552 42px 84px);
+    repeating-linear-gradient(90deg, #1f7748 0 42px, #2b8f57 42px 84px);
   box-shadow:
     inset 0 0 0 2px rgba(255,255,255,.42),
     inset 0 18px 34px rgba(255,255,255,.08),
@@ -1995,24 +2011,24 @@ h2 { margin: 0; font-size: 21px; }
 .pitch::after {
   content: "";
   position: absolute;
-  left: 50%;
-  width: min(54%, 330px);
-  height: 25%;
-  transform: translateX(-50%);
+  top: 50%;
+  width: 19%;
+  height: 58%;
+  transform: translateY(-50%);
   border: 3px solid rgba(255,255,255,.62);
   box-shadow: inset 0 0 0 999px rgba(255,255,255,0), 0 0 0 999px rgba(0,0,0,0);
 }
 .pitch::before {
-  top: -3px;
-  border-top: 0;
+  left: -3px;
+  border-left: 0;
   background:
-    linear-gradient(90deg, transparent 34%, rgba(255,255,255,.58) 34% 66%, transparent 66%) bottom / 100% 45% no-repeat;
+    linear-gradient(0deg, transparent 34%, rgba(255,255,255,.58) 34% 66%, transparent 66%) right / 42% 100% no-repeat;
 }
 .pitch::after {
-  bottom: -3px;
-  border-bottom: 0;
+  right: -3px;
+  border-right: 0;
   background:
-    linear-gradient(90deg, transparent 34%, rgba(255,255,255,.58) 34% 66%, transparent 66%) top / 100% 45% no-repeat;
+    linear-gradient(0deg, transparent 34%, rgba(255,255,255,.58) 34% 66%, transparent 66%) left / 42% 100% no-repeat;
 }
 .field-player {
   position: absolute;
@@ -2068,30 +2084,30 @@ h2 { margin: 0; font-size: 21px; }
 }
 .team-a b { background: rgba(15,79,55,.88); }
 .team-b b { background: rgba(34,72,131,.88); }
-.slot-a-1 { left: 50%; top: 12%; }
+.slot-a-1 { left: 9%; top: 50%; }
 .slot-a-2 { left: 24%; top: 25%; }
-.slot-a-3 { left: 76%; top: 25%; }
-.slot-a-4 { left: 38%; top: 39%; }
-.slot-a-5 { left: 62%; top: 39%; }
-.slot-a-6 { left: 50%; top: 27%; }
-.slot-a-7 { left: 17%; top: 42%; }
-.slot-a-8 { left: 83%; top: 42%; }
-.slot-a-9 { left: 40%; top: 17%; }
-.slot-a-10 { left: 60%; top: 17%; }
-.slot-a-11 { left: 14%; top: 17%; }
-.slot-a-12 { left: 86%; top: 17%; }
-.slot-b-1 { left: 50%; top: 88%; }
-.slot-b-2 { left: 24%; top: 75%; }
+.slot-a-3 { left: 24%; top: 75%; }
+.slot-a-4 { left: 35%; top: 40%; }
+.slot-a-5 { left: 35%; top: 60%; }
+.slot-a-6 { left: 45%; top: 50%; }
+.slot-a-7 { left: 20%; top: 50%; }
+.slot-a-8 { left: 42%; top: 25%; }
+.slot-a-9 { left: 42%; top: 75%; }
+.slot-a-10 { left: 49%; top: 34%; }
+.slot-a-11 { left: 49%; top: 66%; }
+.slot-a-12 { left: 30%; top: 50%; }
+.slot-b-1 { left: 91%; top: 50%; }
+.slot-b-2 { left: 76%; top: 25%; }
 .slot-b-3 { left: 76%; top: 75%; }
-.slot-b-4 { left: 38%; top: 61%; }
-.slot-b-5 { left: 62%; top: 61%; }
-.slot-b-6 { left: 50%; top: 73%; }
-.slot-b-7 { left: 17%; top: 58%; }
-.slot-b-8 { left: 83%; top: 58%; }
-.slot-b-9 { left: 40%; top: 83%; }
-.slot-b-10 { left: 60%; top: 83%; }
-.slot-b-11 { left: 14%; top: 83%; }
-.slot-b-12 { left: 86%; top: 83%; }
+.slot-b-4 { left: 65%; top: 40%; }
+.slot-b-5 { left: 65%; top: 60%; }
+.slot-b-6 { left: 55%; top: 50%; }
+.slot-b-7 { left: 80%; top: 50%; }
+.slot-b-8 { left: 58%; top: 25%; }
+.slot-b-9 { left: 58%; top: 75%; }
+.slot-b-10 { left: 51%; top: 34%; }
+.slot-b-11 { left: 51%; top: 66%; }
+.slot-b-12 { left: 70%; top: 50%; }
 .ticket-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 96px;
@@ -4217,5 +4233,186 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
   }
   .profile-hero .supporter-profile-card strong {
     font-size: 13px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .profile-hero {
+    display: grid !important;
+    grid-template-columns: 142px minmax(0, 1fr) !important;
+    grid-template-rows: minmax(168px, auto) auto !important;
+    align-items: center !important;
+    column-gap: 12px !important;
+    row-gap: 10px !important;
+    min-height: 0 !important;
+    padding: 14px 12px 12px !important;
+    overflow: hidden !important;
+    background-position: 53% top !important;
+  }
+  .profile-card-stage {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 142px !important;
+    min-height: 168px !important;
+    align-self: center !important;
+    justify-self: start !important;
+    z-index: 2 !important;
+  }
+  .profile-copy {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    z-index: 2 !important;
+  }
+  .profile-copy .eyebrow {
+    margin: 0 0 5px !important;
+    font-size: 10px !important;
+    line-height: 1.1 !important;
+  }
+  .profile-copy h1 {
+    display: block !important;
+    max-width: 100% !important;
+    margin: 0 0 7px !important;
+    font-size: clamp(26px, 8.2vw, 40px) !important;
+    line-height: .92 !important;
+    overflow-wrap: anywhere !important;
+  }
+  .profile-copy .lede {
+    display: -webkit-box !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    -webkit-line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important;
+    font-size: 12px !important;
+    line-height: 1.22 !important;
+  }
+  .profile-actions {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 7px !important;
+    border-radius: 14px !important;
+    z-index: 3 !important;
+  }
+  .profile-actions .button {
+    min-width: 0 !important;
+    min-height: 42px !important;
+    padding: 7px 6px !important;
+    font-size: 12px !important;
+    line-height: 1.05 !important;
+  }
+  .profile-hero .fifa-premium-card {
+    width: 142px !important;
+    min-height: 168px !important;
+    padding: 9px 8px 10px !important;
+    border-radius: 20px !important;
+    box-shadow: 0 16px 24px rgba(0,0,0,.28), inset 0 0 0 2px rgba(255,255,255,.18) !important;
+  }
+  .profile-hero .fifa-premium-card .fifa-card-top {
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    align-items: start !important;
+  }
+  .profile-hero .fifa-premium-card .fifa-rating strong {
+    font-size: 34px !important;
+    line-height: .85 !important;
+  }
+  .profile-hero .fifa-premium-card .fifa-rating span,
+  .profile-hero .fifa-premium-card .fifa-rating b {
+    font-size: 9px !important;
+  }
+  .profile-hero .fifa-premium-card .fifa-rating i {
+    width: 28px !important;
+    margin: 4px 0 !important;
+  }
+  .profile-hero .fifa-premium-card .fifa-card-mascot {
+    width: 118px !important;
+    height: 118px !important;
+    margin: -16px -28px -24px -14px !important;
+    transform: translate(-2px, 3px) scale(1.13) !important;
+    filter: drop-shadow(0 17px 11px rgba(0,0,0,.36)) !important;
+  }
+  .profile-hero .fifa-premium-card .fifa-nameplate {
+    margin-top: -2px !important;
+  }
+  .profile-hero .fifa-premium-card .fifa-nameplate b {
+    font-size: 11px !important;
+    line-height: .98 !important;
+  }
+  .profile-hero .fifa-premium-card .fifa-nameplate small {
+    font-size: 9px !important;
+  }
+  .profile-hero .supporter-profile-card {
+    width: 142px !important;
+    min-height: 168px !important;
+    padding: 10px 8px !important;
+    border-radius: 20px !important;
+  }
+  .profile-hero .supporter-profile-card img {
+    width: 96px !important;
+    height: 96px !important;
+  }
+  .profile-hero .supporter-profile-card strong {
+    font-size: 16px !important;
+  }
+  .formation-layout {
+    grid-template-columns: 1fr !important;
+  }
+  .formation-layout .pitch {
+    order: -1;
+    min-height: 226px !important;
+    aspect-ratio: 16 / 9.8 !important;
+  }
+  .field-player {
+    width: 76px !important;
+  }
+  .field-player img {
+    width: 58px !important;
+    height: 58px !important;
+  }
+  .field-player b {
+    max-width: 74px !important;
+    font-size: 8px !important;
+  }
+  .field-player small {
+    min-width: 26px !important;
+    min-height: 18px !important;
+    font-size: 10px !important;
+  }
+  .tv-news-ticker {
+    grid-template-columns: 132px minmax(0, 1fr) !important;
+  }
+  .tv-news-ticker > strong {
+    min-height: 40px !important;
+    padding: 8px 9px !important;
+    font-size: 10px !important;
+  }
+  .skycalcetto-logo {
+    width: 30px !important;
+    height: 22px !important;
+    font-size: 9px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .profile-hero {
+    grid-template-columns: 132px minmax(0, 1fr) !important;
+  }
+  .profile-card-stage,
+  .profile-hero .fifa-premium-card,
+  .profile-hero .supporter-profile-card {
+    width: 132px !important;
+  }
+  .profile-copy h1 {
+    font-size: clamp(24px, 7.5vw, 34px) !important;
+  }
+  .profile-actions .button {
+    font-size: 11px !important;
   }
 }
