@@ -268,6 +268,25 @@ h2 { margin: 0; font-size: 21px; }
   min-height: clamp(190px, 24vw, 278px);
   overflow: visible;
 }
+.profile-identity-row {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: clamp(118px, 15vw, 172px) minmax(0, 1fr);
+  gap: clamp(12px, 3vw, 28px);
+  align-items: center;
+  width: 100%;
+}
+.profile-identity-row .profile-card-stage {
+  grid-column: 1;
+  grid-row: auto;
+  width: auto;
+  min-height: 0;
+}
+.profile-identity-row .profile-copy {
+  grid-column: 2;
+  grid-row: auto;
+}
 .profile-avatar-orb {
   position: relative;
   display: grid;
@@ -4841,5 +4860,58 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
   }
   .profile-copy h1 {
     font-size: clamp(20px, 6.2vw, 27px) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .profile-hero {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto !important;
+    padding: 88px 12px 12px !important;
+  }
+  .profile-identity-row {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    display: grid !important;
+    grid-template-columns: 78px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    align-items: end !important;
+    width: 100% !important;
+  }
+  .profile-identity-row .profile-card-stage {
+    grid-column: 1 !important;
+    width: 78px !important;
+    min-width: 78px !important;
+    height: 78px !important;
+    min-height: 78px !important;
+    align-self: end !important;
+    justify-self: start !important;
+  }
+  .profile-identity-row .profile-copy {
+    grid-column: 2 !important;
+    align-self: end !important;
+    min-width: 0 !important;
+    padding: 0 0 3px !important;
+  }
+  .profile-avatar-orb {
+    width: 78px !important;
+    height: 78px !important;
+    min-width: 78px !important;
+    min-height: 78px !important;
+  }
+  .profile-copy h1 {
+    display: block !important;
+    max-width: 100% !important;
+    margin: 0 0 4px !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    hyphens: none !important;
+    font-size: clamp(20px, 6.1vw, 28px) !important;
+    line-height: .96 !important;
+  }
+  .profile-copy .lede {
+    font-size: 11px !important;
+    line-height: 1.18 !important;
   }
 }

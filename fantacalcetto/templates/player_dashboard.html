@@ -120,28 +120,30 @@
 
 {% set player_ovr = player|overall_rating %}
 <section class="hero profile-hero {% if effective_supporter %}supporter-hero{% endif %}" id="profilo" data-app-section="profilo">
-  <div class="profile-card-stage" aria-label="{% if effective_supporter %}Avatar supporter{% else %}Avatar calciatore{% endif %}">
-    <div class="profile-avatar-orb {% if effective_supporter %}supporter-avatar{% endif %}">
-      <img src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
-      {% if effective_supporter %}
-        <span>Fede {{ player.faith_score or 0 }}</span>
-      {% else %}
-        <span>{{ player_ovr }}</span>
-      {% endif %}
+  <div class="profile-identity-row">
+    <div class="profile-card-stage" aria-label="{% if effective_supporter %}Avatar supporter{% else %}Avatar calciatore{% endif %}">
+      <div class="profile-avatar-orb {% if effective_supporter %}supporter-avatar{% endif %}">
+        <img src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
+        {% if effective_supporter %}
+          <span>Fede {{ player.faith_score or 0 }}</span>
+        {% else %}
+          <span>{{ player_ovr }}</span>
+        {% endif %}
+      </div>
     </div>
-  </div>
-  <div class="profile-copy">
-    <p class="eyebrow">{% if effective_supporter %}Profilo supporter{% else %}Profilo calciatore{% endif %}</p>
-    <h1>
-      {{ player.name }}
-    </h1>
-    <p class="lede">
-      {% if effective_supporter %}
-        {{ player.nickname or "Tifoso di tribuna" }} · supporter{% if player.supporter_player_name %} di {{ player.supporter_player_name }}{% endif %}{% if player.supporter_relation %} · {{ player.supporter_relation }}{% endif %}
-      {% else %}
-        {{ player.nickname or "Soprannome ancora da spogliatoio" }} · {{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.permanent_team_name or "Svincolato di lusso" }} · {{ player.account_status|account_status_label }}
-      {% endif %}
-    </p>
+    <div class="profile-copy">
+      <p class="eyebrow">{% if effective_supporter %}Profilo supporter{% else %}Profilo calciatore{% endif %}</p>
+      <h1>
+        {{ player.name }}
+      </h1>
+      <p class="lede">
+        {% if effective_supporter %}
+          {{ player.nickname or "Tifoso di tribuna" }} · supporter{% if player.supporter_player_name %} di {{ player.supporter_player_name }}{% endif %}{% if player.supporter_relation %} · {{ player.supporter_relation }}{% endif %}
+        {% else %}
+          {{ player.nickname or "Soprannome ancora da spogliatoio" }} · {{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.permanent_team_name or "Svincolato di lusso" }} · {{ player.account_status|account_status_label }}
+        {% endif %}
+      </p>
+    </div>
   </div>
   <div class="hero-actions profile-actions">
     <a class="button primary" href="{{ url_for('player_update_profile') }}">Modifica profilo</a>
@@ -190,6 +192,9 @@
       <strong>{{ player.name }}</strong>
       <span>{{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.permanent_team_name or "Svincolato di lusso" }}</span>
       <button class="button primary" type="button" onclick="window.print()">Salva/Stampa card</button>
+      <form method="dialog">
+        <button class="button ghost" type="submit">Esci</button>
+      </form>
     </div>
   </div>
 </dialog>
