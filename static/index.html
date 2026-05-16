@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-title" content="Incassi">
     <title>Incassi</title>
     <link rel="manifest" href="/manifest.webmanifest">
-    <link rel="stylesheet" href="/style.css?v=20260516-6">
+    <link rel="stylesheet" href="/style.css?v=20260516-7">
   </head>
   <body>
     <section class="login" id="loginView">
@@ -69,21 +69,6 @@
 
       <section class="method-grid month-breakdown" id="monthBreakdown" aria-label="Riepilogo metodi"></section>
 
-      <section class="command-panel" aria-label="Azioni rapide">
-        <button class="command primary-command" id="historyAddButton" type="button" aria-label="Aggiungi nuovo incasso">
-          <span>+</span>
-          <strong>Nuovo incasso</strong>
-        </button>
-        <button class="command" data-screen-button="history" type="button">
-          <span>✎</span>
-          <strong>Correggi</strong>
-        </button>
-        <button class="command" data-screen-button="stats" type="button">
-          <span>⌁</span>
-          <strong>Insight</strong>
-        </button>
-      </section>
-
       <section class="insight-strip" aria-label="Insight mese">
         <span>
           <b>Media</b>
@@ -98,6 +83,11 @@
           <em>Automatico</em>
         </span>
       </section>
+
+      <button class="floating-new-entry" id="historyAddButton" type="button" aria-label="Aggiungi nuovo incasso">
+        <span>+</span>
+        <strong>Nuovo incasso</strong>
+      </button>
 
       <nav class="bottom-nav screen-nav" aria-label="Navigazione app">
         <button class="secondary back-button" id="backButton" type="button" hidden>Indietro</button>
@@ -321,6 +311,6 @@
       </section>
     </main>
 
-    <script src="/app.js?v=20260516-6"></script>
+    <script src="/app.js?v=20260516-7"></script>
   </body>
 </html>
