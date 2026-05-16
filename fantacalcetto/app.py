@@ -10,6 +10,7 @@ from functools import wraps
 from threading import Lock
 
 from flask import Flask, Response, g, redirect, render_template, request, session, url_for
+from PIL import Image, ImageOps
 from werkzeug.exceptions import HTTPException
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -23,9 +24,13 @@ except ImportError:  # Local SQLite mode does not need psycopg installed.
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DB_PATH = os.environ.get("FANTACALCETTO_DB_PATH", os.path.join(BASE_DIR, "calcetto.db"))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+LEGAGRAM_UPLOAD_DIR = os.path.join(STATIC_DIR, "generated", "legagram")
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 USE_POSTGRES = bool(DATABASE_URL)
 SEED_DEMO_DATA = os.environ.get("FANTACALCETTO_SEED_DEMO", "").lower() in ("1", "true", "yes")
+PHOTO_TTL_DAYS = 7
+MAX_LEGAGRAM_IMAGE_SIDE = 1280
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "calcetto-local-demo")
@@ -673,6 +678,9 @@ def init_db():
                 actor_display_role text default '',
                 title text not null,
                 body text default '',
+                feed_scope text not null default 'common',
+                image_path text default '',
+                image_expires_at timestamptz,
                 visibility text not null default 'all',
                 created_at timestamptz not null default now()
             )
@@ -766,6 +774,9 @@ def init_db():
             "alter table matches add column if not exists team_b_logo text not null default 'crest-2'",
             "alter table league_events add column if not exists league_id integer",
             "alter table league_events add column if not exists actor_display_role text default ''",
+            "alter table league_events add column if not exists feed_scope text not null default 'common'",
+            "alter table league_events add column if not exists image_path text default ''",
+            "alter table league_events add column if not exists image_expires_at timestamptz",
             "alter table league_event_comments add column if not exists display_role text default ''",
             "alter table match_players add column if not exists responded_at timestamptz",
             "alter table match_players add column if not exists rating numeric(3,1)",
@@ -948,6 +959,9 @@ def init_db():
             actor_display_role text default '',
             title text not null,
             body text default '',
+            feed_scope text not null default 'common',
+            image_path text default '',
+            image_expires_at text,
             visibility text not null default 'all',
             created_at text not null default current_timestamp
         );
@@ -1020,6 +1034,12 @@ def init_db():
         connection.execute("alter table league_events add column league_id integer")
     if "actor_display_role" not in event_columns:
         connection.execute("alter table league_events add column actor_display_role text default ''")
+    if "feed_scope" not in event_columns:
+        connection.execute("alter table league_events add column feed_scope text not null default 'common'")
+    if "image_path" not in event_columns:
+        connection.execute("alter table league_events add column image_path text default ''")
+    if "image_expires_at" not in event_columns:
+        connection.execute("alter table league_events add column image_expires_at text")
     event_comment_columns = [row["name"] for row in query("pragma table_info(league_event_comments)")]
     if "display_role" not in event_comment_columns:
         connection.execute("alter table league_event_comments add column display_role text default ''")
@@ -1467,23 +1487,54 @@ def import_payload(payload):
     seed_award_types()
 
 
-def log_league_event(title, body="", event_type="news", actor_player_id=None, visibility="all", league_id=None, actor_display_role=""):
+def log_league_event(
+    title,
+    body="",
+    event_type="news",
+    actor_player_id=None,
+    visibility="all",
+    league_id=None,
+    actor_display_role="",
+    feed_scope="common",
+    image_path="",
+    image_expires_at=None,
+):
     try:
         target_league_id = league_id or current_league_id()
         execute(
             """
-            insert into league_events (league_id, actor_player_id, event_type, actor_display_role, title, body, visibility)
-            values (?, ?, ?, ?, ?, ?, ?)
+            insert into league_events (
+                league_id, actor_player_id, event_type, actor_display_role, title,
+                body, feed_scope, image_path, image_expires_at, visibility
+            )
+            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (target_league_id, actor_player_id, event_type, actor_display_role, title, body, visibility),
+            (
+                target_league_id,
+                actor_player_id,
+                event_type,
+                actor_display_role,
+                title,
+                body,
+                feed_scope,
+                image_path,
+                image_expires_at,
+                visibility,
+            ),
         )
     except Exception:
         app.logger.exception("Errore durante scrittura evento lega")
 
 
-def recent_league_events(limit=10, include_admin=False):
+def recent_league_events(limit=10, include_admin=False, feed_scope="common"):
     league_id = current_league_id()
     visibility_filter = "" if include_admin else "and le.visibility in ('all', 'players')"
+    scope_filter = ""
+    params = [league_id, league_id]
+    if feed_scope:
+        scope_filter = "and coalesce(le.feed_scope, 'common') = ?"
+        params.append(feed_scope)
+    params.append(limit)
     return query(
         f"""
         select le.*, p.name as actor_name, p.mascot as actor_mascot,
@@ -1492,10 +1543,30 @@ def recent_league_events(limit=10, include_admin=False):
         left join players p on p.id = le.actor_player_id
         where coalesce(le.league_id, ?) = ?
         {visibility_filter}
+        {scope_filter}
         order by le.created_at desc, le.id desc
         limit ?
         """,
-        (league_id, league_id, limit),
+        tuple(params),
+    )
+
+
+def personal_league_events(player_id, limit=12):
+    league_id = current_league_id()
+    return query(
+        """
+        select le.*, p.name as actor_name, p.mascot as actor_mascot,
+               p.app_role as actor_app_role, p.account_type as actor_account_type
+        from league_events le
+        left join players p on p.id = le.actor_player_id
+        where coalesce(le.league_id, ?) = ?
+          and le.actor_player_id = ?
+          and coalesce(le.feed_scope, 'common') = 'personal'
+          and le.visibility in ('all', 'players')
+        order by le.created_at desc, le.id desc
+        limit ?
+        """,
+        (league_id, league_id, player_id, limit),
     )
 
 
@@ -1518,6 +1589,53 @@ def comments_for_events(events):
     for row in rows:
         grouped.setdefault(row["event_id"], []).append(row)
     return grouped
+
+
+def cleanup_expired_legagram_photos():
+    try:
+        rows = query(
+            """
+            select id, image_path
+            from league_events
+            where coalesce(image_path, '') != ''
+              and image_expires_at is not null
+              and image_expires_at <= current_timestamp
+            """
+        )
+        for row in rows:
+            image_path = row["image_path"] or ""
+            if image_path.startswith("generated/legagram/"):
+                full_path = os.path.abspath(os.path.join(STATIC_DIR, image_path))
+                if full_path.startswith(os.path.abspath(LEGAGRAM_UPLOAD_DIR)) and os.path.exists(full_path):
+                    try:
+                        os.remove(full_path)
+                    except OSError:
+                        app.logger.warning("Non riesco a eliminare foto LegaGram scaduta: %s", full_path)
+            execute("update league_events set image_path = '', image_expires_at = null where id = ?", (row["id"],))
+    except Exception:
+        app.logger.exception("Errore durante pulizia foto LegaGram")
+
+
+def save_legagram_photo(uploaded):
+    if not uploaded or not uploaded.filename:
+        return "", None
+    try:
+        os.makedirs(LEGAGRAM_UPLOAD_DIR, exist_ok=True)
+        image = Image.open(uploaded.stream)
+        image = ImageOps.exif_transpose(image)
+        image.thumbnail((MAX_LEGAGRAM_IMAGE_SIDE, MAX_LEGAGRAM_IMAGE_SIDE), Image.Resampling.LANCZOS)
+        if image.mode not in ("RGB", "L"):
+            image = image.convert("RGB")
+        elif image.mode == "L":
+            image = image.convert("RGB")
+        filename = f"{uuid.uuid4().hex}.jpg"
+        full_path = os.path.join(LEGAGRAM_UPLOAD_DIR, filename)
+        image.save(full_path, "JPEG", quality=78, optimize=True, progressive=True)
+        expires_at = (datetime.utcnow() + timedelta(days=PHOTO_TTL_DAYS)).strftime("%Y-%m-%d %H:%M:%S")
+        return f"generated/legagram/{filename}", expires_at
+    except Exception:
+        app.logger.exception("Foto LegaGram non valida o non comprimibile")
+        return "", None
 
 
 def normalize_publish_role(player, requested_role=""):
@@ -2897,6 +3015,7 @@ def player_logout():
 def player_dashboard():
     player = current_player()
     league_id = current_league_id() or player["league_id"]
+    cleanup_expired_legagram_photos()
     match = featured_match()
     if match:
         maybe_auto_generate(match)
@@ -2931,6 +3050,8 @@ def player_dashboard():
             my_waitlist_positions[my_match["id"]] = waitlist_positions(my_match["id"]).get(player["id"])
     seed_develop_feed()
     news_items = recent_league_events(14)
+    personal_posts = personal_league_events(player["id"], 12)
+    all_legagram_items = news_items + personal_posts
     featured_players = invited_players(my_matches[0]["id"]) if my_matches else []
     current_mvp_player_id = latest_mvp_player_id(league_id, my_matches[0]["id"]) if my_matches else None
     pending_transfers = pending_transfer_for_player(player["id"])
@@ -2946,7 +3067,8 @@ def player_dashboard():
         foot_labels=FOOT_LABELS,
         notice=request.args.get("notice", ""),
         news_items=news_items,
-        news_comments=comments_for_events(news_items),
+        personal_posts=personal_posts,
+        news_comments=comments_for_events(all_legagram_items),
         match_comments=comments_for_matches(my_matches + past_matches),
         app_updates=APP_UPDATES[:3],
         pending_transfers=pending_transfers,
@@ -3126,7 +3248,7 @@ def add_event_comment(event_id):
             "update players set faith_score = faith_score + 2, score = score + 1 where id = ?",
             (player["id"],),
         )
-    return redirect(url_for("player_dashboard", notice="Commento alla news pubblicato. +2 Fede, la curva prende nota."))
+    return redirect(url_for("player_dashboard", notice="Commento alla news pubblicato. +2 Fede, la curva prende nota.", _anchor="legagram"))
 
 
 @app.route("/league-events/<int:event_id>/react", methods=["POST"])
@@ -3147,7 +3269,7 @@ def react_event(event_id):
             "update players set faith_score = faith_score + 1 where id = ?",
             (player["id"],),
         )
-    return redirect(url_for("player_dashboard", notice="Reaction registrata. +1 Fede, la curva applaude."))
+    return redirect(url_for("player_dashboard", notice="Reaction registrata. +1 Fede, la curva applaude.", _anchor="legagram"))
 
 
 @app.route("/player/chronicles", methods=["POST"])
@@ -3156,11 +3278,15 @@ def add_player_chronicle():
     player = current_player()
     title = request.form.get("title", "").strip()
     body = request.form.get("body", "").strip()
+    feed_scope = request.form.get("feed_scope", "common").strip().lower()
+    if feed_scope not in ("common", "personal"):
+        feed_scope = "common"
     display_role = normalize_publish_role(player, request.form.get("as_role", ""))
-    if not body:
-        return redirect(url_for("player_dashboard", notice="Scrivi almeno due righe, pure storte, ma scrivile."))
+    image_path, image_expires_at = save_legagram_photo(request.files.get("photo"))
+    if not body and not image_path:
+        return redirect(url_for("player_dashboard", notice="Scrivi qualcosa o carica una foto: pure una prova VAR sgranata va bene.", _anchor="legagram"))
     if not title:
-        title = f"Cronaca di {player['name']}"
+        title = f"Bacheca di {player['name']}" if feed_scope == "personal" else f"Cronaca di {player['name']}"
     log_league_event(
         title[:90],
         body[:700],
@@ -3168,8 +3294,14 @@ def add_player_chronicle():
         player["id"],
         "all",
         actor_display_role=display_role,
+        feed_scope=feed_scope,
+        image_path=image_path,
+        image_expires_at=image_expires_at,
     )
-    return redirect(url_for("player_dashboard", notice="Cronaca pubblicata. Lo spogliatoio è stato informato."))
+    notice = "Post pubblicato nella tua bacheca personale." if feed_scope == "personal" else "Post pubblicato nel feed comune."
+    if image_path:
+        notice += " Foto compressa: resta visibile per massimo 7 giorni."
+    return redirect(url_for("player_dashboard", notice=notice, _anchor="legagram"))
 
 
 @app.route("/player/profile", methods=["GET", "POST"])

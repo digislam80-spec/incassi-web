@@ -1702,6 +1702,26 @@ h2 { margin: 0; font-size: 21px; }
   font-weight: 900;
   text-transform: uppercase;
 }
+.legagram-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 14px;
+}
+.legagram-tabs a {
+  display: grid;
+  place-items: center;
+  min-height: 42px;
+  border: 1px solid #bddfc9;
+  border-radius: 999px;
+  color: var(--green);
+  background: #eef8ef;
+  font-weight: 1000;
+  text-decoration: none;
+}
+.feed-common-head {
+  margin-top: 18px;
+}
 .market-breaking {
   display: grid;
   gap: 10px;
@@ -1737,6 +1757,9 @@ h2 { margin: 0; font-size: 21px; }
   border: 1px solid var(--line);
   border-radius: 14px;
   background: #fbfcf7;
+}
+.photo-composer {
+  align-items: start;
 }
 .feed-composer img,
 .post-avatar img {
@@ -1792,7 +1815,7 @@ h2 { margin: 0; font-size: 21px; }
 .source-badge.player { background: #166b4f; }
 .composer-box {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 8px;
   align-items: center;
 }
@@ -1804,6 +1827,60 @@ h2 { margin: 0; font-size: 21px; }
   padding: 9px 14px;
   font: inherit;
   font-weight: 850;
+}
+.photo-upload-pill {
+  display: inline-grid;
+  place-items: center;
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 1px solid #bddfc9;
+  border-radius: 999px;
+  color: var(--green);
+  background: #eef8ef;
+  font-weight: 1000;
+  cursor: pointer;
+}
+.photo-upload-pill input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.photo-disclaimer {
+  grid-column: 2;
+  color: #7a6220;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.3;
+}
+.personal-post-list {
+  margin-bottom: 8px;
+}
+.personal-post-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(242,201,76,.18), transparent 32%),
+    #fffdf3;
+}
+.personal-empty-card {
+  background: #fff8d7;
+}
+.post-photo {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  margin-top: 10px;
+  border-radius: 14px;
+  object-fit: cover;
+  background: #eef4ea;
+  box-shadow: 0 12px 24px rgba(12,27,22,.12);
+}
+.photo-expiry-note {
+  display: block;
+  margin-top: 6px;
+  color: #7a6220;
+  font-size: 11px;
+  font-weight: 900;
 }
 .supporter-card {
   display: grid;
@@ -4397,6 +4474,22 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
     width: 30px !important;
     height: 22px !important;
     font-size: 9px !important;
+  }
+  .feed-composer {
+    grid-template-columns: 46px minmax(0, 1fr) !important;
+    align-items: start !important;
+  }
+  .composer-box {
+    grid-template-columns: 1fr !important;
+  }
+  .photo-disclaimer {
+    grid-column: 1 / -1 !important;
+  }
+  .legagram-tabs {
+    grid-template-columns: 1fr !important;
+  }
+  .post-photo {
+    max-height: 360px !important;
   }
 }
 
