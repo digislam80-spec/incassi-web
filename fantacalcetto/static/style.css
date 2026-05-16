@@ -177,8 +177,6 @@ h2 { margin: 0; font-size: 21px; }
   width: min(100%, 348px);
   min-height: 340px;
 }
-#profile-edit { scroll-margin-top: 96px; }
-
 .fun-strip {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
@@ -488,7 +486,7 @@ h2 { margin: 0; font-size: 21px; }
 .tone-info { border-color: rgba(37,95,153,.24); background: #f1f7fc; }
 .admin-hub-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 10px;
   margin-top: 18px;
 }
@@ -505,6 +503,105 @@ h2 { margin: 0; font-size: 21px; }
 }
 .hub-tile strong { font-size: 18px; }
 .hub-tile span { color: var(--muted); font-weight: 800; line-height: 1.25; }
+.section-intro {
+  margin: -4px 0 16px;
+  font-weight: 850;
+}
+.admin-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.admin-split h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+.compact-match-list {
+  display: grid;
+  gap: 10px;
+}
+.match-list-card {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+}
+.match-list-card strong {
+  display: block;
+  margin-bottom: 4px;
+}
+.muted-card {
+  background: #f8f8f4;
+  opacity: .92;
+}
+.admin-inline-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.admin-inline-buttons form { margin: 0; }
+.admin-inline-buttons .button { width: 100%; }
+.admin-accordion {
+  padding: 0;
+  overflow: hidden;
+}
+.admin-accordion > summary {
+  display: grid;
+  gap: 4px;
+  padding: 18px 20px;
+  cursor: pointer;
+  list-style: none;
+}
+.admin-accordion > summary::-webkit-details-marker { display: none; }
+.admin-accordion > summary strong { font-size: 20px; }
+.admin-accordion > summary span {
+  color: var(--muted);
+  font-weight: 850;
+}
+.accordion-body {
+  padding: 0 20px 20px;
+}
+.admin-accordion .data-panel,
+.admin-accordion .news-panel {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.mascot-picker-title {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 4px;
+  margin-top: 4px;
+}
+.mascot-picker-title strong { font-size: 18px; }
+.mascot-picker-title span {
+  color: var(--muted);
+  font-weight: 850;
+}
+.mascot-avatar-grid.large {
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+}
+.mascot-avatar-grid.large .mascot-avatar-choice {
+  min-height: 182px;
+}
+.mascot-avatar-grid.large .avatar-art {
+  width: 118px;
+  height: 118px;
+}
+.sticky-form-actions {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  position: sticky;
+  bottom: 84px;
+  z-index: 4;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 12px 26px rgba(25,33,31,.12);
+  backdrop-filter: blur(12px);
+}
 
 .grid { display: grid; gap: 18px; margin-top: 18px; }
 .grid.two, .teams { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1562,9 +1659,15 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
   .page { width: min(100% - 20px, 1180px); margin-top: 14px; }
   .hero, .match-header { min-height: 0; padding: 20px; }
   .site-footer { padding-bottom: 92px; }
-  .form, .roster-row, .stat-row, .quick-pagella-row, .scoreline, .stat-cards, .admin-actions, .admin-player-stats, .league-card, .league-metrics, .match-quickbar, .notification-grid, .award-row, .data-actions, .password-request-row, .password-reset-form, .team-name-grid, .team-editor-row, .comment-form, .help-grid, .admin-hub-grid { grid-template-columns: 1fr; }
+  .form, .roster-row, .stat-row, .quick-pagella-row, .scoreline, .stat-cards, .admin-actions, .admin-player-stats, .league-card, .league-metrics, .match-quickbar, .notification-grid, .award-row, .data-actions, .password-request-row, .password-reset-form, .team-name-grid, .team-editor-row, .comment-form, .help-grid, .admin-hub-grid, .admin-split, .admin-inline-buttons, .sticky-form-actions { grid-template-columns: 1fr; }
   .admin-hub-grid { gap: 8px; }
   .hub-tile { min-height: 82px; }
+  .admin-accordion > summary { padding: 16px; }
+  .accordion-body { padding: 0 16px 16px; }
+  .mascot-avatar-grid.large { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mascot-avatar-grid.large .mascot-avatar-choice { min-height: 150px; padding: 8px 6px; }
+  .mascot-avatar-grid.large .avatar-art { width: 94px; height: 94px; }
+  .sticky-form-actions { bottom: 76px; }
   .admin-player-list { max-height: none; padding-right: 0; }
   .admin-player-card summary {
     grid-template-columns: minmax(0, 1fr) auto auto 28px;

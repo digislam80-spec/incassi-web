@@ -36,7 +36,7 @@
     <h1>{{ player.name }}</h1>
     <p class="lede">{{ player.nickname or "Soprannome ancora da spogliatoio" }} · {{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.account_status|account_status_label }}</p>
     <div class="hero-actions">
-      <a class="button primary" href="#profile-edit">Modifica profilo</a>
+      <a class="button primary" href="{{ url_for('player_update_profile') }}">Modifica profilo</a>
       <button class="button profile-help-button" type="button" onclick="document.getElementById('player-help').showModal()">Cosa posso fare qui?</button>
     </div>
   </div>
@@ -105,6 +105,94 @@
   <div class="notice soft">Account non ancora approvato: puoi guardare il profilo, ma non sei ancora arruolabile.</div>
 {% endif %}
 
+<section class="panel">
+  <div class="panel-head">
+    <h2>Statistiche</h2>
+    <a class="button ghost" href="{{ url_for('player_update_profile') }}">Modifica profilo</a>
+  </div>
+  <div class="stat-cards">
+    <div><strong>{{ player.matches }}</strong><small>presenze</small></div>
+    <div><strong>{{ player.goals }}</strong><small>gol</small></div>
+    <div><strong>{{ player.assists }}</strong><small>assist</small></div>
+    <div><strong>{{ player.wins }}</strong><small>vittorie</small></div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Le mie partite</h2>
+    <span class="pill">Prossime</span>
+  </div>
+  <div class="compact-match-list">
+    {% for m in matches %}
+      <article class="mini-card match-list-card">
+        <div>
+          <strong>{{ m.title }}</strong>
+          <span>{{ m.match_date|datetime_it }} · {{ m.location }}</span>
+        </div>
+        <small>{{ m.status|status_label }} · {{ (m.response or "non invitato")|response_label }}</small>
+        <small>Stato: {{ (m.response or "non invitato")|response_label }}{% if m.response == "waitlist" and waitlist_positions.get(m.id) %} · posizione {{ waitlist_positions.get(m.id) }}{% elif m.responded_at %} · ordine conferma registrato{% endif %}{% if m.penalty_points %} · penalità {{ m.penalty_points }}{% endif %}</small>
+        {% if m.response == "waitlist" %}
+          <p class="waitlist-note">Numero massimo raggiunto: sei nella panchina d'onore. Se qualcuno disdice, entri automaticamente in lista.</p>
+        {% endif %}
+        <div class="comment-list">
+          {% for comment in match_comments.get(m.id, []) %}
+            <small><b>{{ comment.player_name or "Spogliatoio" }}</b>: {{ comment.body }}</small>
+          {% endfor %}
+        </div>
+        <form class="comment-form" method="post" action="{{ url_for('add_match_comment', match_id=m.id) }}">
+          <input name="body" maxlength="500" placeholder="Commenta la partita">
+          <button class="button ghost" type="submit">Invia</button>
+        </form>
+        {% if m.status != "cancelled" %}
+          <a class="button ghost" href="{{ url_for('player_match_calendar', match_id=m.id) }}">Aggiungi al calendario</a>
+        {% endif %}
+      </article>
+    {% else %}
+      <div class="mini-card">
+        <strong>Nessuna convocazione aperta</strong>
+        <span>Quando il mister crea la prossima partita, la conferma appare solo nel riquadro in alto.</span>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Storico partite</h2>
+    <span class="pill">Già fatte</span>
+  </div>
+  <div class="compact-match-list">
+    {% for m in past_matches %}
+      <article class="mini-card match-list-card muted-card">
+        <div>
+          <strong>{{ m.title }}</strong>
+          <span>{{ m.match_date|datetime_it }} · {{ m.location }}</span>
+        </div>
+        <small>{{ m.status|status_label }} · {{ (m.response or "non invitato")|response_label }}</small>
+        <div class="comment-list">
+          {% for comment in match_comments.get(m.id, []) %}
+            <small><b>{{ comment.player_name or "Spogliatoio" }}</b>: {{ comment.body }}</small>
+          {% endfor %}
+        </div>
+      </article>
+    {% else %}
+      <div class="mini-card">
+        <strong>Nessuno storico</strong>
+        <span>Dopo la prima partita, pagelle e memoria del gruppo finiscono qui.</span>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Regole crescita</h2>
+    <span class="pill">{{ player.power|player_title }}</span>
+  </div>
+  <p class="muted">Confermare vale +1 score e +2 affidabilità. In partita: vittoria +3, pareggio +1, gol +2, assist +1. Se fai almeno 5 punti in una partita prendi +0.5 stella. Disdire costa score e affidabilità: sotto 24h perdi anche 0.5 stella, sotto 3h perdi 1 stella.</p>
+</section>
+
 <section class="grid two">
   <div class="panel news-panel">
     <div class="panel-head">
@@ -155,103 +243,6 @@
         </article>
       {% endfor %}
     </div>
-  </div>
-</section>
-
-<section class="grid two">
-  <div class="panel">
-    <div class="panel-head">
-      <h2>Statistiche</h2>
-      <span class="pill">{{ player.power|player_title }}</span>
-    </div>
-    <div class="stat-cards">
-      <div><strong>{{ player.matches }}</strong><small>presenze</small></div>
-      <div><strong>{{ player.goals }}</strong><small>gol</small></div>
-      <div><strong>{{ player.assists }}</strong><small>assist</small></div>
-      <div><strong>{{ player.wins }}</strong><small>vittorie</small></div>
-    </div>
-  </div>
-  <div class="panel" id="profile-edit">
-    <div class="panel-head">
-      <h2>Modifica profilo</h2>
-      <a class="button ghost" href="{{ url_for('rules') }}">Leggi regolamento</a>
-    </div>
-    <form class="form login-form" method="post" action="{{ url_for('player_update_profile') }}">
-      <label>Nome visualizzato <input name="name" value="{{ player.name }}" required></label>
-      <label>Soprannome <input name="nickname" value="{{ player.nickname or '' }}" placeholder="Es. Trivela"></label>
-      <label>WhatsApp <input name="phone" value="{{ player.phone or '' }}" placeholder="333..." required></label>
-      <label>Nome mascotte <input name="mascot_name" value="{{ player.mascot_name or '' }}" placeholder="Es. O' Mast d'a fascia"></label>
-      <label>Piede preferito
-        <select name="preferred_foot">
-          {% for key, label in foot_labels.items() %}
-            <option value="{{ key }}" {% if (player.preferred_foot or "right") == key %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-      </label>
-      <div class="mascot-avatar-grid">
-        {% for key, mascot in mascots.items() %}
-          <label class="mascot-avatar-choice mascot-{{ key }} {{ mascot.class }}">
-            <input type="radio" name="mascot" value="{{ key }}" {% if player.mascot == key %}checked{% endif %}>
-            <span class="avatar-art"><img src="{{ url_for('static', filename='mascots/' ~ key ~ '.png') }}" alt=""></span>
-            <strong>{{ mascot.label }}</strong>
-          </label>
-        {% endfor %}
-      </div>
-      <button class="button" type="submit">Salva profilo</button>
-    </form>
-  </div>
-</section>
-
-<section class="panel">
-  <div class="panel-head">
-    <h2>Regole crescita</h2>
-    <span class="pill">{{ player.power|player_title }}</span>
-  </div>
-  <p class="muted">Confermare vale +1 score e +2 affidabilità. In partita: vittoria +3, pareggio +1, gol +2, assist +1. Se fai almeno 5 punti in una partita prendi +0.5 stella. Disdire costa score e affidabilità: sotto 24h perdi anche 0.5 stella, sotto 3h perdi 1 stella.</p>
-</section>
-
-<section class="panel">
-  <div class="panel-head">
-    <h2>Convocazioni</h2>
-  </div>
-  <div class="cards">
-    {% for m in matches %}
-      <div class="mini-card">
-        <a class="event-title" href="{{ url_for('player_match_calendar', match_id=m.id) }}"><strong>{{ m.title }}</strong></a>
-        <span>{{ m.match_date|datetime_it }} · {{ m.location }}</span>
-        <small>{{ m.status|status_label }}</small>
-        <small>Stato: {{ (m.response or "non invitato")|response_label }}{% if m.response == "waitlist" and waitlist_positions.get(m.id) %} · posizione {{ waitlist_positions.get(m.id) }}{% elif m.responded_at %} · ordine conferma registrato{% endif %}{% if m.penalty_points %} · penalità {{ m.penalty_points }}{% endif %}</small>
-        {% if m.response == "waitlist" %}
-          <p class="waitlist-note">Numero massimo raggiunto: sei nella panchina d'onore. Se qualcuno disdice, entri automaticamente in lista.</p>
-        {% endif %}
-        <div class="comment-list">
-          {% for comment in match_comments.get(m.id, []) %}
-            <small><b>{{ comment.player_name or "Spogliatoio" }}</b>: {{ comment.body }}</small>
-          {% endfor %}
-        </div>
-        <form class="comment-form" method="post" action="{{ url_for('add_match_comment', match_id=m.id) }}">
-          <input name="body" maxlength="500" placeholder="Commenta la partita">
-          <button class="button ghost" type="submit">Invia</button>
-        </form>
-        {% if m.status != "cancelled" %}
-          <a class="button ghost" href="{{ url_for('player_match_calendar', match_id=m.id) }}">Aggiungi al calendario</a>
-        {% endif %}
-        {% if player.account_status == "approved" and m.status not in ["cancelled", "closed"] %}
-          {% if m.response in ["confirmed", "present"] %}
-            <button class="button primary confirmed-button" type="button" disabled>Confermato</button>
-          {% elif m.response == "waitlist" %}
-            <button class="button waitlist-button" type="button" disabled>In lista d'attesa</button>
-          {% else %}
-            <form class="inline-actions" method="post" action="{{ url_for('player_confirm', match_id=m.id) }}">
-              <button class="button confirm-neutral-button" type="submit">{% if m.response == "declined" %}Riconferma presenza{% else %}Da confermare{% endif %}</button>
-            </form>
-          {% endif %}
-          <form class="inline-actions" method="post" action="{{ url_for('player_cancel', match_id=m.id) }}">
-            <button class="button ghost" type="submit" {% if m.response == "declined" %}disabled{% endif %}>{% if m.response == "declined" %}Disdetto{% else %}Disdico{% endif %}</button>
-          </form>
-        {% endif %}
-      </div>
-    {% endfor %}
   </div>
 </section>
 {% endblock %}

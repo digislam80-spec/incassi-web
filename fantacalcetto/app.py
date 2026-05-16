@@ -45,6 +45,21 @@ DATA_TABLES = [
 
 APP_UPDATES = [
     {
+        "title": "Dashboard meno caotiche",
+        "body": "Admin e calciatore ora separano partita, storico, profilo e approvazioni: meno scroll mentale, più calcetto.",
+        "tag": "Esperienza",
+    },
+    {
+        "title": "Profilo in pagina dedicata",
+        "body": "Il calciatore modifica dati, piede e mascotte in una schermata separata e torna alla home quando salva.",
+        "tag": "Profilo",
+    },
+    {
+        "title": "Storico partite più visibile",
+        "body": "Le partite future e quelle già giocate sono divise meglio, così nessuno si perde tra convocazioni e pagelle.",
+        "tag": "Partite",
+    },
+    {
         "title": "App più chiara da telefono",
         "body": "Partite, admin e profilo iniziano a separare meglio azioni rapide, stato partita e storico.",
         "tag": "Mobile",
@@ -204,6 +219,7 @@ def sql_for_backend(sql):
         return sql
     translated = sql.replace("?", "%s")
     translated = translated.replace("m.match_date >= datetime('now', '-1 day')", "m.match_date::timestamp >= now() - interval '1 day'")
+    translated = translated.replace("m.match_date < datetime('now', '-1 day')", "m.match_date::timestamp < now() - interval '1 day'")
     translated = translated.replace("match_date >= datetime('now', '-4 hours')", "match_date::timestamp >= now() - interval '4 hours'")
     translated = translated.replace("match_date < datetime('now', '-4 hours')", "match_date::timestamp < now() - interval '4 hours'")
     translated = translated.replace("max(0, score - %s)", "greatest(0, score - %s)")
@@ -1518,6 +1534,7 @@ def admin_login():
     error = None
     if request.method == "POST":
         if request.form.get("pin") == ADMIN_PIN:
+            session.pop("player_id", None)
             session["is_admin"] = True
             return redirect(request.args.get("next") or url_for("admin_dashboard"))
         error = "PIN sbagliato. Il mister non ti riconosce."
@@ -1632,6 +1649,7 @@ def player_login():
             if player["account_status"] in ("rejected", "removed"):
                 error = "Account non attivo. Parla col mister prima di entrare nello spogliatoio."
                 return render_template("player_login.html", error=error)
+            session.pop("is_admin", None)
             session["player_id"] = player["id"]
             return redirect(request.args.get("next") or url_for("player_dashboard"))
         error = "Credenziali sbagliate. Riprova senza tunnel."
@@ -1741,6 +1759,18 @@ def player_dashboard():
         """,
         (player["id"],),
     )
+    past_matches = query(
+        """
+        select m.*, mp.response, mp.team, mp.goals as match_goals, mp.assists as match_assists,
+               mp.cancelled_at, mp.responded_at, mp.penalty_points
+        from matches m
+        left join match_players mp on mp.match_id = m.id and mp.player_id = ?
+        where m.match_date < datetime('now', '-1 day') or m.status in ('closed', 'cancelled')
+        order by m.match_date desc, m.id desc
+        limit 8
+        """,
+        (player["id"],),
+    )
     my_waitlist_positions = {}
     for my_match in my_matches:
         if my_match["response"] == "waitlist":
@@ -1750,6 +1780,7 @@ def player_dashboard():
         "player_dashboard.html",
         player=player,
         matches=my_matches,
+        past_matches=past_matches,
         match=match,
         phase=match_phase(match),
         waitlist_positions=my_waitlist_positions,
@@ -1757,7 +1788,7 @@ def player_dashboard():
         notice=request.args.get("notice", ""),
         news_items=news_items,
         news_comments=comments_for_events(news_items),
-        match_comments=comments_for_matches(my_matches),
+        match_comments=comments_for_matches(my_matches + past_matches),
         app_updates=APP_UPDATES[:3],
         mascots=MASCOTS,
     )
@@ -1932,10 +1963,17 @@ def add_player_chronicle():
     return redirect(url_for("player_dashboard", notice="Cronaca pubblicata. Lo spogliatoio è stato informato."))
 
 
-@app.route("/player/profile", methods=["POST"])
+@app.route("/player/profile", methods=["GET", "POST"])
 @require_player
 def player_update_profile():
     player = current_player()
+    if request.method == "GET":
+        return render_template(
+            "player_profile.html",
+            player=player,
+            mascots=MASCOTS,
+            foot_labels=FOOT_LABELS,
+        )
     name = request.form.get("name", "").strip() or player["name"]
     nickname = request.form.get("nickname", "").strip()
     phone = request.form.get("phone", "").strip() or player["phone"]

@@ -21,17 +21,13 @@
       {% if current_player %}
         <a href="{{ url_for('player_dashboard') }}">Partita</a>
         <a href="{{ url_for('league_overview') }}">Stats</a>
-      {% else %}
-        <a href="{{ url_for('player_login') }}">Entra</a>
-        <a href="{{ url_for('register_player') }}">Registrati</a>
-      {% endif %}
-      {% if is_admin and not current_player %}
+      {% elif is_admin %}
         <a href="{{ url_for('admin_dashboard') }}">Oggi</a>
         <a href="{{ url_for('league_overview') }}">Analisi lega</a>
       {% else %}
-        {% if not current_player %}
-          <a href="{{ url_for('admin_login') }}">Mister</a>
-        {% endif %}
+        <a href="{{ url_for('player_login') }}">Entra</a>
+        <a href="{{ url_for('register_player') }}">Registrati</a>
+        <a href="{{ url_for('admin_login') }}">Mister</a>
       {% endif %}
       {% if is_admin and not current_player %}
         <form class="nav-form" method="post" action="{{ url_for('admin_logout') }}">
@@ -56,7 +52,7 @@
   {% if current_player %}
     <nav class="bottom-nav">
       <a href="{{ url_for('player_dashboard') }}">Partita</a>
-      <a href="{{ url_for('player_dashboard') }}#profile-edit">Profilo</a>
+      <a href="{{ url_for('player_update_profile') }}">Profilo</a>
       <a href="{{ url_for('league_overview') }}">Stats</a>
       <a href="{{ url_for('player_guide') }}">Guida</a>
     </nav>
@@ -65,7 +61,7 @@
       <a href="{{ url_for('admin_dashboard') }}">Oggi</a>
       {% if match is defined and match %}<a href="{{ url_for('match_detail', match_id=match.id) }}">Partita</a>{% endif %}
       <a href="{{ url_for('admin_dashboard') }}#new-match">Nuova</a>
-      <a href="{{ url_for('admin_dashboard') }}#roster">Rosa</a>
+      <a href="{{ url_for('admin_dashboard') }}#history">Storico</a>
     </nav>
   {% endif %}
   <script>

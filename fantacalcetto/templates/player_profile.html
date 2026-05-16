@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="mobile-focus-card tone-info">
+  <span class="status-kicker">Profilo calciatore</span>
+  <h1>Modifica figurina</h1>
+  <p>{{ player.name }} · {{ player.nickname or "senza soprannome" }} · piede {{ player.preferred_foot|foot_label }}</p>
+  <small>Qui sistemi solo i tuoi dati. La partita resta nella home, così non si mischia tutto.</small>
+  <div class="action-stack">
+    <a class="button big" href="{{ url_for('player_dashboard') }}">Torna alla partita</a>
+  </div>
+</section>
+
+<section class="panel profile-edit-panel">
+  <div class="panel-head">
+    <h2>Dati personali</h2>
+    <a class="button ghost" href="{{ url_for('rules') }}">Regolamento</a>
+  </div>
+  <form class="form login-form" method="post" action="{{ url_for('player_update_profile') }}">
+    <label>Nome visualizzato <input name="name" value="{{ player.name }}" required></label>
+    <label>Soprannome <input name="nickname" value="{{ player.nickname or '' }}" placeholder="Es. Trivela"></label>
+    <label>WhatsApp <input name="phone" value="{{ player.phone or '' }}" placeholder="333..." required></label>
+    <label>Nome mascotte <input name="mascot_name" value="{{ player.mascot_name or '' }}" placeholder="Es. O' Mast d'a fascia"></label>
+    <label>Piede preferito
+      <select name="preferred_foot">
+        {% for key, label in foot_labels.items() %}
+          <option value="{{ key }}" {% if (player.preferred_foot or "right") == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <div class="mascot-picker-title">
+      <strong>Scegli mascotte</strong>
+      <span>Clicca l'avatar: niente menu nascosti, qua si guarda in faccia il talento.</span>
+    </div>
+    <div class="mascot-avatar-grid large">
+      {% for key, mascot in mascots.items() %}
+        <label class="mascot-avatar-choice mascot-{{ key }} {{ mascot.class }}">
+          <input type="radio" name="mascot" value="{{ key }}" {% if player.mascot == key %}checked{% endif %}>
+          <span class="avatar-art"><img src="{{ url_for('static', filename='mascots/' ~ key ~ '.png') }}" alt=""></span>
+          <strong>{{ mascot.label }}</strong>
+        </label>
+      {% endfor %}
+    </div>
+    <div class="sticky-form-actions">
+      <a class="button ghost" href="{{ url_for('player_dashboard') }}">Annulla</a>
+      <button class="button primary" type="submit">Salva e torna alla home</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

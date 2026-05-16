@@ -14,7 +14,7 @@
     <div class="action-stack">
       <a class="button primary big" href="{{ url_for('match_detail', match_id=match.id) }}">Gestisci partita</a>
       <a class="button big" href="#new-match">Nuova partita</a>
-      <a class="button ghost big" href="#roster">Rosa</a>
+      <a class="button ghost big" href="#approvals">Approvazioni</a>
     </div>
   {% else %}
     <h1>Nessuna partita</h1>
@@ -23,187 +23,156 @@
   {% endif %}
 </section>
 
-<section class="hero">
-  <div>
-    <p class="eyebrow">Admin</p>
-    <h1>Oggi fai solo quello che serve.</h1>
-    <p class="lede">{{ motto }} Le funzioni restano tutte, ma la priorità è la partita da gestire adesso.</p>
-  </div>
-  {% if match %}
-  <div class="match-strip">
-    <span>Prossima partita</span>
-    <strong>{{ match.title }}</strong>
-    <small>{{ match.match_date|datetime_it }} · {{ match.location }}</small>
-    <small>{{ phase.label }}</small>
-    <a class="button primary" href="{{ url_for('match_detail', match_id=match.id) }}">Apri cabina di regia</a>
-  </div>
-  {% endif %}
-</section>
-
-<section class="fun-strip">
-  <div class="mascot-scene" aria-hidden="true">
-    <img src="{{ url_for('static', filename='mascots/fantasista.png') }}" alt="">
-    <img src="{{ url_for('static', filename='mascots/bomber.png') }}" alt="">
-    <img src="{{ url_for('static', filename='mascots/varista.png') }}" alt="">
-  </div>
-  <div>
-    <h2>Mister Automatico attivo</h2>
-    <p>Link unico spogliatoio: <strong>{{ request.host_url.rstrip('/') }}{{ url_for('player_login') }}</strong>. Chi non ha account si registra, chi è approvato entra e conferma. A parità di posti vale l'ordine di conferma. Sponsor ufficiale: <a href="https://digislam.shop" target="_blank" rel="noopener">Digislam Print Lab</a>.</p>
-  </div>
-</section>
-
 <section class="admin-hub-grid">
   <a class="hub-tile" href="{% if match %}{{ url_for('match_detail', match_id=match.id) }}{% else %}#new-match{% endif %}">
     <strong>Partita da gestire</strong>
     <span>{% if match %}{{ phase.label }} · {{ match.match_date|datetime_it(True) }}{% else %}Crea la prima partita{% endif %}</span>
   </a>
   <a class="hub-tile" href="#new-match"><strong>Nuova partita</strong><span>Creazione guidata, separata dalle modifiche.</span></a>
-  <a class="hub-tile" href="#roster"><strong>Rosa</strong><span>Approva, modifica, rimuovi calciatori.</span></a>
-  <a class="hub-tile" href="#history"><strong>Archivio</strong><span>Future, da completare e concluse.</span></a>
+  <a class="hub-tile" href="#approvals"><strong>Approvazioni</strong><span>{{ pending_players|length }} iscrizioni · {{ reset_requests|length }} password.</span></a>
+  <a class="hub-tile" href="#history"><strong>Archivio</strong><span>Future e giocate, senza mischiare tutto.</span></a>
+  <a class="hub-tile" href="#roster"><strong>Rosa</strong><span>{{ players|length }} approvati e modificabili.</span></a>
+  <a class="hub-tile" href="#settings"><strong>Impostazioni</strong><span>Backup, import, link e strumenti meno frequenti.</span></a>
 </section>
 
-<section class="grid two">
-  <div class="panel news-panel">
-    <div class="panel-head">
-      <h2>Cronache Spogliatoio</h2>
-      <span class="pill">{{ news_items|length }} news</span>
-    </div>
-    <div class="news-list">
-      {% for item in news_items %}
-        <article class="news-item">
-          <span>{{ item.event_type }}</span>
-          <strong>{{ item.title }}</strong>
-          <p>{{ item.body }}</p>
-          <small>{{ item.created_at }}{% if item.actor_name %} · {{ item.actor_name }}{% endif %}</small>
-          <div class="comment-list">
-            {% for comment in news_comments.get(item.id, []) %}
-              <small><b>{{ comment.player_name or "Spogliatoio" }}</b>: {{ comment.body }}</small>
-            {% endfor %}
+<section class="panel" id="new-match">
+  <div class="panel-head">
+    <h2>Nuova partita</h2>
+    <span class="pill">Solo creazione</span>
+  </div>
+  <p class="muted section-intro">Qui crei una nuova partita. Per modificare orario, confermare, annullare, squadre e pagelle apri la scheda della partita.</p>
+  <form class="form" method="post" action="{{ url_for('create_match') }}">
+    <label>Titolo <input name="title" value="Calcetto del Venerdì" required></label>
+    <label>Data e ora <input type="datetime-local" name="match_date" required></label>
+    <label>Campo <input name="location" value="Centro Sportivo" required></label>
+    <label>Posti <input type="number" name="player_limit" min="2" max="30" step="2" value="10"></label>
+    <button class="button primary" type="submit">Crea partita</button>
+  </form>
+</section>
+
+<section class="panel" id="approvals">
+  <div class="panel-head">
+    <h2>Approvazioni e accessi</h2>
+    <span class="pill">{{ pending_players|length }} iscrizioni</span>
+  </div>
+  <div class="admin-split">
+    <div>
+      <h3>Calciatori da approvare</h3>
+      <div class="compact-match-list">
+        {% for p in pending_players %}
+          <article class="mini-card pending-card">
+            <strong>{{ p.name }}</strong>
+            <span>{{ p.nickname or "senza soprannome" }} · {{ p.phone }}</span>
+            <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
+            <div class="admin-inline-buttons">
+              <form method="post" action="{{ url_for('approve_player', player_id=p.id) }}">
+                <button class="button primary" type="submit">Approva</button>
+              </form>
+              <form method="post" action="{{ url_for('reject_player', player_id=p.id) }}">
+                <button class="button ghost" type="submit">Respingi</button>
+              </form>
+            </div>
+          </article>
+        {% else %}
+          <div class="mini-card">
+            <strong>Nessuno in attesa</strong>
+            <span>Quando qualcuno si registra, appare qui bello evidente.</span>
           </div>
-        </article>
-      {% else %}
-        <p class="muted">Ancora nessuna cronaca: lo spogliatoio è pulito, evento raro.</p>
-      {% endfor %}
-    </div>
-  </div>
-  <div class="panel news-panel">
-    <div class="panel-head">
-      <h2>Novità App</h2>
-      <span class="pill">Diario lavori</span>
-    </div>
-    <div class="news-list">
-      {% for item in app_updates %}
-        <article class="news-item app-update">
-          <span>{{ item.tag }}</span>
-          <strong>{{ item.title }}</strong>
-          <p>{{ item.body }}</p>
-        </article>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-
-<section class="panel data-panel">
-  <div class="panel-head">
-    <h2>Dati Reali</h2>
-    <span class="pill">Backup e import</span>
-  </div>
-  <div class="data-actions">
-    <a class="button primary" href="{{ url_for('admin_backup') }}">Scarica backup dati</a>
-    <form class="data-import-form" method="post" action="{{ url_for('admin_import') }}" enctype="multipart/form-data">
-      <label>Importa backup JSON <input type="file" name="backup_file" accept="application/json" required></label>
-      <button class="button" type="submit">Importa dati</button>
-    </form>
-    <form class="data-reset-form" method="post" action="{{ url_for('admin_reset_data') }}" onsubmit="return confirm('Sicuro? Verranno eliminati giocatori, partite, convocazioni, squadre, pagelle e premi assegnati. Prima scarica il backup.');">
-      <label>Scrivi RESET per svuotare demo <input name="confirm_text" placeholder="RESET" autocomplete="off"></label>
-      <button class="button danger" type="submit">Svuota tutto</button>
-    </form>
-  </div>
-  <p class="muted">Usa il backup prima di ogni pulizia. L'admin resta via PIN, quindi puoi ripartire con iscrizioni vere senza utenti demo.</p>
-</section>
-
-<section class="panel">
-  <div class="panel-head">
-    <h2>Da Approvare</h2>
-    <span class="pill">{{ pending_players|length }} in attesa</span>
-  </div>
-  <div class="cards">
-    {% for p in pending_players %}
-      <div class="mini-card pending-card">
-        <strong>{{ p.name }}</strong>
-        <span>{{ p.nickname or "senza soprannome" }} · {{ p.phone }}</span>
-        <span class="mascot-badge compact mascot-{{ p.mascot }} {{ p.mascot|mascot_class }}"><b>{{ p.mascot|mascot_code }}</b><small>{{ p|player_mascot_label }}</small></span>
-        <form class="inline-actions" method="post" action="{{ url_for('approve_player', player_id=p.id) }}">
-          <button class="button primary" type="submit">Approva</button>
-        </form>
-        <form class="inline-actions" method="post" action="{{ url_for('reject_player', player_id=p.id) }}">
-          <button class="button ghost" type="submit">Respingi</button>
-        </form>
+        {% endfor %}
       </div>
-    {% else %}
-      <div class="mini-card">
-        <strong>Nessuno in attesa</strong>
-        <span>Quando qualcuno si registra, appare qui bello evidente.</span>
-      </div>
-    {% endfor %}
-  </div>
-</section>
-
-{% if reset_requests %}
-<section class="panel">
-  <div class="panel-head">
-    <h2>Recupero Password</h2>
-    <span class="pill">{{ reset_requests|length }} richieste</span>
-  </div>
-  <div class="password-request-list">
-    {% for item in reset_requests %}
-      <article class="password-request-row">
-        <div>
-          <strong>{{ item.player_name or item.display_name or item.username or item.phone or "Calciatore misterioso" }}</strong>
-          <small>
-            Username: {{ item.player_username or item.username or "-" }} · WhatsApp: {{ item.phone or "-" }} · {{ item.created_at }}
-          </small>
-          {% if item.message %}<p>{{ item.message }}</p>{% endif %}
-        </div>
-        <form class="password-reset-form" method="post" action="{{ url_for('resolve_password_request', request_id=item.id) }}">
-          <label>Calciatore
-            <select name="player_id">
-              {% if item.player_id %}
-                <option value="{{ item.player_id }}">{{ item.player_name or item.username }}</option>
-              {% endif %}
-              {% for p in players %}
-                <option value="{{ p.id }}" {% if p.id == item.player_id %}selected{% endif %}>{{ p.name }} · {{ p.username or "senza username" }}</option>
-              {% endfor %}
-            </select>
-          </label>
-          <label>Nuova password provvisoria <input name="new_password" placeholder="Es. calcetto2026" required></label>
-          <button class="button primary" type="submit">Imposta password</button>
-        </form>
-        <form method="post" action="{{ url_for('dismiss_password_request', request_id=item.id) }}">
-          <button class="button ghost" type="submit">Archivia</button>
-        </form>
-      </article>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
-
-<section class="grid two">
-  <div class="panel" id="new-match">
-    <div class="panel-head">
-      <h2>Crea Partita</h2>
-      <span class="pill">Admin</span>
     </div>
-    <form class="form" method="post" action="{{ url_for('create_match') }}">
-      <label>Titolo <input name="title" value="Calcetto del Venerdì" required></label>
-      <label>Data e ora <input type="datetime-local" name="match_date" required></label>
-      <label>Campo <input name="location" value="Centro Sportivo" required></label>
-      <label>Posti <input type="number" name="player_limit" min="2" max="30" step="2" value="10"></label>
-      <button class="button primary" type="submit">Crea e invita tutti</button>
-    </form>
+    <div>
+      <h3>Recupero password</h3>
+      <div class="password-request-list">
+        {% for item in reset_requests %}
+          <article class="password-request-row">
+            <div>
+              <strong>{{ item.player_name or item.display_name or item.username or item.phone or "Calciatore misterioso" }}</strong>
+              <small>Username: {{ item.player_username or item.username or "-" }} · WhatsApp: {{ item.phone or "-" }} · {{ item.created_at }}</small>
+              {% if item.message %}<p>{{ item.message }}</p>{% endif %}
+            </div>
+            <form class="password-reset-form" method="post" action="{{ url_for('resolve_password_request', request_id=item.id) }}">
+              <label>Calciatore
+                <select name="player_id">
+                  {% if item.player_id %}
+                    <option value="{{ item.player_id }}">{{ item.player_name or item.username }}</option>
+                  {% endif %}
+                  {% for p in players %}
+                    <option value="{{ p.id }}" {% if p.id == item.player_id %}selected{% endif %}>{{ p.name }} · {{ p.username or "senza username" }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <label>Password provvisoria <input name="new_password" placeholder="Es. calcetto2026" required></label>
+              <button class="button primary" type="submit">Imposta</button>
+            </form>
+            <form method="post" action="{{ url_for('dismiss_password_request', request_id=item.id) }}">
+              <button class="button ghost" type="submit">Archivia</button>
+            </form>
+          </article>
+        {% else %}
+          <div class="mini-card">
+            <strong>Nessuna richiesta</strong>
+            <span>Quando qualcuno dimentica la password lo gestisci qui, non nella rosa.</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
   </div>
+</section>
 
-  <div class="panel">
+<section class="panel" id="history">
+  <div class="panel-head">
+    <h2>Partite e storico</h2>
+    <span class="pill">{{ future_matches|length }} future · {{ past_matches|length }} storiche</span>
+  </div>
+  <div class="admin-split">
+    <div>
+      <h3>Da gestire</h3>
+      <div class="compact-match-list">
+        {% for m in future_matches %}
+          <a class="mini-card match-list-card" href="{{ url_for('match_detail', match_id=m.id) }}">
+            <div>
+              <strong>{{ m.title }}</strong>
+              <span>{{ m.match_date|datetime_it }} · {{ m.location }}</span>
+            </div>
+            <small>{{ m|match_phase_label }} · {{ m.status|status_label }}</small>
+          </a>
+        {% else %}
+          <div class="mini-card">
+            <strong>Nessuna futura</strong>
+            <span>Crea la prossima partita dal blocco sopra.</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div>
+      <h3>Già fatte</h3>
+      <div class="compact-match-list">
+        {% for m in past_matches %}
+          <a class="mini-card match-list-card muted-card" href="{{ url_for('match_detail', match_id=m.id) }}">
+            <div>
+              <strong>{{ m.title }}</strong>
+              <span>{{ m.match_date|datetime_it }} · {{ m.location }}</span>
+            </div>
+            <small>{{ m.status|status_label }}</small>
+          </a>
+        {% else %}
+          <div class="mini-card">
+            <strong>Nessuna storica</strong>
+            <span>Dopo le prime pagelle, l'archivio prende vita qui.</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<details class="panel admin-accordion">
+  <summary>
+    <strong>Nuovo giocatore manuale</strong>
+    <span>Solo se il mister deve inserire un esterno senza registrazione.</span>
+  </summary>
+  <div class="accordion-body">
     <div class="panel-head">
       <h2>Nuovo Giocatore</h2>
       <span class="pill">Arruolabile</span>
@@ -241,7 +210,7 @@
       <button class="button" type="submit">Aggiungi</button>
     </form>
   </div>
-</section>
+</details>
 
 <section class="panel" id="roster">
   <div class="panel-head">
@@ -319,7 +288,7 @@
 </section>
 
 {% if rejected_players %}
-<section class="panel" id="history">
+<section class="panel">
   <div class="panel-head">
     <h2>Non Attivi</h2>
     <span class="pill">{{ rejected_players|length }}</span>
@@ -335,18 +304,71 @@
 </section>
 {% endif %}
 
-<section class="panel">
-  <div class="panel-head">
-    <h2>Storico Partite</h2>
+<details class="panel admin-accordion" id="settings">
+  <summary>
+    <strong>Impostazioni, backup e news</strong>
+    <span>Strumenti utili, ma non devono sporcare la gestione partita.</span>
+  </summary>
+  <div class="accordion-body">
+    <section class="data-panel">
+      <div class="panel-head">
+        <h2>Dati Reali</h2>
+        <span class="pill">Backup e import</span>
+      </div>
+      <div class="data-actions">
+        <a class="button primary" href="{{ url_for('admin_backup') }}">Scarica backup dati</a>
+        <form class="data-import-form" method="post" action="{{ url_for('admin_import') }}" enctype="multipart/form-data">
+          <label>Importa backup JSON <input type="file" name="backup_file" accept="application/json" required></label>
+          <button class="button" type="submit">Importa dati</button>
+        </form>
+        <form class="data-reset-form" method="post" action="{{ url_for('admin_reset_data') }}" onsubmit="return confirm('Sicuro? Verranno eliminati giocatori, partite, convocazioni, squadre, pagelle e premi assegnati. Prima scarica il backup.');">
+          <label>Scrivi RESET per svuotare demo <input name="confirm_text" placeholder="RESET" autocomplete="off"></label>
+          <button class="button danger" type="submit">Svuota tutto</button>
+        </form>
+      </div>
+      <p class="muted">Link unico spogliatoio: <strong>{{ request.host_url.rstrip('/') }}{{ url_for('player_login') }}</strong></p>
+    </section>
+
+    <section class="grid two">
+      <div class="news-panel">
+        <div class="panel-head">
+          <h2>Cronache Spogliatoio</h2>
+          <span class="pill">{{ news_items|length }} news</span>
+        </div>
+        <div class="news-list">
+          {% for item in news_items %}
+            <article class="news-item">
+              <span>{{ item.event_type }}</span>
+              <strong>{{ item.title }}</strong>
+              <p>{{ item.body }}</p>
+              <small>{{ item.created_at }}{% if item.actor_name %} · {{ item.actor_name }}{% endif %}</small>
+              <div class="comment-list">
+                {% for comment in news_comments.get(item.id, []) %}
+                  <small><b>{{ comment.player_name or "Spogliatoio" }}</b>: {{ comment.body }}</small>
+                {% endfor %}
+              </div>
+            </article>
+          {% else %}
+            <p class="muted">Ancora nessuna cronaca: lo spogliatoio è pulito, evento raro.</p>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="news-panel">
+        <div class="panel-head">
+          <h2>Novità App</h2>
+          <span class="pill">Diario lavori</span>
+        </div>
+        <div class="news-list">
+          {% for item in app_updates %}
+            <article class="news-item app-update">
+              <span>{{ item.tag }}</span>
+              <strong>{{ item.title }}</strong>
+              <p>{{ item.body }}</p>
+            </article>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
   </div>
-  <div class="cards">
-    {% for m in matches %}
-      <a class="mini-card" href="{{ url_for('match_detail', match_id=m.id) }}">
-        <strong>{{ m.title }}</strong>
-        <span>{{ m.match_date|datetime_it }}</span>
-        <small>{{ m.location }} · {{ m.status|status_label }}</small>
-      </a>
-    {% endfor %}
-  </div>
-</section>
+</details>
 {% endblock %}
