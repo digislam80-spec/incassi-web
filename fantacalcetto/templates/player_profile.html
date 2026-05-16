@@ -7,8 +7,15 @@
   <small>Qui sistemi solo i tuoi dati. La partita resta nella home, così non si mischia tutto.</small>
   <div class="action-stack">
     <a class="button big" href="{{ url_for('player_dashboard') }}">Torna alla partita</a>
+    <form method="post" action="{{ url_for('player_logout') }}">
+      <button class="button ghost big" type="submit">Esci dal profilo</button>
+    </form>
   </div>
 </section>
+
+{% if request.args.get("notice") %}
+  <div class="notice soft">{{ request.args.get("notice") }}</div>
+{% endif %}
 
 <section class="panel profile-edit-panel">
   <div class="panel-head">
@@ -45,6 +52,20 @@
       <a class="button ghost" href="{{ url_for('player_dashboard') }}">Annulla</a>
       <button class="button primary" type="submit">Salva e torna alla home</button>
     </div>
+  </form>
+</section>
+
+<section class="panel profile-password-panel">
+  <div class="panel-head">
+    <h2>Password account</h2>
+    <span class="pill">sicurezza</span>
+  </div>
+  <p class="muted section-intro">Puoi cambiarla quando vuoi. Dopo un po' di inattivita' l'app ti fa uscire e ti chiede di rientrare.</p>
+  <form class="form login-form" method="post" action="{{ url_for('player_change_password') }}">
+    <label>Password attuale <input name="current_password" type="password" autocomplete="current-password" required></label>
+    <label>Nuova password <input name="new_password" type="password" autocomplete="new-password" minlength="4" required></label>
+    <label>Ripeti nuova password <input name="confirm_password" type="password" autocomplete="new-password" minlength="4" required></label>
+    <button class="button primary" type="submit">Aggiorna password</button>
   </form>
 </section>
 {% endblock %}

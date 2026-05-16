@@ -31,6 +31,7 @@ USE_POSTGRES = bool(DATABASE_URL)
 SEED_DEMO_DATA = os.environ.get("FANTACALCETTO_SEED_DEMO", "").lower() in ("1", "true", "yes")
 PHOTO_TTL_DAYS = 7
 MAX_LEGAGRAM_IMAGE_SIDE = 1280
+SESSION_IDLE_TIMEOUT_SECONDS = 30 * 60
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "calcetto-local-demo")
@@ -62,6 +63,11 @@ DEFAULT_TEAM_A_NAME = "Real Madrink"
 DEFAULT_TEAM_B_NAME = "Dinamo Spritz"
 
 APP_UPDATES = [
+    {
+        "title": "Sicurezza account",
+        "body": "Nel profilo trovi Esci account e cambio password. Se resti inattivo troppo a lungo, FantaCalcetto ti manda fuori e devi rientrare.",
+        "tag": "Account",
+    },
     {
         "title": "Eta' in scheda calciatore",
         "body": "La registrazione chiede la data di nascita. Chi non l'ha ancora inserita la completa al prossimo accesso: nelle news arriva anche l'eta'.",
@@ -441,6 +447,30 @@ def execute(sql, params=()):
         inserted_id = row["id"] if row else None
     connection.commit()
     return inserted_id if USE_POSTGRES else cursor.lastrowid
+
+
+@app.before_request
+def expire_idle_session():
+    if request.endpoint in ("static", "player_logout", "admin_logout"):
+        return None
+    if not session.get("player_id") and not session.get("is_admin"):
+        return None
+    now = datetime.now().timestamp()
+    last_activity = session.get("last_activity_at")
+    if last_activity and now - float(last_activity) > SESSION_IDLE_TIMEOUT_SECONDS:
+        player_id = session.get("player_id")
+        if player_id:
+            log_league_event(
+                "Sessione scaduta",
+                "Account uscito automaticamente per inattivita'. Meglio cosi': il telefono in panchina non comanda.",
+                "security",
+                player_id,
+                "admin",
+            )
+        session.clear()
+        return redirect(url_for("player_login", notice="Sessione scaduta per inattivita'. Accedi di nuovo."))
+    session["last_activity_at"] = now
+    return None
 
 
 def is_admin():
@@ -2601,7 +2631,7 @@ def admin_dashboard():
     news_items = recent_league_events(12, include_admin=True)
     news_comments = comments_for_events(news_items)
     leagues = query("select * from leagues order by active desc, name") if is_develop() else []
-    activity_logs = recent_league_events(24, include_admin=True) if is_develop() else []
+    activity_logs = recent_league_events(80, include_admin=True) if is_develop() else []
     develop_stats = {}
     if is_develop():
         develop_stats = {
@@ -2695,6 +2725,7 @@ def admin_login():
         if request.form.get("pin") == ADMIN_PIN:
             session.pop("player_id", None)
             session["is_admin"] = True
+            session["last_activity_at"] = datetime.now().timestamp()
             return redirect(request.args.get("next") or url_for("admin_dashboard"))
         error = "PIN sbagliato. Il mister non ti riconosce."
     return render_template("login.html", error=error)
@@ -3046,6 +3077,7 @@ def player_login():
                 session.pop("is_admin", None)
                 session.pop("active_league_id", None)
                 session["player_id"] = player["id"]
+                session["last_activity_at"] = datetime.now().timestamp()
                 log_league_event("Accesso effettuato", f"{player['name']} è entrato nello spogliatoio digitale.", "login", player["id"], "admin")
                 return redirect(request.args.get("next") or url_for("player_dashboard"))
         player = query("select * from players where lower(username) = lower(?)", (username,), one=True)
@@ -3056,6 +3088,7 @@ def player_login():
             session.pop("is_admin", None)
             session.pop("active_league_id", None)
             session["player_id"] = player["id"]
+            session["last_activity_at"] = datetime.now().timestamp()
             log_league_event("Accesso effettuato", f"{player['name']} è entrato nello spogliatoio digitale.", "login", player["id"], "admin")
             return redirect(request.args.get("next") or url_for("player_dashboard"))
         error = "Credenziali sbagliate. Riprova senza tunnel."
@@ -3141,7 +3174,12 @@ def dismiss_password_request(request_id):
 
 @app.route("/player/logout", methods=["POST"])
 def player_logout():
+    player = current_player()
+    if player:
+        log_league_event("Uscita account", f"{player['name']} è uscito dal profilo.", "logout", player["id"], "admin")
     session.pop("player_id", None)
+    session.pop("active_league_id", None)
+    session.pop("last_activity_at", None)
     return redirect(url_for("dashboard"))
 
 
@@ -3509,6 +3547,30 @@ def player_save_birth_date():
     execute("update players set birth_date = ? where id = ?", (birth_date, player["id"]))
     g.pop("current_player_value", None)
     return redirect(url_for("player_dashboard", notice="Data di nascita salvata. Ora la scheda sa anche quanti anni dichiari."))
+
+
+@app.route("/player/password", methods=["POST"])
+@require_player
+def player_change_password():
+    player = current_player()
+    current_password = request.form.get("current_password", "")
+    new_password = request.form.get("new_password", "")
+    confirm_password = request.form.get("confirm_password", "")
+    if len(new_password) < 4:
+        return redirect(url_for("player_update_profile", notice="Nuova password troppo corta: almeno 4 caratteri."))
+    if new_password != confirm_password:
+        return redirect(url_for("player_update_profile", notice="Le due password nuove non coincidono."))
+    if player["password_hash"] and not check_password_hash(player["password_hash"], current_password):
+        return redirect(url_for("player_update_profile", notice="Password attuale non corretta."))
+    execute("update players set password_hash = ? where id = ?", (generate_password_hash(new_password), player["id"]))
+    log_league_event(
+        "Password cambiata",
+        f"{player['name']} ha cambiato la propria password dall'account.",
+        "security",
+        player["id"],
+        "admin",
+    )
+    return redirect(url_for("player_update_profile", notice="Password aggiornata. Ora il profilo è più blindato dello spogliatoio."))
 
 
 @app.route("/player/mascot-name", methods=["POST"])

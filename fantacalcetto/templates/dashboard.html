@@ -35,6 +35,7 @@
     <a href="#approvals"><span>✅</span><b>Approva</b></a>
     <a href="#roster"><span>👥</span><b>Profili</b></a>
     <a href="#mercato"><span>🔁</span><b>Mercato</b></a>
+    <a href="#stats"><span>📋</span><b>Log</b></a>
   {% else %}
     <a href="#admin-partita"><span>🏟️</span><b>Partita</b></a>
     <a href="#new-match"><span>📅</span><b>Crea</b></a>
@@ -100,9 +101,10 @@
 {% if is_develop %}
 <section class="panel" id="stats" data-admin-section="stats">
   <div class="panel-head">
-    <h2>Statistiche e log</h2>
+    <h2>Movimenti sistema</h2>
     <span class="pill">Develop</span>
   </div>
+  <p class="muted section-intro">Qui il Develop vede accessi, iscrizioni, richieste, cambi password, uscite, conferme, commenti e modifiche importanti della lega selezionata.</p>
   <div class="stat-cards develop-stat-cards">
     <div><strong>{{ develop_stats.leagues or 0 }}</strong><small>leghe attive</small></div>
     <div><strong>{{ develop_stats.players or 0 }}</strong><small>calciatori</small></div>

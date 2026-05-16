@@ -105,7 +105,11 @@
       <a href="{{ url_for('admin_dashboard') }}{% if is_develop %}#develop{% else %}#admin-partita{% endif %}"><span>{% if is_develop %}★{% else %}🧢{% endif %}</span><b>{% if is_develop %}Develop{% else %}Mister{% endif %}</b></a>
       <a href="{% if match is defined and match %}{{ url_for('match_detail', match_id=match.id) }}{% else %}{{ url_for('admin_dashboard') }}#admin-partita{% endif %}"><span>🏟️</span><b>Partita</b></a>
       <a href="{{ url_for('admin_dashboard') }}#mercato"><span>🔁</span><b>Mercato</b></a>
-      <a href="{{ url_for('admin_dashboard') }}#new-match"><span>📅</span><b>Nuova</b></a>
+      {% if is_develop %}
+        <a href="{{ url_for('admin_dashboard') }}#stats"><span>📋</span><b>Log</b></a>
+      {% else %}
+        <a href="{{ url_for('admin_dashboard') }}#new-match"><span>📅</span><b>Nuova</b></a>
+      {% endif %}
       <a href="{{ url_for('admin_dashboard') }}#history"><span>📚</span><b>Storico</b></a>
     </nav>
   {% elif current_player %}
@@ -131,7 +135,27 @@
       <a href="{{ url_for('admin_dashboard') }}#history"><span>📚</span><b>Storico</b></a>
     </nav>
   {% endif %}
+  {% if current_player or is_admin %}
+    <form id="idle-logout-form" method="post" action="{{ url_for('player_logout') if current_player else url_for('admin_logout') }}" hidden></form>
+  {% endif %}
   <script>
+    {% if current_player or is_admin %}
+      (() => {
+        const idleLimit = 30 * 60 * 1000;
+        const form = document.getElementById("idle-logout-form");
+        let timer;
+        const resetIdleTimer = () => {
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            if (form) form.requestSubmit ? form.requestSubmit() : form.submit();
+          }, idleLimit);
+        };
+        ["click", "keydown", "touchstart", "scroll"].forEach((eventName) => {
+          window.addEventListener(eventName, resetIdleTimer, { passive: true });
+        });
+        resetIdleTimer();
+      })();
+    {% endif %}
     document.addEventListener("click", async (event) => {
       const button = event.target.closest("[data-copy-target]");
       if (!button) return;

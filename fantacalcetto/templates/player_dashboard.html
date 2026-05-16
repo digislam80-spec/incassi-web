@@ -166,6 +166,9 @@
     {% if effective_manager %}
       <a class="button ghost" href="{{ url_for('admin_dashboard') }}">{% if is_develop %}Cabina Develop{% else %}Cabina Mister{% endif %}</a>
     {% endif %}
+    <form class="inline-logout-form" method="post" action="{{ url_for('player_logout') }}">
+      <button class="button ghost" type="submit">Esci profilo</button>
+    </form>
   </div>
 </section>
 

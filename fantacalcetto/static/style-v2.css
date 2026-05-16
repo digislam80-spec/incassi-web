@@ -258,6 +258,10 @@ h2 { margin: 0; font-size: 21px; }
   min-height: 46px;
   justify-content: center;
 }
+.inline-logout-form,
+.action-stack form {
+  display: contents;
+}
 .profile-card-stage {
   grid-column: 1;
   grid-row: 1;
