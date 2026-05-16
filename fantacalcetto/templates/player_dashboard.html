@@ -118,49 +118,17 @@
   </article>
 </section>
 
+{% set player_ovr = player|overall_rating %}
 <section class="hero profile-hero {% if effective_supporter %}supporter-hero{% endif %}" id="profilo" data-app-section="profilo">
-  <div class="profile-card-stage" aria-label="{% if player.account_type == 'supporter' %}Card supporter{% else %}Card calciatore{% endif %}">
-    {% if effective_supporter %}
-      <div class="supporter-profile-card">
-        <img src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
-        <span>Profilo tifoso</span>
-        <strong>{{ player.nickname or "Divano Nord" }}</strong>
-        <small>{% if player.supporter_player_name %}Tifa {{ player.supporter_player_name }}{% else %}Tifoso di lega{% endif %}</small>
-        <div>
-          <b>{{ player.supporter_relation or "supporter" }}</b>
-          <b>Fede {{ player.faith_score or 0 }}</b>
-          <b>LegaGram</b>
-          <b>Biglietti</b>
-        </div>
-      </div>
-    {% else %}
-      {% set player_ovr = player|overall_rating %}
-      <div class="overall-badge fifa-card fifa-premium-card {% if player_ovr >= 85 %}tier-elite{% elif player_ovr >= 70 %}tier-gold{% elif player_ovr >= 55 %}tier-silver{% else %}tier-bronze{% endif %}">
-        <div class="fifa-card-top">
-          <div class="fifa-rating">
-            <strong>{{ player_ovr }}</strong>
-            <span>{{ player.role[:3]|upper }}</span>
-            <i></i>
-            <b>{{ (player.permanent_team_name or "SV")[:2]|upper }}</b>
-          </div>
-          <img class="fifa-card-mascot" src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
-        </div>
-        <div class="fifa-nameplate">
-          <b>{{ player.nickname or player.name }}</b>
-          <small>{{ player.power|stars }}</small>
-        </div>
-        <div class="fifa-stats">
-          <div>
-            <span><b>{{ player.reliability }}</b> AFF</span>
-            <span><b>{{ player.score }}</b> SCO</span>
-          </div>
-          <div>
-            <span><b>{{ player.matches }}</b> PRE</span>
-            <span><b>{{ player.faith_score or 0 }}</b> FED</span>
-          </div>
-        </div>
-      </div>
-    {% endif %}
+  <div class="profile-card-stage" aria-label="{% if effective_supporter %}Avatar supporter{% else %}Avatar calciatore{% endif %}">
+    <div class="profile-avatar-orb {% if effective_supporter %}supporter-avatar{% endif %}">
+      <img src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
+      {% if effective_supporter %}
+        <span>Fede {{ player.faith_score or 0 }}</span>
+      {% else %}
+        <span>{{ player_ovr }}</span>
+      {% endif %}
+    </div>
   </div>
   <div class="profile-copy">
     <p class="eyebrow">{% if effective_supporter %}Profilo supporter{% else %}Profilo calciatore{% endif %}</p>
@@ -178,11 +146,54 @@
   <div class="hero-actions profile-actions">
     <a class="button primary" href="{{ url_for('player_update_profile') }}">Modifica profilo</a>
     <button class="button profile-help-button" type="button" onclick="document.getElementById('player-help').showModal()">Cosa posso fare qui?</button>
+    {% if not effective_supporter %}
+      <button class="button ghost" type="button" onclick="document.getElementById('player-card-modal').showModal()">Mostra card</button>
+    {% endif %}
     {% if effective_manager %}
       <a class="button ghost" href="{{ url_for('admin_dashboard') }}">{% if is_develop %}Cabina Develop{% else %}Cabina Mister{% endif %}</a>
     {% endif %}
   </div>
 </section>
+
+{% if not effective_supporter %}
+<dialog class="app-modal player-card-modal" id="player-card-modal">
+  <form method="dialog">
+    <button class="modal-close" aria-label="Chiudi">×</button>
+  </form>
+  <div class="player-card-modal-inner">
+    <div class="overall-badge fifa-card fifa-premium-card showcase-card {% if player_ovr >= 85 %}tier-elite{% elif player_ovr >= 70 %}tier-gold{% elif player_ovr >= 55 %}tier-silver{% else %}tier-bronze{% endif %}">
+      <div class="fifa-card-top">
+        <div class="fifa-rating">
+          <strong>{{ player_ovr }}</strong>
+          <span>{{ player.role[:3]|upper }}</span>
+          <i></i>
+          <b>{{ (player.permanent_team_name or "SV")[:2]|upper }}</b>
+        </div>
+        <img class="fifa-card-mascot" src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
+      </div>
+      <div class="fifa-nameplate">
+        <b>{{ player.nickname or player.name }}</b>
+        <small>{{ player.power|stars }}</small>
+      </div>
+      <div class="fifa-stats">
+        <div>
+          <span><b>{{ player.reliability }}</b> AFF</span>
+          <span><b>{{ player.score }}</b> SCO</span>
+        </div>
+        <div>
+          <span><b>{{ player.matches }}</b> PRE</span>
+          <span><b>{{ player.faith_score or 0 }}</b> FED</span>
+        </div>
+      </div>
+    </div>
+    <div class="player-card-modal-actions">
+      <strong>{{ player.name }}</strong>
+      <span>{{ player.role }} · piede {{ player.preferred_foot|foot_label }} · {{ player.permanent_team_name or "Svincolato di lusso" }}</span>
+      <button class="button primary" type="button" onclick="window.print()">Salva/Stampa card</button>
+    </div>
+  </div>
+</dialog>
+{% endif %}
 
 <nav class="player-section-nav" aria-label="Menu calciatore">
   <a href="#profilo"><span>👤</span><b>Profilo</b></a>
