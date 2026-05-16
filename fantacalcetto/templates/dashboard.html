@@ -13,9 +13,8 @@
       <div><strong>{{ match.player_limit }}</strong><small>quota</small></div>
     </div>
     <div class="action-stack">
-      <a class="button primary big" href="{{ url_for('match_detail', match_id=match.id) }}">Gestisci partita</a>
-      <a class="button big" href="#new-match">Nuova partita</a>
-      {% if is_develop %}<a class="button ghost big" href="#approvals">Approvazioni</a>{% endif %}
+      <a class="button primary big" href="{{ url_for('match_detail', match_id=match.id) }}">Apri prossimo comando</a>
+      <a class="button big" href="#new-match">Crea nuovo evento</a>
     </div>
   {% else %}
     <h1>Nessuna partita</h1>
@@ -123,14 +122,7 @@
     <h2>Develop · Leghe</h2>
     <span class="pill">Controllo totale</span>
   </div>
-  <p class="muted section-intro">Tutti i dati attuali sono assegnati alla Lega Bombonera. Da qui potrai creare altre leghe e dare il ruolo di Mister ai profili giusti.</p>
-  <div class="league-logo-row">
-    <img class="league-logo-preview" src="{{ url_for('static', filename=current_league.logo or 'league-bombonera.svg') }}" alt="{{ current_league.name if current_league else 'Lega Bombonera' }}">
-    <div>
-      <strong>{{ current_league.name if current_league else "Lega Bombonera" }}</strong>
-      <small>Lega che stai gestendo ora · Develop: {{ develop_username }}</small>
-    </div>
-  </div>
+  <p class="muted section-intro">Scegli una lega, creane una nuova o apri la scheda per modificarla. Tutto resta separato tra tornei.</p>
   <form class="form inline-league-switch" method="post" action="{{ url_for('switch_develop_league') }}">
     <label>Apri cabina lega
       <select name="league_id">
@@ -141,24 +133,24 @@
     </label>
     <button class="button primary" type="submit">Gestisci questa lega</button>
   </form>
-  <form class="form" method="post" action="{{ url_for('create_league') }}">
-    <label>Nome nuova lega <input name="name" placeholder="Es. Lega Vesuvio League"></label>
-    <label>Logo <input name="logo" value="league-bombonera.svg"></label>
-    <label>Colore principale <input name="primary_color" value="#0f6b4f"></label>
-    <label>Colore secondario <input name="secondary_color" value="#f2c94c"></label>
-    <button class="button primary" type="submit">Crea lega</button>
-  </form>
+  <details class="mini-card league-create-card">
+    <summary><strong>Crea nuova lega</strong><span>Apri solo quando serve</span></summary>
+    <form class="form" method="post" action="{{ url_for('create_league') }}">
+      <label>Nome nuova lega <input name="name" placeholder="Es. Lega Vesuvio League"></label>
+      <label>Logo <input name="logo" value="league-bombonera.svg"></label>
+      <label>Colore principale <input name="primary_color" value="#0f6b4f"></label>
+      <label>Colore secondario <input name="secondary_color" value="#f2c94c"></label>
+      <button class="button primary" type="submit">Crea lega</button>
+    </form>
+  </details>
   <div class="cards">
     {% for lega in leagues %}
-      <article class="mini-card league-edit-card">
+      <details class="mini-card league-edit-card">
+        <summary>
+          <img class="league-logo-preview" src="{{ url_for('static', filename=lega.logo or 'league-bombonera.svg') }}" alt="{{ lega.name }}">
+          <span><strong>{{ lega.name }}</strong><small>{{ "attiva" if lega.active else "pausata" }} · {{ lega.slug }}</small></span>
+        </summary>
         <form class="form" method="post" action="{{ url_for('update_league', league_id=lega.id) }}">
-          <div class="league-logo-row compact">
-            <img class="league-logo-preview" src="{{ url_for('static', filename=lega.logo or 'league-bombonera.svg') }}" alt="{{ lega.name }}">
-            <div>
-              <strong>{{ lega.name }}</strong>
-              <small>{{ lega.slug }}</small>
-            </div>
-          </div>
           <label>Nome lega <input name="name" value="{{ lega.name }}"></label>
           <label>Logo <input name="logo" value="{{ lega.logo or '' }}" placeholder="league-bombonera.svg"></label>
           <label>Colore principale <input name="primary_color" value="{{ lega.primary_color or '#0f6b4f' }}"></label>
@@ -171,7 +163,7 @@
           </label>
           <button class="button primary" type="submit">Salva lega</button>
         </form>
-      </article>
+      </details>
     {% endfor %}
   </div>
 </section>

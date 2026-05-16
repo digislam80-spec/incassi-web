@@ -172,7 +172,7 @@
             <strong>{{ player_ovr }}</strong>
             <span>{{ player.role[:3]|upper }}</span>
             <i></i>
-            <b>⚽</b>
+            <b>{{ (player.permanent_team_name or "SV")[:2]|upper }}</b>
           </div>
           <img class="fifa-card-mascot" src="{{ url_for('static', filename='mascots/' ~ player.mascot ~ '.png') }}" alt="">
         </div>
@@ -340,6 +340,7 @@
           <div class="field-player team-a slot-a-{{ loop.index }}">
             <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
             <b>{{ p.nickname or p.name }}</b>
+            <small>{{ p|overall_rating }}</small>
           </div>
         {% endif %}
       {% endfor %}
@@ -348,6 +349,7 @@
           <div class="field-player team-b slot-b-{{ loop.index }}">
             <img src="{{ url_for('static', filename='mascots/' ~ p.mascot ~ '.png') }}" alt="">
             <b>{{ p.nickname or p.name }}</b>
+            <small>{{ p|overall_rating }}</small>
           </div>
         {% endif %}
       {% endfor %}
