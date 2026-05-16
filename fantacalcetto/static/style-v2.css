@@ -4797,3 +4797,49 @@ th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
+
+@media (max-width: 760px) {
+  .profile-hero {
+    grid-template-columns: 82px minmax(0, 1fr) !important;
+    column-gap: 10px !important;
+  }
+  .profile-card-stage {
+    width: 82px !important;
+    min-height: 82px !important;
+  }
+  .profile-avatar-orb {
+    width: 82px !important;
+    height: 82px !important;
+  }
+  .profile-copy h1 {
+    display: block !important;
+    max-width: 100% !important;
+    margin-bottom: 4px !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    hyphens: none !important;
+    font-size: clamp(22px, 6.7vw, 31px) !important;
+    line-height: .95 !important;
+  }
+  .profile-copy .lede {
+    -webkit-line-clamp: 2 !important;
+    font-size: 11px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .profile-hero {
+    grid-template-columns: 76px minmax(0, 1fr) !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  .profile-card-stage,
+  .profile-avatar-orb {
+    width: 76px !important;
+    height: 76px !important;
+    min-height: 76px !important;
+  }
+  .profile-copy h1 {
+    font-size: clamp(20px, 6.2vw, 27px) !important;
+  }
+}
